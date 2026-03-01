@@ -8,6 +8,8 @@ interface SajuFormData {
   day: number
   hour: number
   minute: number
+  calendarType: 'solar' | 'lunar'
+  isLeapMonth: boolean
 }
 
 interface SajuFormProps {
@@ -31,13 +33,15 @@ export default function SajuForm({ onSubmit, loading = false }: SajuFormProps) {
   const [day, setDay] = useState(1)
   const [hour, setHour] = useState(12)
   const [minute, setMinute] = useState(0)
+  const [calendarType, setCalendarType] = useState<'solar' | 'lunar'>('solar')
+  const [isLeapMonth, setIsLeapMonth] = useState(false)
 
   const daysInMonth = getDaysInMonth(year, month)
   const days = Array.from({ length: daysInMonth }, (_, i) => i + 1)
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    onSubmit({ year, month, day, hour, minute })
+    onSubmit({ year, month, day, hour, minute, calendarType, isLeapMonth })
   }
 
   const selectClass =
@@ -56,11 +60,48 @@ export default function SajuForm({ onSubmit, loading = false }: SajuFormProps) {
         {/* 폼 카드 */}
         <div className="bg-slate-800 rounded-2xl p-6 shadow-2xl border border-slate-700">
           <p className="text-slate-300 text-sm mb-5 text-center">
-            양력 생년월일시를 입력해 주세요
-            <span className="block text-slate-500 text-xs mt-1">
-              (음력 입력은 지원하지 않습니다)
-            </span>
+            생년월일시를 입력해 주세요
           </p>
+
+          {/* 양력/음력 토글 */}
+          <div className="flex rounded-lg overflow-hidden border border-slate-600 mb-4">
+            <button
+              type="button"
+              onClick={() => { setCalendarType('solar'); setIsLeapMonth(false) }}
+              className={`flex-1 py-2 text-sm font-medium transition-colors ${
+                calendarType === 'solar'
+                  ? 'bg-amber-500 text-slate-900'
+                  : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
+              }`}
+            >
+              양력 (陽曆)
+            </button>
+            <button
+              type="button"
+              onClick={() => setCalendarType('lunar')}
+              className={`flex-1 py-2 text-sm font-medium transition-colors ${
+                calendarType === 'lunar'
+                  ? 'bg-amber-500 text-slate-900'
+                  : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
+              }`}
+            >
+              음력 (陰曆)
+            </button>
+          </div>
+
+          {/* 윤달 체크박스 (음력일 때만 표시) */}
+          {calendarType === 'lunar' && (
+            <label className="flex items-center gap-2 mb-4 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={isLeapMonth}
+                onChange={e => setIsLeapMonth(e.target.checked)}
+                className="w-4 h-4 rounded border-slate-600 bg-slate-800 text-amber-500 focus:ring-amber-400 focus:ring-offset-0"
+                disabled={loading}
+              />
+              <span className="text-slate-400 text-sm">윤달 (閏月)</span>
+            </label>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* 연도 */}

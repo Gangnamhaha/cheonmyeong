@@ -16,6 +16,8 @@ interface FormData {
   day: number
   hour: number
   minute: number
+  calendarType: 'solar' | 'lunar'
+  isLeapMonth: boolean
 }
 
 export default function Home() {
@@ -57,7 +59,7 @@ export default function Home() {
     setAiError(null)
 
     try {
-      const saju = calculateSajuFromBirth(data.year, data.month, data.day, data.hour, data.minute)
+      const saju = calculateSajuFromBirth(data.year, data.month, data.day, data.hour, data.minute, data.calendarType, data.isLeapMonth)
       const oheng = analyzeOheng(saju)
 
       setSajuResult(saju)

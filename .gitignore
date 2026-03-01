@@ -55,3 +55,4 @@ run_test.js
 run_vitest.bat
 setup.bat
 test-output.txt
+.vercel

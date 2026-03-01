@@ -1,4 +1,4 @@
-import { calculateSaju } from '@fullstackfamily/manseryeok'
+import { calculateSaju, lunarToSolar } from '@fullstackfamily/manseryeok'
 
 export interface SajuPillar {
   heavenlyStem: string       // 천간 한글 (갑, 을, 병...)
@@ -55,12 +55,14 @@ function parsePillar(pillarHangul: string, pillarHanja: string): SajuPillar {
 }
 
 /**
- * 양력 생년월일시로 사주팔자를 계산합니다.
- * @param year  양력 연도 (1900~2050)
- * @param month 양력 월 (1~12)
- * @param day   양력 일 (1~31)
+ * 양력 또는 음력 생년월일시로 사주팔자를 계산합니다.
+ * @param year  연도 (1900~2050)
+ * @param month 월 (1~12)
+ * @param day   일 (1~31)
  * @param hour  시 (0~23)
  * @param minute 분 (0~59, 기본값 0)
+ * @param calendarType '양력' 또는 '음력' (기본값 'solar')
+ * @param isLeapMonth 윤달 여부 (기본값 false, 음력일 때만 사용)
  */
 export function calculateSajuFromBirth(
   year: number,
@@ -68,6 +70,8 @@ export function calculateSajuFromBirth(
   day: number,
   hour: number,
   minute: number = 0,
+  calendarType: 'solar' | 'lunar' = 'solar',
+  isLeapMonth: boolean = false,
 ): SajuResult {
   if (year < 1900 || year > 2050) {
     throw new Error(`지원하지 않는 연도입니다: ${year}. 1900~2050년만 지원합니다.`)
@@ -82,8 +86,19 @@ export function calculateSajuFromBirth(
     throw new Error(`잘못된 시입니다: ${hour}. 0~23 사이여야 합니다.`)
   }
 
+  // 음력인 경우 양력으로 변환
+  let solarYear = year
+  let solarMonth = month
+  let solarDay = day
+  if (calendarType === 'lunar') {
+    const converted = lunarToSolar(year, month, day, isLeapMonth)
+    solarYear = converted.solar.year
+    solarMonth = converted.solar.month
+    solarDay = converted.solar.day
+  }
+
   // manseryeok calculateSaju 호출 (서울 경도 127도, 진태양시 보정 적용)
-  const raw = calculateSaju(year, month, day, hour, minute, {
+  const raw = calculateSaju(solarYear, solarMonth, solarDay, hour, minute, {
     longitude: 127,
     applyTimeCorrection: true,
   })
