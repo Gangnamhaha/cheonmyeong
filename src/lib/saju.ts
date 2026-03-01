@@ -3,8 +3,8 @@ import { calculateSaju } from '@fullstackfamily/manseryeok'
 export interface SajuPillar {
   heavenlyStem: string       // 천간 한글 (갑, 을, 병...)
   earthlyBranch: string      // 지지 한글 (자, 축, 인...)
-  heavenlyStemHanja: string  // 천간 한자 (甲, 乙, 丙...)
-  earthlyBranchHanja: string // 지지 한자 (子, 丑, 寅...)
+  heavenlyStemHanja?: string  // 천간 한자 (甲, 乙, 丙...) — optional for test mocks
+  earthlyBranchHanja?: string // 지지 한자 (子, 丑, 寅...) — optional for test mocks
   element: string            // 오행 (목, 화, 토, 금, 수)
 }
 
@@ -13,7 +13,7 @@ export interface SajuResult {
   monthPillar: SajuPillar
   dayPillar: SajuPillar
   hourPillar: SajuPillar
-  rawText: string // "경오년 신사월 경진일 계미시"
+  rawText?: string // "경오년 신사월 경진일 계미시" (optional for test mocks)
 }
 
 // 천간 한글 → 한자 매핑

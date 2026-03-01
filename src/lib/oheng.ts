@@ -1,22 +1,5 @@
 // src/lib/oheng.ts
-
-// SajuPillar 타입 (saju.ts에서 import하거나 여기서 재정의)
-// Task 2와 병렬 실행 중이므로 saju.ts가 없을 수 있음 → 로컬 타입 정의
-interface SajuPillar {
-  heavenlyStem: string
-  earthlyBranch: string
-  heavenlyStemHanja?: string
-  earthlyBranchHanja?: string
-  element: string
-}
-
-interface SajuResult {
-  yearPillar: SajuPillar
-  monthPillar: SajuPillar
-  dayPillar: SajuPillar
-  hourPillar: SajuPillar
-  rawText?: string
-}
+import type { SajuPillar, SajuResult } from './saju'
 
 export interface OhengResult {
   counts: { 목: number; 화: number; 토: number; 금: number; 수: number }
@@ -34,7 +17,7 @@ export const OHENG_COLORS: Record<string, string> = {
   수: '#3B82F6',  // 파랑/검정 (북방, 겨울)
 }
 
-// 천간 오행 매핑
+// 천간 오행 매핑 (saju.ts의 STEM_ELEMENT와 동일 — 지지 오행 계산용)
 const STEM_ELEMENT: Record<string, string> = {
   갑: '목', 을: '목',
   병: '화', 정: '화',
