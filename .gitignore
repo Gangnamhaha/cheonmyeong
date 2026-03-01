@@ -39,3 +39,19 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local dev logs
+*.log
+dev2.log
+dev2err.log
+build.log
+nul
+
+# sisyphus orchestration files
+.sisyphus/
+
+# windows artifacts
+run_test.js
+run_vitest.bat
+setup.bat
+test-output.txt
