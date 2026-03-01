@@ -1,65 +1,132 @@
-import Image from "next/image";
+'use client'
+
+import { useState, useCallback } from 'react'
+import SajuForm from '@/components/SajuForm'
+import SajuResultCard from '@/components/SajuResult'
+import OhengChart from '@/components/OhengChart'
+import AiInterpretation from '@/components/AiInterpretation'
+import { calculateSajuFromBirth, SajuResult } from '@/lib/saju'
+import { analyzeOheng, OhengResult } from '@/lib/oheng'
+
+type AppState = 'form' | 'result'
+
+interface FormData {
+  year: number
+  month: number
+  day: number
+  hour: number
+  minute: number
+}
 
 export default function Home() {
+  const [appState, setAppState] = useState<AppState>('form')
+  const [loading, setLoading] = useState(false)
+  const [sajuResult, setSajuResult] = useState<SajuResult | null>(null)
+  const [ohengResult, setOhengResult] = useState<OhengResult | null>(null)
+  const [aiInterpretation, setAiInterpretation] = useState<string | null>(null)
+  const [aiLoading, setAiLoading] = useState(false)
+  const [aiError, setAiError] = useState<string | null>(null)
+  const [calcError, setCalcError] = useState<string | null>(null)
+
+  const fetchInterpretation = useCallback(async (saju: SajuResult, oheng: OhengResult) => {
+    setAiLoading(true)
+    setAiError(null)
+    try {
+      const res = await fetch('/api/interpret', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ saju, oheng }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setAiError(data.error ?? 'AI 해석 중 오류가 발생했습니다.')
+      } else {
+        setAiInterpretation(data.interpretation)
+      }
+    } catch {
+      setAiError('네트워크 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.')
+    } finally {
+      setAiLoading(false)
+    }
+  }, [])
+
+  async function handleFormSubmit(data: FormData) {
+    setLoading(true)
+    setCalcError(null)
+    setAiInterpretation(null)
+    setAiError(null)
+
+    try {
+      const saju = calculateSajuFromBirth(data.year, data.month, data.day, data.hour, data.minute)
+      const oheng = analyzeOheng(saju)
+
+      setSajuResult(saju)
+      setOhengResult(oheng)
+      setAppState('result')
+
+      fetchInterpretation(saju, oheng)
+    } catch (err) {
+      setCalcError(err instanceof Error ? err.message : '사주 계산 중 오류가 발생했습니다.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  function handleReset() {
+    setAppState('form')
+    setSajuResult(null)
+    setOhengResult(null)
+    setAiInterpretation(null)
+    setAiError(null)
+    setCalcError(null)
+  }
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
+    <main className="min-h-screen bg-slate-900 py-8 px-4">
+      <div className="max-w-md mx-auto">
+        {appState === 'form' && (
+          <>
+            <SajuForm onSubmit={handleFormSubmit} loading={loading} />
+            {calcError && (
+              <div className="mt-4 bg-red-900/30 border border-red-700 rounded-lg p-4 text-red-300 text-sm text-center">
+                {calcError}
+              </div>
+            )}
+          </>
+        )}
+
+        {appState === 'result' && sajuResult && ohengResult && (
+          <div className="space-y-8">
+            {/* 헤더 */}
+            <div className="text-center">
+              <h1 className="text-3xl font-bold text-amber-400">천명</h1>
+              <p className="text-slate-500 text-sm tracking-widest">天命</p>
+            </div>
+
+            {/* 사주팔자 */}
+            <SajuResultCard result={sajuResult} />
+
+            {/* 오행 차트 */}
+            <OhengChart result={ohengResult} />
+
+            {/* AI 해석 */}
+            <AiInterpretation
+              interpretation={aiInterpretation}
+              loading={aiLoading}
+              error={aiError}
+              onRetry={() => fetchInterpretation(sajuResult, ohengResult)}
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
-  );
+
+            {/* 다시 보기 버튼 */}
+            <button
+              onClick={handleReset}
+              className="w-full bg-slate-700 hover:bg-slate-600 text-slate-300 font-medium py-3 px-6 rounded-lg transition-colors text-sm"
+            >
+              다시 보기
+            </button>
+          </div>
+        )}
+      </div>
+    </main>
+  )
 }
