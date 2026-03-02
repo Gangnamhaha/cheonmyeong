@@ -46,7 +46,7 @@ interface FormData {
 }
 
 export default function Home() {
-  const { theme, toggleTheme } = useTheme()
+  const { theme, toggleTheme, cycleFontSize, fontSizeLabel } = useTheme()
   const [appState, setAppState] = useState<AppState>('form')
   const [loading, setLoading] = useState(false)
   const [fullResult, setFullResult] = useState<FullSajuResult | null>(null)
@@ -360,6 +360,15 @@ export default function Home() {
                   aria-label="테마 전환"
                 >
                   {theme === 'dark' ? '☀️' : '🌙'}
+                </button>
+                <button
+                  onClick={cycleFontSize}
+                  className="p-2 rounded-full hover-scale theme-transition text-xs font-bold"
+                  style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', color: 'var(--text-secondary)' }}
+                  aria-label="글씨 크기 조절"
+                  title="글씨 크기 조절"
+                >
+                  {fontSizeLabel}
                 </button>
                 <div>
                   <h1 className="font-serif-kr text-3xl font-bold" style={{ color: 'var(--text-accent)' }}>천명</h1>

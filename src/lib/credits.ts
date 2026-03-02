@@ -17,7 +17,7 @@ import { Redis } from '@upstash/redis'
 export interface UserCredits {
   total: number
   used: number
-  plan: 'free' | 'starter' | 'pro' | 'unlimited'
+  plan: PlanKey
   lastRefill: string // ISO date
 }
 
@@ -30,6 +30,7 @@ export const PLANS = {
     priceLabel: '무료',
     features: ['기본 사주 분석', 'AI 해석 1일 3회', '오행·십신 차트'],
     popular: false,
+    type: 'free' as const,
     stripePriceId: null,
   },
   starter: {
@@ -40,7 +41,8 @@ export const PLANS = {
     priceLabel: '₩3,900',
     features: ['AI 해석 30회', '모든 카테고리 해석', '후속 질문 가능', '궁합 분석'],
     popular: false,
-    stripePriceId: 'price_starter', // Replace with real Stripe Price ID
+    type: 'onetime' as const,
+    stripePriceId: process.env.STRIPE_PRICE_STARTER || null,
   },
   pro: {
     name: '프로',
@@ -50,7 +52,8 @@ export const PLANS = {
     priceLabel: '₩9,900',
     features: ['AI 해석 100회', '모든 카테고리 해석', '무제한 후속 질문', '궁합 분석', '대운 상세 해석'],
     popular: true,
-    stripePriceId: 'price_pro', // Replace with real Stripe Price ID
+    type: 'onetime' as const,
+    stripePriceId: process.env.STRIPE_PRICE_PRO || null,
   },
   unlimited: {
     name: '언리미티드',
@@ -60,11 +63,50 @@ export const PLANS = {
     priceLabel: '₩29,900',
     features: ['AI 해석 500회', '모든 기능 무제한', '우선 응답', '월간 운세 리포트'],
     popular: false,
-    stripePriceId: 'price_unlimited', // Replace with real Stripe Price ID
+    type: 'onetime' as const,
+    stripePriceId: process.env.STRIPE_PRICE_UNLIMITED || null,
+  },
+  sub_basic: {
+    name: '베이직 구독',
+    nameEn: 'Basic Subscription',
+    credits: 50,
+    price: 4900,
+    priceLabel: '₩4,900/월',
+    features: ['매월 50회 크레딧 자동 충전', '모든 카테고리 해석', '후속 질문 가능', '궁합 분석'],
+    popular: false,
+    type: 'subscription' as const,
+    stripePriceId: process.env.STRIPE_PRICE_SUB_BASIC || null,
+    interval: 'month' as const,
+  },
+  sub_pro: {
+    name: '프로 구독',
+    nameEn: 'Pro Subscription',
+    credits: 150,
+    price: 9900,
+    priceLabel: '₩9,900/월',
+    features: ['매월 150회 크레딧 자동 충전', '모든 기능 무제한', '대운 상세 해석', '우선 응답'],
+    popular: true,
+    type: 'subscription' as const,
+    stripePriceId: process.env.STRIPE_PRICE_SUB_PRO || null,
+    interval: 'month' as const,
+  },
+  sub_premium: {
+    name: '프리미엄 구독',
+    nameEn: 'Premium Subscription',
+    credits: 500,
+    price: 19900,
+    priceLabel: '₩19,900/월',
+    features: ['매월 500회 크레딧 자동 충전', '모든 기능 무제한', '우선 응답', '월간 운세 리포트', '1:1 상담'],
+    popular: false,
+    type: 'subscription' as const,
+    stripePriceId: process.env.STRIPE_PRICE_SUB_PREMIUM || null,
+    interval: 'month' as const,
   },
 } as const
 
 export type PlanKey = keyof typeof PLANS
+export type SubscriptionPlanKey = Extract<PlanKey, `sub_${string}`>
+export type OnetimePlanKey = Exclude<PlanKey, 'free' | `sub_${string}`>
 
 // ─── Storage backend ───────────────────────────────────────────────
 
@@ -116,6 +158,24 @@ export async function addCredits(userId: string, plan: PlanKey): Promise<UserCre
     total: current.total + planInfo.credits - current.used, // remaining + new
     used: 0,
     plan: plan === 'free' ? current.plan : plan,
+    lastRefill: new Date().toISOString().slice(0, 10),
+  }
+
+  if (redis) {
+    await redis.set(CREDIT_KEY(userId), updated)
+  } else {
+    memCreditStore.set(userId, updated)
+  }
+
+  return updated
+}
+
+export async function refillSubscriptionCredits(userId: string, plan: SubscriptionPlanKey): Promise<UserCredits> {
+  const planInfo = PLANS[plan]
+  const updated: UserCredits = {
+    total: planInfo.credits,
+    used: 0,
+    plan,
     lastRefill: new Date().toISOString().slice(0, 10),
   }
 

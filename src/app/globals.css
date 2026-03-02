@@ -2,6 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ─── Font Size Scaling ─── */
+html.fontsize-normal { font-size: 16px; }
+html.fontsize-large { font-size: 18px; }
+html.fontsize-xlarge { font-size: 20px; }
+
 /* ─── Theme CSS Variables ─── */
 :root {
   --bg-primary: #f5f0e8;

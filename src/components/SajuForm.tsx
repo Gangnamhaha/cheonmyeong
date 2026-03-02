@@ -144,7 +144,7 @@ function incrementAnalysisCount() {
 
 // ─── Component ───
 export default function SajuForm({ onSubmit, loading = false }: SajuFormProps) {
-  const { theme, toggleTheme } = useTheme()
+  const { theme, toggleTheme, cycleFontSize, fontSizeLabel } = useTheme()
   const [year, setYear] = useState(1990)
   const [month, setMonth] = useState(1)
   const [day, setDay] = useState(1)
@@ -231,6 +231,15 @@ export default function SajuForm({ onSubmit, loading = false }: SajuFormProps) {
         {/* Top bar: theme toggle + user menu */}
         <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
           <UserMenu />
+          <button
+            onClick={cycleFontSize}
+            className="p-2.5 rounded-full hover-scale theme-transition text-xs font-bold"
+            style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', color: 'var(--text-secondary)' }}
+            aria-label="글씨 크기 조절"
+            title="글씨 크기 조절"
+          >
+            {fontSizeLabel}
+          </button>
           <button
             onClick={toggleTheme}
             className="p-2.5 rounded-full hover-scale theme-transition"

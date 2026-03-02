@@ -5,14 +5,14 @@ interface SajuResultProps {
   result: SajuResult
 }
 
-const PILLAR_LABELS = ['년주 (年柱)', '월주 (月柱)', '일주 (日柱)', '시주 (時柱)']
+const PILLAR_LABELS = ['시주 (時柱)', '일주 (日柱)', '월주 (月柱)', '년주 (年柱)']
 
 export default function SajuResultCard({ result }: SajuResultProps) {
   const pillars = [
-    result.yearPillar,
-    result.monthPillar,
-    result.dayPillar,
     result.hourPillar,
+    result.dayPillar,
+    result.monthPillar,
+    result.yearPillar,
   ]
 
   return (

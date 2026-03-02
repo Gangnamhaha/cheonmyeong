@@ -20,14 +20,14 @@ function getSipsinColor(name: SipsinName | '본인'): string {
   return '#94a3b8'
 }
 
-const PILLAR_LABELS = ['년주', '월주', '일주', '시주']
+const PILLAR_LABELS = ['시주', '일주', '월주', '년주']
 
 export default function SipsinChart({ result }: SipsinChartProps) {
   const positions = [
-    { stem: result.yearStem, branch: result.yearBranch },
-    { stem: result.monthStem, branch: result.monthBranch },
-    { stem: result.dayStem, branch: result.dayBranch },
     { stem: result.hourStem, branch: result.hourBranch },
+    { stem: result.dayStem, branch: result.dayBranch },
+    { stem: result.monthStem, branch: result.monthBranch },
+    { stem: result.yearStem, branch: result.yearBranch },
   ]
 
   // Summary bar
