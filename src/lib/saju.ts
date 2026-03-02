@@ -1,4 +1,4 @@
-import { calculateSaju, lunarToSolar } from '@fullstackfamily/manseryeok'
+import { calculateSaju, solarToLunar } from '@fullstackfamily/manseryeok'
 
 export interface SajuPillar {
   heavenlyStem: string       // 천간 한글 (갑, 을, 병...)
@@ -55,6 +55,40 @@ function parsePillar(pillarHangul: string, pillarHanja: string): SajuPillar {
 }
 
 /**
+ * 음력 → 양력 안전 변환
+ * manseryeok의 lunarToSolar()에 연말 음력(예: 11월, 12월)이 다음 해 양력(1월)에 매핑될 때
+ * 검색 범위 버그가 있어, solarToLunar()를 역으로 사용하여 안정적으로 변환합니다.
+ */
+function lunarToSolarSafe(
+  lunarYear: number, lunarMonth: number, lunarDay: number, isLeapMonth: boolean,
+): { year: number; month: number; day: number } {
+  // 음력 날짜 근처의 양력 날짜를 탐색하여 역변환
+  const baseDate = new Date(lunarYear, lunarMonth - 1, lunarDay)
+  for (let offset = -15; offset <= 45; offset++) {
+    const testDate = new Date(baseDate.getTime() + offset * 86400000)
+    const sy = testDate.getFullYear()
+    const sm = testDate.getMonth() + 1
+    const sd = testDate.getDate()
+    try {
+      const r = solarToLunar(sy, sm, sd)
+      if (
+        r.lunar.year === lunarYear &&
+        r.lunar.month === lunarMonth &&
+        r.lunar.day === lunarDay &&
+        r.lunar.isLeapMonth === isLeapMonth
+      ) {
+        return { year: sy, month: sm, day: sd }
+      }
+    } catch {
+      // 유효하지 않은 양력 날짜는 건너뛰
+    }
+  }
+  throw new Error(
+    `유효하지 않은 음력 날짜입니다: ${lunarYear}년 ${lunarMonth}월 ${lunarDay}일${isLeapMonth ? ' (윤달)' : ''}`
+  )
+}
+
+/**
  * 양력 또는 음력 생년월일시로 사주팔자를 계산합니다.
  * @param year  연도 (1900~2050)
  * @param month 월 (1~12)
@@ -91,10 +125,12 @@ export function calculateSajuFromBirth(
   let solarMonth = month
   let solarDay = day
   if (calendarType === 'lunar') {
-    const converted = lunarToSolar(year, month, day, isLeapMonth)
-    solarYear = converted.solar.year
-    solarMonth = converted.solar.month
-    solarDay = converted.solar.day
+    // lunarToSolar()에 연말 음력→다음해 양력 매핑 버그가 있어
+    // solarToLunar() 역변환으로 안정적으로 처리
+    const converted = lunarToSolarSafe(year, month, day, isLeapMonth)
+    solarYear = converted.year
+    solarMonth = converted.month
+    solarDay = converted.day
   }
 
   // manseryeok calculateSaju 호출 (서울 경도 127도, 진태양시 보정 적용)
