@@ -4,6 +4,7 @@ import { useState, useCallback, useRef } from 'react'
 import SajuForm from '@/components/SajuForm'
 import SajuResultCard from '@/components/SajuResult'
 import OhengChart from '@/components/OhengChart'
+import { OHENG_COLORS } from '@/lib/oheng'
 import AiInterpretation from '@/components/AiInterpretation'
 import SipsinChart from '@/components/SipsinChart'
 import IlganStrengthBadge from '@/components/IlganStrengthBadge'
@@ -51,6 +52,7 @@ export default function Home() {
   const [appState, setAppState] = useState<AppState>('form')
   const [loading, setLoading] = useState(false)
   const [fullResult, setFullResult] = useState<FullSajuResult | null>(null)
+  const [formData, setFormData] = useState<FormData | null>(null)
   const [aiInterpretation, setAiInterpretation] = useState<string | null>(null)
   const [aiLoading, setAiLoading] = useState(false)
   const [aiError, setAiError] = useState<string | null>(null)
@@ -63,7 +65,9 @@ export default function Home() {
   const [chatHistory, setChatHistory] = useState<{ role: 'user' | 'assistant'; content: string }[]>([])
   const [shareToast, setShareToast] = useState(false)
   const [saveImageLoading, setSaveImageLoading] = useState(false)
+  const [saveDocxLoading, setSaveDocxLoading] = useState(false)
   const resultRef = useRef<HTMLDivElement>(null)
+  const downloadRef = useRef<HTMLDivElement>(null)
 
   // New state for tabs and view mode
   const [activeTab, setActiveTab] = useState<ResultTab>('사주')
@@ -165,6 +169,7 @@ export default function Home() {
     setCategoryCache({})
     setActiveTab('사주')
     setViewMode('detail')
+    setFormData(data)
 
     try {
       const result = calculateFullSaju(
@@ -229,24 +234,192 @@ export default function Home() {
   }
 
   async function handleSaveImage() {
-    if (!resultRef.current || saveImageLoading) return
+    if (!downloadRef.current || saveImageLoading) return
     setSaveImageLoading(true)
     try {
       const html2canvas = (await import('html2canvas')).default
-      const canvas = await html2canvas(resultRef.current, {
-        backgroundColor: theme === 'dark' ? '#0f172a' : '#f5f0e8',
+      const canvas = await html2canvas(downloadRef.current, {
+        backgroundColor: '#0f172a',
         scale: 2,
         useCORS: true,
         logging: false,
       })
       const link = document.createElement('a')
-      link.download = `천명_사주결과_${new Date().toISOString().slice(0, 10)}.png`
+      const name = formData?.name ? `_${formData.name}` : ''
+      link.download = `\uCC9C\uBA85_\uC0AC\uC8FC\uACB0\uACFC${name}_${new Date().toISOString().slice(0, 10)}.png`
       link.href = canvas.toDataURL('image/png')
       link.click()
     } catch {
-      alert('이미지 저장 중 오류가 발생했습니다.')
+      alert('\uC774\uBBF8\uC9C0 \uC800\uC7A5 \uC911 \uC624\uB958\uAC00 \uBC1C\uC0DD\uD588\uC2B5\uB2C8\uB2E4.')
     } finally {
       setSaveImageLoading(false)
+    }
+  }
+
+  async function handleSaveDocx() {
+    if (!fullResult || saveDocxLoading) return
+    setSaveDocxLoading(true)
+    try {
+      const docx = await import('docx')
+      const { saveAs } = await import('file-saver')
+      const { Document, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, AlignmentType, BorderStyle, HeadingLevel, Packer } = docx
+
+      const pillars = [
+        { label: '\uC2DC\uC8FC (\u6642\u67F1)', p: fullResult.saju.hourPillar },
+        { label: '\uC77C\uC8FC (\u65E5\u67F1)', p: fullResult.saju.dayPillar },
+        { label: '\uC6D4\uC8FC (\u6708\u67F1)', p: fullResult.saju.monthPillar },
+        { label: '\uB144\uC8FC (\u5E74\u67F1)', p: fullResult.saju.yearPillar },
+      ]
+
+      const noBorder = { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' }
+      const noBorders = { top: noBorder, bottom: noBorder, left: noBorder, right: noBorder }
+
+      const pillarTable = new Table({
+        width: { size: 100, type: WidthType.PERCENTAGE },
+        rows: [
+          new TableRow({
+            children: pillars.map(({ label }) =>
+              new TableCell({
+                borders: noBorders,
+                width: { size: 25, type: WidthType.PERCENTAGE },
+                children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: label, size: 18, color: '888888' })] })],
+              })
+            ),
+          }),
+          new TableRow({
+            children: pillars.map(({ p }) =>
+              new TableCell({
+                borders: noBorders,
+                children: [new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 80 }, children: [
+                  new TextRun({ text: `${p.heavenlyStemHanja ?? ''} (${p.heavenlyStem})`, size: 28, bold: true }),
+                ] })],
+              })
+            ),
+          }),
+          new TableRow({
+            children: pillars.map(({ p }) =>
+              new TableCell({
+                borders: noBorders,
+                children: [new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 40 }, children: [
+                  new TextRun({ text: `${p.earthlyBranchHanja ?? ''} (${p.earthlyBranch})`, size: 28, bold: true }),
+                ] })],
+              })
+            ),
+          }),
+          new TableRow({
+            children: pillars.map(({ p }) =>
+              new TableCell({
+                borders: noBorders,
+                children: [new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 40 }, children: [
+                  new TextRun({ text: p.element, size: 20, color: '666666' }),
+                ] })],
+              })
+            ),
+          }),
+        ],
+      })
+
+      const ohengLine = ['\uBAA9', '\uD654', '\uD1A0', '\uAE08', '\uC218']
+        .map(e => `${e}: ${fullResult.oheng.counts[e as keyof typeof fullResult.oheng.counts]}`).join('  |  ')
+
+      const sections = [
+        new Paragraph({ heading: HeadingLevel.TITLE, alignment: AlignmentType.CENTER, children: [
+          new TextRun({ text: '\uCC9C\uBA85 (\u5929\u547D) \uC0AC\uC8FC\uBD84\uC11D', bold: true, size: 36 }),
+        ] }),
+        new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 200 }, children: [
+          new TextRun({
+            text: [
+              formData?.name || '',
+              formData?.gender === 'male' ? '\uB0A8' : '\uC5EC',
+              formData ? `${formData.year}\uB144 ${formData.month}\uC6D4 ${formData.day}\uC77C ${formData.hour}\uC2DC` : '',
+              formData?.calendarType === 'lunar' ? '(\uC74C\uB825)' : '',
+            ].filter(Boolean).join(' \u00B7 '),
+            size: 22, color: '666666',
+          }),
+        ] }),
+        new Paragraph({ spacing: { before: 100, after: 100 }, children: [] }),
+
+        // \uC0AC\uC8FC\uD314\uC790
+        new Paragraph({ heading: HeadingLevel.HEADING_1, children: [
+          new TextRun({ text: '\uC0AC\uC8FC\uD314\uC790 (\u56DB\u67F1\u516B\u5B57)', bold: true }),
+        ] }),
+        pillarTable,
+        new Paragraph({ spacing: { before: 100, after: 100 }, children: [] }),
+
+        // \uC624\uD589
+        new Paragraph({ heading: HeadingLevel.HEADING_1, children: [
+          new TextRun({ text: '\uC624\uD589 \uBD84\uD3EC (\u4E94\u884C)', bold: true }),
+        ] }),
+        new Paragraph({ spacing: { after: 100 }, children: [
+          new TextRun({ text: ohengLine, size: 22 }),
+        ] }),
+        new Paragraph({ children: [
+          new TextRun({ text: `\uADE0\uD615 \uC0C1\uD0DC: ${fullResult.oheng.balance}`, size: 22, color: '444444' }),
+        ] }),
+        new Paragraph({ spacing: { before: 100, after: 100 }, children: [] }),
+
+        // \uC77C\uAC04 \uAC15\uC57D + \uC6A9\uC2E0
+        new Paragraph({ heading: HeadingLevel.HEADING_1, children: [
+          new TextRun({ text: '\uC77C\uAC04 \uAC15\uC57D \u00B7 \uC6A9\uC2E0', bold: true }),
+        ] }),
+        new Paragraph({ spacing: { after: 60 }, children: [
+          new TextRun({ text: '\uC77C\uAC04 \uAC15\uC57D: ', size: 22 }),
+          new TextRun({ text: fullResult.ilganStrength.strength, size: 24, bold: true }),
+        ] }),
+        new Paragraph({ spacing: { after: 60 }, children: [
+          new TextRun({ text: '\uC6A9\uC2E0 (\u7528\u795E): ', size: 22 }),
+          new TextRun({ text: fullResult.yongsin.yongsin, size: 24, bold: true }),
+        ] }),
+        new Paragraph({ children: [
+          new TextRun({ text: fullResult.yongsin.reason, size: 20, color: '555555' }),
+        ] }),
+        new Paragraph({ spacing: { before: 100, after: 100 }, children: [] }),
+
+        // \uC62C\uD574 \uC6B4\uC138
+        new Paragraph({ heading: HeadingLevel.HEADING_1, children: [
+          new TextRun({ text: `${new Date().getFullYear()}\uB144 \uC6B4\uC138`, bold: true }),
+        ] }),
+        new Paragraph({ spacing: { after: 60 }, children: [
+          new TextRun({ text: `\uD310\uC815: ${fullResult.yearlyFortune.rating}`, size: 22, bold: true }),
+          new TextRun({ text: `  (${fullResult.yearlyFortune.pillar})`, size: 20, color: '888888' }),
+        ] }),
+        new Paragraph({ children: [
+          new TextRun({ text: fullResult.yearlyFortune.description, size: 20, color: '444444' }),
+        ] }),
+      ]
+
+      // AI \uD574\uC11D
+      if (aiInterpretation) {
+        sections.push(
+          new Paragraph({ spacing: { before: 200, after: 100 }, children: [] }),
+          new Paragraph({ heading: HeadingLevel.HEADING_1, children: [
+            new TextRun({ text: 'AI \uC885\uD569 \uD574\uC11D', bold: true }),
+          ] }),
+          new Paragraph({ children: [
+            new TextRun({ text: aiInterpretation, size: 20, color: '333333' }),
+          ] }),
+        )
+      }
+
+      // \uD478\uD130
+      sections.push(
+        new Paragraph({ spacing: { before: 300 }, children: [] }),
+        new Paragraph({ alignment: AlignmentType.CENTER, children: [
+          new TextRun({ text: `${new Date().toISOString().slice(0, 10)} | cheonmyeong.vercel.app`, size: 16, color: 'AAAAAA' }),
+        ] }),
+      )
+
+      const doc = new Document({
+        sections: [{ children: sections }],
+      })
+
+      const blob = await Packer.toBlob(doc)
+      const name = formData?.name ? `_${formData.name}` : ''
+      saveAs(blob, `\uCC9C\uBA85_\uC0AC\uC8FC\uACB0\uACFC${name}_${new Date().toISOString().slice(0, 10)}.docx`)
+    } catch {
+      alert('\uC6CC\uB4DC \uBB38\uC11C \uC800\uC7A5 \uC911 \uC624\uB958\uAC00 \uBC1C\uC0DD\uD588\uC2B5\uB2C8\uB2E4.')
+    } finally {
+      setSaveDocxLoading(false)
     }
   }
 
@@ -254,6 +427,7 @@ export default function Home() {
     abortRef.current?.abort()
     setAppState('form')
     setFullResult(null)
+    setFormData(null)
     setAiInterpretation(null)
     setAiError(null)
     setCalcError(null)
@@ -336,6 +510,7 @@ export default function Home() {
   }
 
   return (
+    <>
     <main className="min-h-screen" style={{ background: 'var(--bg-primary)' }}>
       <div className="max-w-md mx-auto">
         {appState === 'form' && (
@@ -530,40 +705,52 @@ export default function Home() {
               💑 궁합 보기
             </a>
 
-            {/* 공유 + 다시보기 버튼 */}
-            <div className="flex gap-3 mt-4">
+            {/* 다운로드 + 공유 + 다시보기 버튼 */}
+            <div className="grid grid-cols-2 gap-3 mt-4">
               <button
                 onClick={handleSaveImage}
                 disabled={saveImageLoading}
-                className="flex-1 font-medium py-3 px-6 rounded-lg transition-colors text-sm hover-lift disabled:cursor-not-allowed"
+                className="font-medium py-3 px-4 rounded-lg transition-colors text-sm hover-lift disabled:cursor-not-allowed"
                 style={{
                   background: 'var(--bg-card)',
                   color: 'var(--text-secondary)',
                   border: '1px solid var(--border-color)',
                 }}
               >
-                {saveImageLoading ? '저장 중...' : '이미지 저장'}
+                {saveImageLoading ? '저장 중...' : '🖼️ 이미지 저장'}
+              </button>
+              <button
+                onClick={handleSaveDocx}
+                disabled={saveDocxLoading}
+                className="font-medium py-3 px-4 rounded-lg transition-colors text-sm hover-lift disabled:cursor-not-allowed"
+                style={{
+                  background: 'var(--bg-card)',
+                  color: 'var(--text-secondary)',
+                  border: '1px solid var(--border-color)',
+                }}
+              >
+                {saveDocxLoading ? '저장 중...' : '📄 워드 저장'}
               </button>
               <button
                 onClick={handleShare}
-                className="flex-1 font-medium py-3 px-6 rounded-lg transition-colors text-sm hover-lift"
+                className="font-medium py-3 px-4 rounded-lg transition-colors text-sm hover-lift"
                 style={{
                   background: 'var(--bg-card)',
                   color: 'var(--text-secondary)',
                   border: '1px solid var(--border-color)',
                 }}
               >
-                링크 복사
+                🔗 링크 복사
               </button>
               <button
                 onClick={handleReset}
-                className="flex-1 font-medium py-3 px-6 rounded-lg transition-colors text-sm hover-lift"
+                className="font-medium py-3 px-4 rounded-lg transition-colors text-sm hover-lift"
                 style={{
                   background: 'var(--bg-secondary)',
                   color: 'var(--text-secondary)',
                 }}
               >
-                다시 보기
+                🔄 다시 보기
               </button>
             </div>
 
@@ -580,5 +767,143 @@ export default function Home() {
         )}
       </div>
     </main>
+
+    {/* === Hidden Download Card (off-screen, captured by html2canvas) === */}
+    {fullResult && (
+      <div ref={downloadRef} style={{
+        position: 'fixed', left: '-10000px', top: 0, width: '420px',
+        background: '#0f172a', padding: '32px 24px',
+        fontFamily: 'system-ui, -apple-system, sans-serif',
+      }}>
+        {/* Header */}
+        <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+          <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#fbbf24', letterSpacing: '2px' }}>
+            \uCC9C\uBA85
+          </div>
+          <div style={{ fontSize: '12px', color: '#64748b', letterSpacing: '4px', marginTop: '2px' }}>
+            \u5929\u547D \uC0AC\uC8FC\uBD84\uC11D
+          </div>
+          {formData && (
+            <div style={{ marginTop: '12px', color: '#94a3b8', fontSize: '13px' }}>
+              {formData.name && <span style={{ color: '#e2e8f0', fontWeight: 'bold' }}>{formData.name}</span>}
+              {formData.name && ' \u00B7 '}
+              {formData.gender === 'male' ? '\uB0A8' : '\uC5EC'} \u00B7{' '}
+              {formData.year}\uB144 {formData.month}\uC6D4 {formData.day}\uC77C {formData.hour}\uC2DC
+              {formData.calendarType === 'lunar' && ' (\uC74C\uB825)'}
+            </div>
+          )}
+        </div>
+
+        {/* \uC0AC\uC8FC 4\uAE30\uB465 */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px', marginBottom: '20px' }}>
+          {[
+            { p: fullResult.saju.hourPillar, l: '\uC2DC\uC8FC' },
+            { p: fullResult.saju.dayPillar, l: '\uC77C\uC8FC' },
+            { p: fullResult.saju.monthPillar, l: '\uC6D4\uC8FC' },
+            { p: fullResult.saju.yearPillar, l: '\uB144\uC8FC' },
+          ].map(({ p, l }, i) => {
+            const c = OHENG_COLORS[p.element] ?? '#94a3b8'
+            return (
+              <div key={i} style={{
+                background: c + '22', border: `1px solid ${c}55`,
+                borderRadius: '12px', padding: '12px 8px', textAlign: 'center',
+              }}>
+                <div style={{ fontSize: '10px', color: '#94a3b8', marginBottom: '4px' }}>{l}</div>
+                <div style={{ fontSize: '24px', fontWeight: 'bold', color: c }}>{p.heavenlyStemHanja}</div>
+                <div style={{ fontSize: '11px', color: '#cbd5e1' }}>{p.heavenlyStem}</div>
+                <div style={{ width: '100%', height: '1px', background: '#334155', margin: '6px 0' }} />
+                <div style={{ fontSize: '24px', fontWeight: 'bold', color: c }}>{p.earthlyBranchHanja}</div>
+                <div style={{ fontSize: '11px', color: '#cbd5e1' }}>{p.earthlyBranch}</div>
+                <div style={{
+                  fontSize: '10px', marginTop: '6px',
+                  padding: '2px 8px', borderRadius: '9999px', display: 'inline-block',
+                  background: c + '33', color: p.element === '\uAE08' ? '#1e293b' : c,
+                  border: `1px solid ${c}55`,
+                }}>{p.element}</div>
+              </div>
+            )
+          })}
+        </div>
+
+        {/* \uC624\uD589 \uBD84\uD3EC */}
+        <div style={{ background: '#1e293b', borderRadius: '12px', padding: '16px', marginBottom: '12px', border: '1px solid #334155' }}>
+          <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#fbbf24', marginBottom: '10px' }}>
+            \uC624\uD589 \uBD84\uD3EC
+          </div>
+          <div style={{ display: 'flex', gap: '16px', justifyContent: 'center' }}>
+            {(['\uBAA9', '\uD654', '\uD1A0', '\uAE08', '\uC218'] as const).map(e => (
+              <div key={e} style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '20px', fontWeight: 'bold', color: OHENG_COLORS[e] }}>
+                  {fullResult.oheng.counts[e]}
+                </div>
+                <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '2px' }}>{e}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* \uC77C\uAC04 \uAC15\uC57D + \uC6A9\uC2E0 */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '12px' }}>
+          <div style={{ background: '#1e293b', borderRadius: '12px', padding: '14px', border: '1px solid #334155', textAlign: 'center' }}>
+            <div style={{ fontSize: '11px', color: '#94a3b8' }}>\uC77C\uAC04 \uAC15\uC57D</div>
+            <div style={{
+              fontSize: '20px', fontWeight: 'bold', marginTop: '4px',
+              color: fullResult.ilganStrength.strength === '\uC2E0\uAC15' ? '#3b82f6' : '#f97316',
+            }}>{fullResult.ilganStrength.strength}</div>
+          </div>
+          <div style={{ background: '#1e293b', borderRadius: '12px', padding: '14px', border: '1px solid #334155', textAlign: 'center' }}>
+            <div style={{ fontSize: '11px', color: '#94a3b8' }}>\uC6A9\uC2E0 (\u7528\u795E)</div>
+            <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#fbbf24', marginTop: '4px' }}>
+              {fullResult.yongsin.yongsin}
+            </div>
+          </div>
+        </div>
+
+        {/* \uC62C\uD574 \uC6B4\uC138 */}
+        <div style={{ background: '#1e293b', borderRadius: '12px', padding: '14px', border: '1px solid #334155', marginBottom: '16px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '12px', color: '#94a3b8' }}>
+              {new Date().getFullYear()}\uB144 \uC6B4\uC138
+            </span>
+            <span style={{
+              fontSize: '16px', fontWeight: 'bold',
+              color: fullResult.yearlyFortune.rating === '\uAE38' ? '#4ade80'
+                : fullResult.yearlyFortune.rating === '\uD749' ? '#f87171' : '#fbbf24',
+            }}>
+              {fullResult.yearlyFortune.rating === '\uAE38' ? '\u25CF ' : fullResult.yearlyFortune.rating === '\uD749' ? '\u25CF ' : '\u25CF '}
+              {fullResult.yearlyFortune.rating}
+            </span>
+          </div>
+          <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '6px', lineHeight: '1.5' }}>
+            {fullResult.yearlyFortune.description.slice(0, 100)}
+            {fullResult.yearlyFortune.description.length > 100 ? '...' : ''}
+          </div>
+        </div>
+
+        {/* AI \uC694\uC57D */}
+        {aiInterpretation && (
+          <div style={{ background: '#1e293b', borderRadius: '12px', padding: '16px', border: '1px solid #334155', marginBottom: '16px' }}>
+            <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#fbbf24', marginBottom: '8px' }}>
+              AI \uC885\uD569 \uD574\uC11D
+            </div>
+            <div style={{ fontSize: '12px', color: '#cbd5e1', lineHeight: '1.7', whiteSpace: 'pre-line' }}>
+              {aiInterpretation.slice(0, 300)}{aiInterpretation.length > 300 ? '...' : ''}
+            </div>
+          </div>
+        )}
+
+        {/* Footer */}
+        <div style={{ borderTop: '1px solid #334155', paddingTop: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span style={{ fontSize: '10px', color: '#475569' }}>
+            {new Date().toISOString().slice(0, 10)}
+          </span>
+          <span style={{ fontSize: '10px', color: '#475569' }}>
+            cheonmyeong.vercel.app
+          </span>
+        </div>
+      </div>
+    )}
+
+    </>
   )
 }
