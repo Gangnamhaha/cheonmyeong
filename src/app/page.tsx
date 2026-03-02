@@ -323,24 +323,21 @@ export default function Home() {
   }
 
   return (
-    <main className="min-h-screen py-8 px-4" style={{ background: 'var(--bg-primary)' }}>
+    <main className="min-h-screen" style={{ background: 'var(--bg-primary)' }}>
       <div className="max-w-md mx-auto">
         {appState === 'form' && (
           <>
             <SajuForm onSubmit={handleFormSubmit} loading={loading} />
             {calcError && (
-              <div className="mt-4 bg-red-900/30 border border-red-700 rounded-lg p-4 text-red-300 text-sm text-center">
+              <div className="mx-4 mb-8 bg-red-900/30 border border-red-700 rounded-lg p-4 text-red-300 text-sm text-center">
                 {calcError}
               </div>
             )}
-            <a href="/gunghap" className="block text-center text-sm mt-4 transition-colors hover-scale" style={{ color: 'var(--text-muted)' }}>
-              💑 궁합 비교하러 가기
-            </a>
           </>
         )}
 
         {appState === 'result' && fullResult && (
-          <div className="animate-fadeIn" ref={resultRef}>
+          <div className="animate-fadeIn py-8 px-4" ref={resultRef}>
             {/* 헤더 */}
             <div className="text-center mb-4">
               <div className="flex justify-between items-center mb-2">
@@ -353,8 +350,8 @@ export default function Home() {
                   {theme === 'dark' ? '☀️' : '🌙'}
                 </button>
                 <div>
-                  <h1 className="text-3xl font-bold" style={{ color: 'var(--text-accent)' }}>천명</h1>
-                  <p className="text-sm tracking-widest" style={{ color: 'var(--text-muted)' }}>天命</p>
+                  <h1 className="font-serif-kr text-3xl font-bold" style={{ color: 'var(--text-accent)' }}>천명</h1>
+                  <p className="font-serif-kr text-sm tracking-widest" style={{ color: 'var(--text-muted)' }}>天命</p>
                 </div>
                 {/* View Mode Toggle */}
                 <button
