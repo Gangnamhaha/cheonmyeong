@@ -10,6 +10,7 @@ interface SajuFormData {
   minute: number
   calendarType: 'solar' | 'lunar'
   isLeapMonth: boolean
+  gender: 'male' | 'female'
 }
 
 interface SajuFormProps {
@@ -35,13 +36,14 @@ export default function SajuForm({ onSubmit, loading = false }: SajuFormProps) {
   const [minute, setMinute] = useState(0)
   const [calendarType, setCalendarType] = useState<'solar' | 'lunar'>('solar')
   const [isLeapMonth, setIsLeapMonth] = useState(false)
+  const [gender, setGender] = useState<'male' | 'female'>('male')
 
   const daysInMonth = getDaysInMonth(year, month)
   const days = Array.from({ length: daysInMonth }, (_, i) => i + 1)
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    onSubmit({ year, month, day, hour, minute, calendarType, isLeapMonth })
+    onSubmit({ year, month, day, hour, minute, calendarType, isLeapMonth, gender })
   }
 
   const selectClass =
@@ -102,6 +104,32 @@ export default function SajuForm({ onSubmit, loading = false }: SajuFormProps) {
               <span className="text-slate-400 text-sm">윤달 (閏月)</span>
             </label>
           )}
+
+          {/* 성별 선택 */}
+          <div className="flex rounded-lg overflow-hidden border border-slate-600 mb-4">
+            <button
+              type="button"
+              onClick={() => setGender('male')}
+              className={`flex-1 py-2 text-sm font-medium transition-colors ${
+                gender === 'male'
+                  ? 'bg-amber-500 text-slate-900'
+                  : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
+              }`}
+            >
+              남성 (男)
+            </button>
+            <button
+              type="button"
+              onClick={() => setGender('female')}
+              className={`flex-1 py-2 text-sm font-medium transition-colors ${
+                gender === 'female'
+                  ? 'bg-amber-500 text-slate-900'
+                  : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
+              }`}
+            >
+              여성 (女)
+            </button>
+          </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* 연도 */}

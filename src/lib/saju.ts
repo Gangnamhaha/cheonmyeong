@@ -125,3 +125,48 @@ export function calculateSajuFromBirth(
 
   return { yearPillar, monthPillar, dayPillar, hourPillar, rawText }
 }
+
+import { analyzeOheng, OhengResult } from './oheng'
+import { analyzeSipsin, SipsinResult } from './sipsin'
+import { analyzeIlganStrength, IlganStrength } from './ilgan-strength'
+import { determineYongsin, YongsinResult } from './yongsin'
+import { calculateDaeun, DaeunResult } from './daeun'
+import { calculateYearlyFortune, calculateMonthlyFortune, FortuneResult } from './fortune'
+
+/** 전체 사주 분석 결과 */
+export interface FullSajuResult {
+  saju: SajuResult
+  oheng: OhengResult
+  sipsin: SipsinResult
+  ilganStrength: IlganStrength
+  yongsin: YongsinResult
+  daeun: DaeunResult
+  yearlyFortune: FortuneResult
+  monthlyFortune: FortuneResult
+}
+
+/**
+ * 모든 분석을 한 번에 수행하여 전체 사주 결과를 반환합니다.
+ */
+export function calculateFullSaju(
+  year: number,
+  month: number,
+  day: number,
+  hour: number,
+  minute: number = 0,
+  calendarType: 'solar' | 'lunar' = 'solar',
+  isLeapMonth: boolean = false,
+  gender: 'male' | 'female' = 'male',
+): FullSajuResult {
+  const saju = calculateSajuFromBirth(year, month, day, hour, minute, calendarType, isLeapMonth)
+  const oheng = analyzeOheng(saju)
+  const sipsin = analyzeSipsin(saju)
+  const ilganStrength = analyzeIlganStrength(saju)
+  const yongsin = determineYongsin(saju, oheng, ilganStrength)
+  const daeun = calculateDaeun(saju, gender, year)
+  const now = new Date()
+  const yearlyFortune = calculateYearlyFortune(saju, now.getFullYear())
+  const monthlyFortune = calculateMonthlyFortune(saju, now.getFullYear(), now.getMonth() + 1)
+
+  return { saju, oheng, sipsin, ilganStrength, yongsin, daeun, yearlyFortune, monthlyFortune }
+}
