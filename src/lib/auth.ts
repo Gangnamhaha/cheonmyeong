@@ -1,6 +1,7 @@
 import { type NextAuthOptions } from 'next-auth'
 import GoogleProvider from 'next-auth/providers/google'
 import CredentialsProvider from 'next-auth/providers/credentials'
+import { registerUser } from '@/lib/admin'
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -69,6 +70,13 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id
+
+        if (user.email) {
+          try {
+            await registerUser(user.id, user.email, user.name ?? undefined)
+          } catch {
+          }
+        }
       }
       return token
     },
