@@ -3,6 +3,7 @@ import './globals.css'
 import ErrorBoundary from '@/components/ErrorBoundary'
 import ThemeProvider from '@/components/ThemeProvider'
 import AuthProvider from '@/components/AuthProvider'
+import Footer from '@/components/Footer'
 
 export const metadata: Metadata = {
   title: '천명(天命) - AI 사주팔자 풀이',
@@ -39,10 +40,11 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className="antialiased min-h-screen" style={{ background: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
+      <body className="antialiased min-h-screen flex flex-col" style={{ background: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
         <AuthProvider>
           <ThemeProvider>
             <ErrorBoundary>{children}</ErrorBoundary>
+            <Footer />
           </ThemeProvider>
         </AuthProvider>
       </body>

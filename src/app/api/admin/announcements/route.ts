@@ -62,3 +62,28 @@ export async function DELETE(req: NextRequest) {
 
   return NextResponse.json({ success: true, announcements: updated })
 }
+
+export async function PATCH(req: NextRequest) {
+  if (!(await checkAdminAuth())) {
+    return NextResponse.json({ error: '관리자 권한이 필요합니다.' }, { status: 403 })
+  }
+
+  const body = await req.json()
+  const id = String(body?.id ?? '').trim()
+
+  if (!id) {
+    return NextResponse.json({ error: '토글할 공지 id가 필요합니다.' }, { status: 400 })
+  }
+
+  const announcements = await getAnnouncements()
+  const idx = announcements.findIndex((item) => item.id === id)
+
+  if (idx === -1) {
+    return NextResponse.json({ error: '해당 공지를 찾을 수 없습니다.' }, { status: 404 })
+  }
+
+  announcements[idx] = { ...announcements[idx], active: !announcements[idx].active }
+  await saveAnnouncements(announcements)
+
+  return NextResponse.json({ success: true, announcements })
+}

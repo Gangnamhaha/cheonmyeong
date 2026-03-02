@@ -454,6 +454,30 @@ export default function AdminDashboardClient() {
     }
   }
 
+  async function handleToggleAnnouncement(id: string) {
+    setAnnouncementsError(null)
+    setAnnouncementsLoading(true)
+
+    try {
+      const res = await fetch('/api/admin/announcements', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setAnnouncementsError(data.error ?? '공지 상태 변경에 실패했습니다.')
+        return
+      }
+
+      setAnnouncements(data.announcements ?? [])
+    } catch {
+      setAnnouncementsError('공지 상태 변경에 실패했습니다.')
+    } finally {
+      setAnnouncementsLoading(false)
+    }
+  }
+
   // 로딩 중
   if (authChecking) {
     return (
@@ -864,8 +888,14 @@ export default function AdminDashboardClient() {
                       </span>
                     </div>
                     <p className="mt-2 whitespace-pre-wrap text-sm text-slate-300">{item.content}</p>
-                    <div className="mt-3 flex items-center justify-between text-xs text-slate-500">
-                      <span>{new Date(item.createdAt).toLocaleString('ko-KR')}</span>
+                    <div className="mt-3 flex items-center justify-end gap-2 text-xs">
+                      <span className="mr-auto text-slate-500">{new Date(item.createdAt).toLocaleString('ko-KR')}</span>
+                      <button
+                        onClick={() => handleToggleAnnouncement(item.id)}
+                        className={`rounded border px-2 py-1 ${item.active ? 'border-slate-500 text-slate-300 hover:bg-slate-700' : 'border-amber-500/40 text-amber-300 hover:bg-amber-900/30'}`}
+                      >
+                        {item.active ? '비활성화' : '활성화'}
+                      </button>
                       <button
                         onClick={() => handleDeleteAnnouncement(item.id)}
                         className="rounded border border-red-500/40 px-2 py-1 text-red-300 hover:bg-red-900/30"
