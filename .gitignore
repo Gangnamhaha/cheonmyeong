@@ -56,3 +56,4 @@ run_vitest.bat
 setup.bat
 test-output.txt
 .vercel
+.env*.local

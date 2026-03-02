@@ -68,8 +68,8 @@ export type PlanKey = keyof typeof PLANS
 
 // ─── Storage backend ───────────────────────────────────────────────
 
-const redisUrl = process.env.REDIS_URL || process.env.KV_REST_API_URL
-const redisToken = process.env.REDIS_TOKEN || process.env.KV_REST_API_TOKEN
+const redisUrl = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL
+const redisToken = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN
 
 const redis = redisUrl && redisToken
   ? new Redis({ url: redisUrl, token: redisToken })
