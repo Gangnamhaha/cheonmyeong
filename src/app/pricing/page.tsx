@@ -8,35 +8,38 @@ import { PLANS, type PlanKey, type SubscriptionPlanKey, type OnetimePlanKey } fr
 import { useTheme } from '@/components/ThemeProvider'
 import type { UserSubscription } from '@/lib/subscription'
 
+// PortOne V2 Browser SDK (loaded via CDN)
 declare global {
   interface Window {
-    IMP?: {
-      init: (storeId: string) => void
-      request_pay: (
-        params: Record<string, unknown>,
-        callback: (rsp: {
-          success: boolean
-          imp_uid?: string
-          merchant_uid?: string
-          error_msg?: string
-        }) => void
-      ) => void
+    PortOne?: {
+      requestPayment: (params: {
+        storeId: string
+        channelKey: string
+        paymentId: string
+        orderName: string
+        totalAmount: number
+        currency: string
+        payMethod: string
+        redirectUrl?: string
+        customer?: {
+          email?: string
+          fullName?: string
+        }
+        customData?: string
+      }) => Promise<{
+        code?: string
+        message?: string
+        paymentId?: string
+        transactionType?: string
+      }>
     }
   }
 }
 
 type PlanMode = 'onetime' | 'subscription'
-type PaymentMethod = 'stripe' | 'kakaopay' | 'naverpay' | 'tosspay'
 
 const ONETIME_PLANS: OnetimePlanKey[] = ['starter', 'pro', 'unlimited']
 const SUBSCRIPTION_PLANS: SubscriptionPlanKey[] = ['sub_basic', 'sub_pro', 'sub_premium']
-
-const PAYMENT_METHODS: { key: PaymentMethod; label: string; icon: string; description: string }[] = [
-  { key: 'stripe', label: '카드 결제', icon: '💳', description: 'Visa, Mastercard 등 해외카드' },
-  { key: 'kakaopay', label: '카카오페이', icon: '🟨', description: '카카오페이로 간편 결제' },
-  { key: 'naverpay', label: '네이버페이', icon: '🟩', description: '네이버페이로 간편 결제' },
-  { key: 'tosspay', label: '토스페이', icon: '🔵', description: '토스페이로 간편 결제' },
-]
 
 export default function PricingPage() {
   return (
@@ -56,24 +59,23 @@ function PricingContent() {
   const [toast, setToast] = useState<string | null>(null)
   const [credits, setCredits] = useState<{ remaining: number; plan: string } | null>(null)
   const [subscription, setSubscription] = useState<UserSubscription | null>(null)
-  const [selectedPlan, setSelectedPlan] = useState<PlanKey | null>(null)
-  const [showPaymentModal, setShowPaymentModal] = useState(false)
   const [cancelingSubscription, setCancelingSubscription] = useState(false)
 
   const success = searchParams.get('success')
   const cancelled = searchParams.get('cancelled')
   const planParam = searchParams.get('plan')
+  const portonePaymentId = searchParams.get('paymentId')
 
   const showToast = useCallback((msg: string, duration = 3000) => {
     setToast(msg)
     setTimeout(() => setToast(null), duration)
   }, [])
 
-  // Load PortOne SDK
+  // Load PortOne V2 SDK
   useEffect(() => {
-    if (document.querySelector('script[src*="iamport"]')) return
+    if (document.querySelector('script[src*="portone"]')) return
     const script = document.createElement('script')
-    script.src = 'https://cdn.iamport.kr/v1/iamport.js'
+    script.src = 'https://cdn.portone.io/v2/browser-sdk.js'
     script.async = true
     document.head.appendChild(script)
     return () => {
@@ -81,7 +83,7 @@ function PricingContent() {
     }
   }, [])
 
-  // Handle URL params (success/cancelled)
+  // Handle URL params (Stripe success/cancelled)
   useEffect(() => {
     if (success && planParam) {
       const plan = PLANS[planParam as PlanKey]
@@ -89,6 +91,13 @@ function PricingContent() {
     }
     if (cancelled) showToast('결제가 취소되었습니다.')
   }, [success, cancelled, planParam, showToast])
+
+  // Handle PortOne V2 mobile redirect (paymentId in query)
+  useEffect(() => {
+    if (portonePaymentId) {
+      verifyPayment(portonePaymentId)
+    }
+  }, [portonePaymentId]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Fetch credits and subscription
   useEffect(() => {
@@ -113,52 +122,43 @@ function PricingContent() {
     } catch { /* ignore */ }
   }
 
-  // Open payment method modal
-  function handlePlanSelect(planKey: PlanKey) {
+  // Verify payment (called after V2 SDK success or mobile redirect)
+  async function verifyPayment(paymentId: string) {
+    try {
+      const verifyRes = await fetch('/api/portone/webhook', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ paymentId }),
+      })
+      if (verifyRes.ok) {
+        showToast('결제가 완료되었습니다! 🎉', 5000)
+        fetchCredits()
+        fetchSubscription()
+        // Clean up URL params
+        window.history.replaceState({}, '', '/pricing')
+      } else {
+        showToast('결제 검증에 실패했습니다. 고객센터에 문의해 주세요.')
+      }
+    } catch {
+      showToast('결제 검증 중 오류가 발생했습니다.')
+    }
+  }
+
+  // PortOne V2 payment flow
+  async function handlePayment(planKey: PlanKey) {
     if (!session) {
       window.location.href = '/login'
       return
     }
-    setSelectedPlan(planKey)
-    setShowPaymentModal(true)
-  }
 
-  // Stripe checkout
-  async function handleStripePayment(planKey: PlanKey) {
-    setShowPaymentModal(false)
-    setLoadingPlan(planKey)
-    const plan = PLANS[planKey]
-    const type: PlanMode = plan.type === 'subscription' ? 'subscription' : 'onetime'
-
-    try {
-      const res = await fetch('/api/checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ plan: planKey, type }),
-      })
-      const data = await res.json()
-      if (data.url) {
-        window.location.href = data.url
-      } else {
-        showToast(data.error || '결제 오류가 발생했습니다.')
-      }
-    } catch {
-      showToast('네트워크 오류가 발생했습니다.')
-    } finally {
-      setLoadingPlan(null)
-    }
-  }
-
-  // PortOne (Korean) payment
-  async function handlePortonePayment(planKey: PlanKey, paymentMethod: PaymentMethod) {
-    setShowPaymentModal(false)
     setLoadingPlan(planKey)
 
     try {
+      // 1. Get payment params from server
       const res = await fetch('/api/portone', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ plan: planKey, paymentMethod }),
+        body: JSON.stringify({ plan: planKey }),
       })
 
       if (!res.ok) {
@@ -170,68 +170,47 @@ function PricingContent() {
 
       const data = await res.json()
 
-      if (!window.IMP) {
+      // 2. Check V2 SDK loaded
+      if (!window.PortOne) {
         showToast('결제 모듈을 로딩 중입니다. 잠시 후 다시 시도해 주세요.')
         setLoadingPlan(null)
         return
       }
 
-      window.IMP.init(data.storeId)
-      window.IMP.request_pay(
-        {
-          channelKey: data.channelKey,
-          merchant_uid: data.merchantUid,
-          name: data.name,
-          amount: data.amount,
-          buyer_email: session?.user?.email || '',
-          buyer_name: session?.user?.name || '',
-          custom_data: JSON.stringify({ userId: data.userId, planKey: data.planKey }),
+      // 3. Call V2 SDK (Promise-based, not callback)
+      const response = await window.PortOne.requestPayment({
+        storeId: data.storeId,
+        channelKey: data.channelKey,
+        paymentId: data.paymentId,
+        orderName: data.orderName,
+        totalAmount: data.totalAmount,
+        currency: data.currency,
+        payMethod: 'CARD',
+        redirectUrl: `${window.location.origin}/pricing`,
+        customer: {
+          email: session.user?.email || undefined,
+          fullName: session.user?.name || undefined,
         },
-        async (rsp) => {
-          if (rsp.success && rsp.imp_uid) {
-            try {
-              const verifyRes = await fetch('/api/portone/webhook', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ imp_uid: rsp.imp_uid, merchant_uid: rsp.merchant_uid }),
-              })
-              if (verifyRes.ok) {
-                showToast('결제가 완료되었습니다! 🎉', 5000)
-                fetchCredits()
-                fetchSubscription()
-              } else {
-                showToast('결제 검증에 실패했습니다. 고객센터에 문의해 주세요.')
-              }
-            } catch {
-              showToast('결제 검증 중 오류가 발생했습니다.')
-            }
-          } else {
-            showToast(rsp.error_msg || '결제가 취소되었습니다.')
-          }
-          setLoadingPlan(null)
-        }
-      )
+        customData: JSON.stringify({ userId: data.userId, plan: planKey }),
+      })
+
+      // 4. Check result
+      if (response?.code) {
+        showToast(response.message || '결제가 취소되었습니다.')
+        setLoadingPlan(null)
+        return
+      }
+
+      // 5. Verify on server
+      await verifyPayment(data.paymentId)
     } catch {
       showToast('네트워크 오류가 발생했습니다.')
+    } finally {
       setLoadingPlan(null)
     }
   }
 
-  // Subscription management
-  async function handleManageSubscription() {
-    try {
-      const res = await fetch('/api/subscription/portal', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      })
-      const data = await res.json()
-      if (data.url) window.location.href = data.url
-      else showToast(data.error || '구독 관리 페이지를 열 수 없습니다.')
-    } catch {
-      showToast('네트워크 오류가 발생했습니다.')
-    }
-  }
-
+  // Subscription cancel
   async function handleCancelSubscription() {
     if (!confirm('정말 구독을 취소하시겠습니까? 현재 기간 종료 후 크레딧이 갱신되지 않습니다.')) return
     setCancelingSubscription(true)
@@ -336,15 +315,6 @@ function PricingContent() {
               </div>
             </div>
             <div className="flex gap-2">
-              {subscription.paymentProvider === 'stripe' && (
-                <button
-                  onClick={handleManageSubscription}
-                  className="flex-1 py-2 rounded-xl text-xs font-bold hover-scale transition-all"
-                  style={{ background: 'var(--bg-secondary)', color: 'var(--text-primary)', border: '1px solid var(--border-color)' }}
-                >
-                  구독 관리
-                </button>
-              )}
               <button
                 onClick={handleCancelSubscription}
                 disabled={cancelingSubscription}
@@ -441,7 +411,7 @@ function PricingContent() {
                 </ul>
 
                 <button
-                  onClick={() => handlePlanSelect(key)}
+                  onClick={() => handlePayment(key)}
                   disabled={loadingPlan === key}
                   className="w-full py-3 rounded-xl text-sm font-bold hover-scale transition-all disabled:cursor-not-allowed"
                   style={{
@@ -490,70 +460,9 @@ function PricingContent() {
         <div className="mt-8 text-center">
           <p className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>
             크레딧은 만료되지 않으며, AI 해석 1회당 1크레딧이 차감됩니다.<br />
-            Stripe, 카카오페이, 네이버페이, 토스페이로 안전하게 결제됩니다.
+            토스페이먼츠를 통해 안전하게 결제됩니다. (카드, 간편결제 지원)
           </p>
         </div>
-
-        {/* Payment Method Modal */}
-        {showPaymentModal && selectedPlan && (
-          <div
-            className="fixed inset-0 z-50 flex items-center justify-center px-4"
-            style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
-            onClick={() => setShowPaymentModal(false)}
-          >
-            <div
-              className="w-full max-w-sm rounded-2xl p-6 animate-fadeIn"
-              style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)' }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <h3 className="text-base font-bold mb-1" style={{ color: 'var(--text-primary)' }}>
-                결제 수단 선택
-              </h3>
-              <p className="text-xs mb-5" style={{ color: 'var(--text-muted)' }}>
-                {PLANS[selectedPlan].name} · {PLANS[selectedPlan].priceLabel}
-              </p>
-
-              <div className="space-y-2">
-                {PAYMENT_METHODS.map((method) => (
-                  <button
-                    key={method.key}
-                    onClick={() => {
-                      if (method.key === 'stripe') {
-                        handleStripePayment(selectedPlan)
-                      } else {
-                        handlePortonePayment(selectedPlan, method.key)
-                      }
-                    }}
-                    className="w-full flex items-center gap-3 p-3 rounded-xl text-left hover-scale transition-all"
-                    style={{
-                      background: 'var(--bg-secondary)',
-                      border: '1px solid var(--border-color)',
-                    }}
-                  >
-                    <span className="text-xl">{method.icon}</span>
-                    <div className="flex-1">
-                      <p className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>
-                        {method.label}
-                      </p>
-                      <p className="text-[10px]" style={{ color: 'var(--text-muted)' }}>
-                        {method.description}
-                      </p>
-                    </div>
-                    <span className="text-xs" style={{ color: 'var(--text-muted)' }}>→</span>
-                  </button>
-                ))}
-              </div>
-
-              <button
-                onClick={() => setShowPaymentModal(false)}
-                className="w-full mt-4 py-2.5 rounded-xl text-sm font-medium transition-all"
-                style={{ color: 'var(--text-muted)' }}
-              >
-                취소
-              </button>
-            </div>
-          </div>
-        )}
 
         {/* Toast */}
         {toast && (

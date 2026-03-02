@@ -10,14 +10,17 @@ import {
 import { createSubscription, getSubscription, updateSubscription } from '@/lib/subscription'
 import { verifyPortonePayment } from '@/lib/portone'
 
-interface ParsedMerchantData {
+interface ParsedPaymentData {
   userId: string
   plan: PlanKey
 }
 
-const parseMerchantUid = (merchantUid: string): ParsedMerchantData | null => {
-  const parts = merchantUid.split('__')
-  if (parts.length !== 4 || parts[0] !== 'cm') return null
+/**
+ * Parse V2 paymentId format: payment__${plan}__${userToken}__${timestamp}
+ */
+const parsePaymentId = (paymentId: string): ParsedPaymentData | null => {
+  const parts = paymentId.split('__')
+  if (parts.length !== 4 || parts[0] !== 'payment') return null
 
   const plan = parts[1] as PlanKey
   if (!(plan in PLANS)) return null
@@ -31,7 +34,10 @@ const parseMerchantUid = (merchantUid: string): ParsedMerchantData | null => {
   }
 }
 
-const parseCustomData = (customData?: string): ParsedMerchantData | null => {
+/**
+ * Fallback: parse customData JSON
+ */
+const parseCustomData = (customData?: string): ParsedPaymentData | null => {
   if (!customData) return null
 
   try {
@@ -43,38 +49,34 @@ const parseCustomData = (customData?: string): ParsedMerchantData | null => {
   }
 }
 
-const resolveWebhookImpUid = async (req: NextRequest): Promise<string | null> => {
-  const text = await req.text()
-  if (!text) return null
-
-  try {
-    const json = JSON.parse(text) as { imp_uid?: string }
-    if (json.imp_uid) return json.imp_uid
-  } catch {}
-
-  const params = new URLSearchParams(text)
-  return params.get('imp_uid')
-}
-
 export async function POST(req: NextRequest) {
   try {
-    const impUid = await resolveWebhookImpUid(req)
-    if (!impUid) {
-      return NextResponse.json({ error: 'imp_uid가 필요합니다.' }, { status: 400 })
+    const body = await req.json()
+    // V2: paymentId from frontend verify or PortOne server webhook
+    const paymentId = (body.paymentId ?? body.data?.paymentId) as string | undefined
+
+    if (!paymentId) {
+      return NextResponse.json({ error: 'paymentId가 필요합니다.' }, { status: 400 })
     }
 
-    const payment = await verifyPortonePayment(impUid)
-    if (payment.status !== 'paid') {
-      return NextResponse.json({ received: true, ignored: true })
+    const payment = await verifyPortonePayment(paymentId)
+    if (payment.status !== 'PAID') {
+      return NextResponse.json({ received: true, ignored: true, status: payment.status })
     }
 
-    const parsedData = parseMerchantUid(payment.merchantUid) ?? parseCustomData(payment.customData)
+    const parsedData = parsePaymentId(payment.id) ?? parseCustomData(payment.customData)
     if (!parsedData) {
-      return NextResponse.json({ error: 'merchant_uid 또는 custom_data 파싱 실패' }, { status: 400 })
+      return NextResponse.json({ error: 'paymentId 또는 customData 파싱 실패' }, { status: 400 })
     }
 
-    const plan = PLANS[parsedData.plan]
-    if (plan.type === 'subscription') {
+    // Verify payment amount matches plan
+    const planInfo = PLANS[parsedData.plan]
+    if (payment.amount.total !== planInfo.price) {
+      console.error(`Amount mismatch: expected ${planInfo.price}, got ${payment.amount.total}`)
+      return NextResponse.json({ error: '결제 금액이 요금제와 일치하지 않습니다.' }, { status: 400 })
+    }
+
+    if (planInfo.type === 'subscription') {
       const now = new Date()
       const periodEnd = new Date(now)
       periodEnd.setMonth(periodEnd.getMonth() + 1)
@@ -86,8 +88,7 @@ export async function POST(req: NextRequest) {
         plan: parsedData.plan as SubscriptionPlanKey,
         status: 'active' as const,
         paymentProvider: 'portone' as const,
-        portoneCustomerUid: payment.customerUid,
-        portoneMerchantUid: payment.merchantUid,
+        portoneMerchantUid: payment.id,
         currentPeriodStart: now.toISOString(),
         currentPeriodEnd: periodEnd.toISOString(),
       }
