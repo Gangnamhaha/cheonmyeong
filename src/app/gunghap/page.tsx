@@ -14,6 +14,7 @@ function getDaysInMonth(year: number, month: number): number {
 }
 
 interface PersonInput {
+  name: string
   year: number
   month: number
   day: number
@@ -25,7 +26,7 @@ interface PersonInput {
 }
 
 const defaultPerson = (): PersonInput => ({
-  year: 1990, month: 1, day: 1, hour: 12, minute: 0,
+  name: '', year: 1990, month: 1, day: 1, hour: 12, minute: 0,
   calendarType: 'solar', isLeapMonth: false, gender: 'male',
 })
 
@@ -39,9 +40,16 @@ function PersonForm({ label, person, onChange, disabled }: {
 }) {
   const days = Array.from({ length: getDaysInMonth(person.year, person.month) }, (_, i) => i + 1)
 
+  const inputClass = 'w-full bg-slate-800 border border-slate-600 text-slate-100 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition-colors placeholder:text-slate-600'
+
   return (
     <div className="flex-1 min-w-0">
       <h3 className="text-center text-sm font-bold text-amber-400 mb-3">{label}</h3>
+
+      {/* 이름 */}
+      <input type="text" value={person.name} placeholder="이름 (선택)"
+        onChange={e => onChange({ ...person, name: e.target.value })}
+        className={inputClass + ' mb-2'} disabled={disabled} maxLength={10} />
 
       {/* 성별 */}
       <div className="flex rounded-lg overflow-hidden border border-slate-600 mb-2">
@@ -156,7 +164,7 @@ export default function GunghapPage() {
   const [aiLoading, setAiLoading] = useState(false)
   const abortRef = useRef<AbortController | null>(null)
 
-  async function fetchAiGunghap(p1: FullSajuResult, p2: FullSajuResult, g: GunghapResult) {
+  async function fetchAiGunghap(p1: FullSajuResult, p2: FullSajuResult, g: GunghapResult, name1: string, name2: string) {
     abortRef.current?.abort()
     const controller = new AbortController()
     abortRef.current = controller
@@ -167,7 +175,7 @@ export default function GunghapPage() {
       const res = await fetch('/api/gunghap', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ person1: p1, person2: p2, gunghap: g }),
+        body: JSON.stringify({ person1: p1, person2: p2, gunghap: g, name1: name1 || undefined, name2: name2 || undefined }),
         signal: controller.signal,
       })
 
@@ -208,7 +216,7 @@ export default function GunghapPage() {
         person2.calendarType, person2.isLeapMonth, person2.gender)
       const gunghap = analyzeGunghap(p1, p2)
       setResult({ p1, p2, gunghap })
-      fetchAiGunghap(p1, p2, gunghap)
+      fetchAiGunghap(p1, p2, gunghap, person1.name.trim(), person2.name.trim())
     } catch (err) {
       setError(err instanceof Error ? err.message : '궁합 계산 중 오류가 발생했습니다.')
     } finally {

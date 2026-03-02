@@ -50,23 +50,28 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: '잘못된 요청 형식입니다.' }, { status: 400 })
   }
 
-  const { person1, person2, gunghap } = body as {
+  const { person1, person2, gunghap, name1, name2 } = body as {
     person1?: unknown
     person2?: unknown
     gunghap?: unknown
+    name1?: string
+    name2?: string
   }
 
   if (!person1 || !person2 || !gunghap) {
     return NextResponse.json({ error: '두 사람의 사주 데이터와 궁합 결과가 필요합니다.' }, { status: 400 })
   }
 
-  const userMessage = `다음 두 사람의 궁합을 해석해 주세요:
+  const label1 = name1 ? `\uCCAB \uBC88\uC9F8 \uC0AC\uB78C(${name1})` : '\uCCAB \uBC88\uC9F8 \uC0AC\uB78C'
+  const label2 = name2 ? `\uB450 \uBC88\uC9F8 \uC0AC\uB78C(${name2})` : '\uB450 \uBC88\uC9F8 \uC0AC\uB78C'
 
-첫 번째 사람 사주: ${JSON.stringify(person1)}
+  const userMessage = `\uB2E4\uC74C \uB450 \uC0AC\uB78C\uC758 \uAD81\uD569\uC744 \uD574\uC11D\uD574 \uC8FC\uC138\uC694:
 
-두 번째 사람 사주: ${JSON.stringify(person2)}
+${label1} \uC0AC\uC8FC: ${JSON.stringify(person1)}
 
-궁합 분석 결과: ${JSON.stringify(gunghap)}`
+${label2} \uC0AC\uC8FC: ${JSON.stringify(person2)}
+
+\uAD81\uD569 \uBD84\uC11D \uACB0\uACFC: ${JSON.stringify(gunghap)}`
 
   try {
     const openai = new OpenAI({ apiKey })
