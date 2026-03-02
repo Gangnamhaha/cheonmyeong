@@ -75,6 +75,18 @@ export default function Home() {
       return
     }
 
+    // Check credits before making request
+    try {
+      const creditRes = await fetch('/api/credits', { method: 'POST' })
+      if (!creditRes.ok) {
+        const creditData = await creditRes.json()
+        setAiError(creditData.error ?? '크레딧이 부족합니다.')
+        return
+      }
+    } catch {
+      // Credit check failed, proceed anyway (graceful degradation)
+    }
+
     // Abort previous request
     abortRef.current?.abort()
     const controller = new AbortController()

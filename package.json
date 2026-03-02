@@ -14,9 +14,11 @@
     "@fullstackfamily/manseryeok": "latest",
     "html2canvas": "^1.4.1",
     "next": "^14.0.0",
+    "next-auth": "^4.24.13",
     "openai": "latest",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "stripe": "^20.4.0"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "latest",

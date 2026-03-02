@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import './globals.css'
 import ErrorBoundary from '@/components/ErrorBoundary'
 import ThemeProvider from '@/components/ThemeProvider'
+import AuthProvider from '@/components/AuthProvider'
 
 export const metadata: Metadata = {
   title: '천명(天命) - AI 사주팔자 풀이',
@@ -39,9 +40,11 @@ export default function RootLayout({
         />
       </head>
       <body className="antialiased min-h-screen" style={{ background: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
-        <ThemeProvider>
-          <ErrorBoundary>{children}</ErrorBoundary>
-        </ThemeProvider>
+        <AuthProvider>
+          <ThemeProvider>
+            <ErrorBoundary>{children}</ErrorBoundary>
+          </ThemeProvider>
+        </AuthProvider>
       </body>
     </html>
   )

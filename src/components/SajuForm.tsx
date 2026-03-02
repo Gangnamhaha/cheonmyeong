@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect } from 'react'
 import { useTheme } from './ThemeProvider'
+import UserMenu from './UserMenu'
 
 interface SajuFormData {
   year: number
@@ -227,8 +228,9 @@ export default function SajuForm({ onSubmit, loading = false }: SajuFormProps) {
         {/* Taegeuk Background */}
         <TaegeukSvg size={320} />
 
-        {/* Theme Toggle - top right */}
-        <div className="absolute top-4 right-4 z-20">
+        {/* Top bar: theme toggle + user menu */}
+        <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
+          <UserMenu />
           <button
             onClick={toggleTheme}
             className="p-2.5 rounded-full hover-scale theme-transition"
