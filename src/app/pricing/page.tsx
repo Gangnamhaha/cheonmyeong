@@ -196,7 +196,9 @@ function PricingContent() {
 
       // 4. Check result
       if (response?.code) {
-        showToast(response.message || '결제가 취소되었습니다.')
+        const isCanceled = response.code === 'PAY_PROCESS_CANCELED' || response.code === 'PAY_PROCESS_ABORTED'
+        showToast(isCanceled ? '결제가 취소되었습니다.' : (response.message || '결제 처리 중 오류가 발생했습니다.'))
+
         setLoadingPlan(null)
         return
       }
