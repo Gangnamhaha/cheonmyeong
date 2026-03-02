@@ -1,5 +1,6 @@
 import { type NextAuthOptions } from 'next-auth'
 import GoogleProvider from 'next-auth/providers/google'
+import KakaoProvider from 'next-auth/providers/kakao'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import { registerUser } from '@/lib/admin'
 
@@ -18,29 +19,10 @@ export const authOptions: NextAuthOptions = {
     // Kakao OAuth
     ...(process.env.KAKAO_CLIENT_ID && process.env.KAKAO_CLIENT_SECRET
       ? [
-          {
-            id: 'kakao',
-            name: 'Kakao',
-            type: 'oauth' as const,
+          KakaoProvider({
             clientId: process.env.KAKAO_CLIENT_ID,
             clientSecret: process.env.KAKAO_CLIENT_SECRET,
-            authorization: {
-              url: 'https://kauth.kakao.com/oauth/authorize',
-              params: { scope: 'profile_nickname profile_image' },
-            },
-            token: 'https://kauth.kakao.com/oauth/token',
-            userinfo: 'https://kapi.kakao.com/v2/user/me',
-            profile(profile: Record<string, unknown>) {
-              const kakaoAccount = profile.kakao_account as Record<string, unknown> | undefined
-              const kakaoProfile = kakaoAccount?.profile as Record<string, unknown> | undefined
-              return {
-                id: String(profile.id),
-                name: (kakaoProfile?.nickname as string) ?? '카카오 사용자',
-                email: (kakaoAccount?.email as string) ?? undefined,
-                image: (kakaoProfile?.profile_image_url as string) ?? undefined,
-              }
-            },
-          },
+          }),
         ]
       : []),
 
