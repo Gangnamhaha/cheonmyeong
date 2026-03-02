@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import OpenAI from 'openai'
+import { recordAnalysisEvent } from '@/lib/admin'
 
 const RATE_LIMIT = new Map<string, number[]>()
 const MAX_REQUESTS = 10
@@ -86,6 +87,9 @@ ${label2} \uC0AC\uC8FC: ${JSON.stringify(person2)}
         { role: 'user', content: userMessage },
       ],
     })
+
+    // Record analysis event (fire-and-forget)
+    recordAnalysisEvent().catch(() => {})
 
     return new Response(
       new ReadableStream({

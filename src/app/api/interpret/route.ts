@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import OpenAI from 'openai'
+import { recordAnalysisEvent } from '@/lib/admin'
 
 // Rate limiting: IP -> timestamps of requests
 const RATE_LIMIT = new Map<string, number[]>()
@@ -141,6 +142,9 @@ export async function POST(req: NextRequest) {
         ],
       })
 
+      // Record analysis event (fire-and-forget)
+      recordAnalysisEvent().catch(() => {})
+
       return new Response(
         new ReadableStream({
           async start(controller) {
@@ -180,6 +184,9 @@ export async function POST(req: NextRequest) {
     })
 
     const interpretation = completion.choices[0]?.message?.content ?? ''
+
+    // Record analysis event (fire-and-forget)
+    recordAnalysisEvent().catch(() => {})
 
     return NextResponse.json({ interpretation })
   } catch (err) {
