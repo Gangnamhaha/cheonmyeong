@@ -9,12 +9,22 @@ export const metadata: Metadata = {
   title: '천명(天命) - AI 사주팔자 풀이',
   description: '생년월일시를 입력하면 사주팔자, 오행, 십신, 용신, 대운을 분석하고 AI가 해석해드립니다. 무료 사주 풀이 서비스.',
   keywords: ['사주', '사주팔자', '팔자', '오행', '십신', '용신', '대운', '운세', 'AI 사주', '무료 사주', '천명', '명리학'],
+  icons: {
+    icon: '/icon.png',
+    apple: '/apple-icon.png',
+  },
   openGraph: {
     title: '천명(天命) - AI 사주팔자 풀이',
     description: '생년월일시를 입력하면 사주팔자, 오행, 십신, 용신, 대운을 분석하고 AI가 해석해드립니다.',
     type: 'website',
     locale: 'ko_KR',
     siteName: '천명(天命)',
+    images: [{
+      url: '/opengraph-image.png',
+      width: 512,
+      height: 512,
+      alt: '천명(天命) - AI 사주팔자 풀이',
+    }],
   },
   twitter: {
     card: 'summary_large_image',
