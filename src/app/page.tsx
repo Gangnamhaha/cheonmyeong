@@ -35,6 +35,7 @@ const AI_CATEGORIES: { key: AiCategory; label: string; icon: string }[] = [
 ]
 
 interface FormData {
+  name: string
   year: number
   month: number
   day: number

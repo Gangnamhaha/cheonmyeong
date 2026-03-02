@@ -5,6 +5,7 @@ import { useTheme } from './ThemeProvider'
 import UserMenu from './UserMenu'
 
 interface SajuFormData {
+  name: string
   year: number
   month: number
   day: number
@@ -157,6 +158,7 @@ export default function SajuForm({ onSubmit, loading = false }: SajuFormProps) {
   const [history, setHistory] = useState<HistoryEntry[]>([])
   const [totalCount, setTotalCount] = useState(0)
   const [showForm, setShowForm] = useState(false)
+  const [name, setName] = useState('')
 
   const daysInMonth = getDaysInMonth(year, month)
   const days = useMemo(() => Array.from({ length: daysInMonth }, (_, i) => i + 1), [daysInMonth])
@@ -178,7 +180,7 @@ export default function SajuForm({ onSubmit, loading = false }: SajuFormProps) {
     const m = unknownTime ? 0 : minute
     saveHistory({ year, month, day, hour: h, gender, date: new Date().toISOString().slice(0, 10) })
     incrementAnalysisCount()
-    onSubmit({ year, month, day, hour: h, minute: m, calendarType, isLeapMonth, gender })
+    onSubmit({ name, year, month, day, hour: h, minute: m, calendarType, isLeapMonth, gender })
   }
 
   function handleHistoryClick(entry: HistoryEntry) {
@@ -401,6 +403,19 @@ export default function SajuForm({ onSubmit, loading = false }: SajuFormProps) {
               </button>
             </div>
 
+            {/* 이름 입력 */}
+            <div className="mb-4 form-section">
+              <label className="block text-xs mb-1 font-medium" style={{ color: 'var(--text-secondary)' }}>이름</label>
+              <input
+                type="text"
+                value={name}
+                onChange={e => setName(e.target.value)}
+                placeholder="이름을 입력해 주세요 (선택)"
+                className={selectClass}
+                disabled={loading}
+                maxLength={20}
+              />
+            </div>
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* 연도 */}
               <div className="form-section">
