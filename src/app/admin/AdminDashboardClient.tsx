@@ -87,6 +87,14 @@ const EMPTY_STATS: DashboardStats = {
 export default function AdminDashboardClient() {
   const [activeTab, setActiveTab] = useState<TabKey>('dashboard')
 
+  // Auth state
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [authChecking, setAuthChecking] = useState(true)
+  const [loginUsername, setLoginUsername] = useState('')
+  const [loginPassword, setLoginPassword] = useState('')
+  const [loginError, setLoginError] = useState<string | null>(null)
+  const [loginLoading, setLoginLoading] = useState(false)
+
   const [stats, setStats] = useState<DashboardStats>(EMPTY_STATS)
   const [statsLoading, setStatsLoading] = useState(true)
   const [statsError, setStatsError] = useState<string | null>(null)
@@ -196,24 +204,75 @@ export default function AdminDashboardClient() {
   }, [])
 
   useEffect(() => {
-    fetchStats()
-    fetchUsers(1)
-    fetchAnnouncements()
-    fetchSettings()
+    async function checkAuth() {
+      try {
+        const res = await fetch('/api/admin/auth')
+        if (res.ok) {
+          setIsAuthenticated(true)
+          fetchStats()
+          fetchUsers(1)
+          fetchAnnouncements()
+          fetchSettings()
+        }
+      } catch {
+        // not authenticated
+      } finally {
+        setAuthChecking(false)
+      }
+    }
+    checkAuth()
   }, [fetchAnnouncements, fetchSettings, fetchStats, fetchUsers])
 
   useEffect(() => {
+    if (!isAuthenticated) return
     const timer = setInterval(() => {
       fetchStats()
     }, 30000)
-
     return () => clearInterval(timer)
-  }, [fetchStats])
+  }, [fetchStats, isAuthenticated])
 
   const selectedUser = useMemo(
     () => users.find((item) => item.userId === selectedUserId) ?? null,
     [users, selectedUserId]
   )
+
+  async function handleLogin(e: FormEvent) {
+    e.preventDefault()
+    setLoginError(null)
+    setLoginLoading(true)
+    try {
+      const res = await fetch('/api/admin/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: loginUsername, password: loginPassword }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setLoginError(data.error ?? '로그인에 실패했습니다.')
+        return
+      }
+      setIsAuthenticated(true)
+      setLoginUsername('')
+      setLoginPassword('')
+      fetchStats()
+      fetchUsers(1)
+      fetchAnnouncements()
+      fetchSettings()
+    } catch {
+      setLoginError('서버 연결에 실패했습니다.')
+    } finally {
+      setLoginLoading(false)
+    }
+  }
+
+  async function handleLogout() {
+    try {
+      await fetch('/api/admin/auth', { method: 'DELETE' })
+    } catch {
+      // ignore
+    }
+    setIsAuthenticated(false)
+  }
 
   async function searchUsers(query: string) {
     setUsersLoading(true)
@@ -395,6 +454,69 @@ export default function AdminDashboardClient() {
     }
   }
 
+  // 로딩 중
+  if (authChecking) {
+    return (
+      <main className="min-h-screen bg-slate-900 text-slate-100 flex items-center justify-center">
+        <p className="text-slate-400">인증 확인 중...</p>
+      </main>
+    )
+  }
+
+  // 로그인 폼
+  if (!isAuthenticated) {
+    return (
+      <main className="min-h-screen bg-slate-900 text-slate-100 flex items-center justify-center px-4">
+        <div className="w-full max-w-sm">
+          <div className="rounded-2xl border border-slate-700 bg-slate-800 p-8">
+            <h1 className="text-center text-2xl font-bold text-amber-400">관리자 로그인</h1>
+            <p className="mt-2 text-center text-sm text-slate-400">천명(天命) 관리자 페이지</p>
+            <form onSubmit={handleLogin} className="mt-6 space-y-4">
+              <div>
+                <label htmlFor="admin-username" className="block text-sm font-medium text-slate-300">아이디</label>
+                <input
+                  id="admin-username"
+                  type="text"
+                  value={loginUsername}
+                  onChange={(e) => setLoginUsername(e.target.value)}
+                  placeholder="관리자 아이디"
+                  autoComplete="username"
+                  className="mt-1 w-full rounded-lg border border-slate-600 bg-slate-900 px-3 py-2.5 text-sm text-slate-100 outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
+                />
+              </div>
+              <div>
+                <label htmlFor="admin-password" className="block text-sm font-medium text-slate-300">비밀번호</label>
+                <input
+                  id="admin-password"
+                  type="password"
+                  value={loginPassword}
+                  onChange={(e) => setLoginPassword(e.target.value)}
+                  placeholder="비밀번호"
+                  autoComplete="current-password"
+                  className="mt-1 w-full rounded-lg border border-slate-600 bg-slate-900 px-3 py-2.5 text-sm text-slate-100 outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
+                />
+              </div>
+              {loginError && (
+                <p className="rounded-lg border border-red-500/50 bg-red-900/20 px-3 py-2 text-sm text-red-300">{loginError}</p>
+              )}
+              <button
+                type="submit"
+                disabled={loginLoading}
+                className="w-full rounded-lg bg-amber-500 px-4 py-2.5 text-sm font-semibold text-slate-950 hover:bg-amber-400 disabled:opacity-50"
+              >
+                {loginLoading ? '로그인 중...' : '로그인'}
+              </button>
+            </form>
+            <div className="mt-4 text-center">
+              <a href="/" className="text-xs text-slate-500 hover:text-slate-300">홈으로 돌아가기</a>
+            </div>
+          </div>
+        </div>
+      </main>
+    )
+  }
+
+  // 대시보드
   return (
     <main className="min-h-screen bg-slate-900 text-slate-100 px-4 py-8 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
@@ -403,12 +525,20 @@ export default function AdminDashboardClient() {
             <h1 className="text-2xl font-bold text-amber-400 sm:text-3xl">관리자 대시보드</h1>
             <p className="mt-1 text-sm text-slate-400">천명(天命) 운영 현황과 데이터 관리</p>
           </div>
-          <a
-            href="/"
-            className="rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-xs font-medium text-slate-300 hover:bg-slate-700"
-          >
-            홈으로 이동
-          </a>
+          <div className="flex items-center gap-2">
+            <a
+              href="/"
+              className="rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-xs font-medium text-slate-300 hover:bg-slate-700"
+            >
+              홈으로 이동
+            </a>
+            <button
+              onClick={handleLogout}
+              className="rounded-lg border border-red-500/40 bg-slate-800 px-3 py-2 text-xs font-medium text-red-300 hover:bg-red-900/30"
+            >
+              로그아웃
+            </button>
+          </div>
         </div>
 
         <div className="mb-6 overflow-x-auto rounded-xl border border-slate-700 bg-slate-800 p-1">

@@ -1,38 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
 import {
   type AdminAnnouncement,
   getAnnouncements,
-  isAdminEmail,
   saveAnnouncements,
 } from '@/lib/admin'
-
-async function assertAdmin() {
-  const session = await getServerSession(authOptions)
-
-  if (!session?.user?.email) {
-    return { ok: false as const, response: NextResponse.json({ error: '로그인이 필요합니다.' }, { status: 401 }) }
-  }
-
-  if (!isAdminEmail(session.user.email)) {
-    return { ok: false as const, response: NextResponse.json({ error: '관리자 권한이 필요합니다.' }, { status: 403 }) }
-  }
-
-  return { ok: true as const }
-}
+import { checkAdminAuth } from '@/lib/admin-auth'
 
 export async function GET() {
-  const adminCheck = await assertAdmin()
-  if (!adminCheck.ok) return adminCheck.response
+  if (!(await checkAdminAuth())) {
+    return NextResponse.json({ error: '관리자 권한이 필요합니다.' }, { status: 403 })
+  }
 
   const announcements = await getAnnouncements()
   return NextResponse.json({ announcements })
 }
 
 export async function POST(req: NextRequest) {
-  const adminCheck = await assertAdmin()
-  if (!adminCheck.ok) return adminCheck.response
+  if (!(await checkAdminAuth())) {
+    return NextResponse.json({ error: '관리자 권한이 필요합니다.' }, { status: 403 })
+  }
 
   const body = await req.json()
   const title = String(body?.title ?? '').trim()
@@ -59,8 +45,9 @@ export async function POST(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
-  const adminCheck = await assertAdmin()
-  if (!adminCheck.ok) return adminCheck.response
+  if (!(await checkAdminAuth())) {
+    return NextResponse.json({ error: '관리자 권한이 필요합니다.' }, { status: 403 })
+  }
 
   const body = await req.json()
   const id = String(body?.id ?? '').trim()

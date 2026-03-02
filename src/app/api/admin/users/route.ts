@@ -1,27 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
-import { getAllUsers, isAdminEmail } from '@/lib/admin'
+import { getAllUsers } from '@/lib/admin'
+import { checkAdminAuth } from '@/lib/admin-auth'
 import { getUserCredits } from '@/lib/credits'
 import { getSubscription } from '@/lib/subscription'
 
-async function assertAdmin() {
-  const session = await getServerSession(authOptions)
-
-  if (!session?.user?.email) {
-    return { ok: false as const, response: NextResponse.json({ error: '로그인이 필요합니다.' }, { status: 401 }) }
-  }
-
-  if (!isAdminEmail(session.user.email)) {
-    return { ok: false as const, response: NextResponse.json({ error: '관리자 권한이 필요합니다.' }, { status: 403 }) }
-  }
-
-  return { ok: true as const }
-}
-
 export async function GET(req: NextRequest) {
-  const adminCheck = await assertAdmin()
-  if (!adminCheck.ok) return adminCheck.response
+  if (!(await checkAdminAuth())) {
+    return NextResponse.json({ error: '관리자 권한이 필요합니다.' }, { status: 403 })
+  }
 
   const { searchParams } = new URL(req.url)
   const page = Number(searchParams.get('page') ?? '1')
@@ -50,8 +36,9 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const adminCheck = await assertAdmin()
-  if (!adminCheck.ok) return adminCheck.response
+  if (!(await checkAdminAuth())) {
+    return NextResponse.json({ error: '관리자 권한이 필요합니다.' }, { status: 403 })
+  }
 
   const body = await req.json()
   const query = String(body?.query ?? '').trim().toLowerCase()

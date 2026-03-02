@@ -1,3 +1,4 @@
+import { createHmac } from 'crypto'
 import { Redis } from '@upstash/redis'
 import { getUserCredits, type UserCredits } from '@/lib/credits'
 import { getSubscription } from '@/lib/subscription'
@@ -70,6 +71,37 @@ export function isAdminEmail(email: string): boolean {
     .filter(Boolean)
 
   return allowList.includes(email.toLowerCase())
+}
+
+const ADMIN_TOKEN_SECRET = process.env.NEXTAUTH_SECRET || 'cheonmyeong-dev-secret-change-in-production'
+
+export function verifyAdminCredentials(username: string, password: string): boolean {
+  const adminUsername = process.env.ADMIN_USERNAME
+  const adminPassword = process.env.ADMIN_PASSWORD
+  if (!adminUsername || !adminPassword) return false
+  return username === adminUsername && password === adminPassword
+}
+
+export function createAdminToken(): string {
+  const payload = JSON.stringify({ admin: true, exp: Date.now() + 24 * 60 * 60 * 1000 })
+  const payloadB64 = Buffer.from(payload).toString('base64url')
+  const sig = createHmac('sha256', ADMIN_TOKEN_SECRET).update(payloadB64).digest('base64url')
+  return `${payloadB64}.${sig}`
+}
+
+export function verifyAdminToken(token: string): boolean {
+  try {
+    const [payloadB64, sig] = token.split('.')
+    if (!payloadB64 || !sig) return false
+    const expectedSig = createHmac('sha256', ADMIN_TOKEN_SECRET).update(payloadB64).digest('base64url')
+    if (sig !== expectedSig) return false
+    const payload = JSON.parse(Buffer.from(payloadB64, 'base64url').toString()) as { admin?: boolean; exp?: number }
+    if (!payload.admin || !payload.exp) return false
+    if (Date.now() > payload.exp) return false
+    return true
+  } catch {
+    return false
+  }
 }
 
 export function getRedis(): Redis | null {
