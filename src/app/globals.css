@@ -2,13 +2,50 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  background: #0a0a0a;
-  color: #ededed;
-  font-family: Arial, Helvetica, sans-serif;
-  min-height: 100vh;
+/* ─── Theme CSS Variables ─── */
+:root {
+  --bg-primary: #f5f0e8;
+  --bg-secondary: #ede7d9;
+  --bg-card: #faf7f0;
+  --bg-card-hover: #f0ebe0;
+  --text-primary: #1a1612;
+  --text-secondary: #6b5e4f;
+  --text-muted: #9c8e7c;
+  --text-accent: #b45309;
+  --border-color: #d4c9b8;
+  --border-light: #e8e0d0;
+  --accent: #f59e0b;
+  --accent-hover: #d97706;
+  --accent-text: #1a1612;
+  --card-shadow: 0 2px 8px rgba(0,0,0,0.06);
 }
 
+.dark {
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --bg-card: rgba(30, 41, 59, 0.5);
+  --bg-card-hover: rgba(30, 41, 59, 0.8);
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --text-accent: #fbbf24;
+  --border-color: #334155;
+  --border-light: #1e293b;
+  --accent: #f59e0b;
+  --accent-hover: #fbbf24;
+  --accent-text: #0f172a;
+  --card-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+body {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: Arial, Helvetica, sans-serif;
+  min-height: 100vh;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* ─── Animations ─── */
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -24,11 +61,179 @@ body {
   animation: fadeIn 0.4s ease-out;
 }
 
-/* Hide scrollbar for horizontal scroll areas */
+/* ─── Starfield Background ─── */
+.starfield {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.star {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background: currentColor;
+  border-radius: 50%;
+  animation: twinkle var(--duration, 3s) ease-in-out var(--delay, 0s) infinite;
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: 0.2; transform: scale(0.8); }
+  50% { opacity: 1; transform: scale(1.3); }
+}
+
+.star.large {
+  width: 3px;
+  height: 3px;
+}
+
+/* ─── Yin-Yang Spinner ─── */
+.yin-yang {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  position: relative;
+  background: linear-gradient(to right, #f1f5f9 50%, #0f172a 50%);
+  border: 2px solid var(--text-muted);
+  animation: spin 1.5s linear infinite;
+}
+
+.dark .yin-yang {
+  background: linear-gradient(to right, #f1f5f9 50%, #0f172a 50%);
+}
+
+.light .yin-yang {
+  background: linear-gradient(to right, #1a1612 50%, #f5f0e8 50%);
+}
+
+.yin-yang::before,
+.yin-yang::after {
+  content: '';
+  position: absolute;
+  width: 50%;
+  height: 50%;
+  border-radius: 50%;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.yin-yang::before {
+  top: 0;
+  background: #0f172a;
+  border: 3px solid #0f172a;
+}
+
+.dark .yin-yang::before {
+  background: #0f172a;
+  border-color: #0f172a;
+}
+
+.light .yin-yang::before {
+  background: #f5f0e8;
+  border-color: #f5f0e8;
+}
+
+.yin-yang::after {
+  bottom: 0;
+  background: #f1f5f9;
+  border: 3px solid #f1f5f9;
+}
+
+.dark .yin-yang::after {
+  background: #f1f5f9;
+  border-color: #f1f5f9;
+}
+
+.light .yin-yang::after {
+  background: #1a1612;
+  border-color: #1a1612;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* ─── Staggered Form Reveal ─── */
+.form-section {
+  opacity: 0;
+  transform: translateY(16px);
+  animation: fadeIn 0.4s ease-out forwards;
+}
+
+.form-section:nth-child(1) { animation-delay: 0s; }
+.form-section:nth-child(2) { animation-delay: 0.08s; }
+.form-section:nth-child(3) { animation-delay: 0.16s; }
+.form-section:nth-child(4) { animation-delay: 0.24s; }
+.form-section:nth-child(5) { animation-delay: 0.32s; }
+.form-section:nth-child(6) { animation-delay: 0.4s; }
+.form-section:nth-child(7) { animation-delay: 0.48s; }
+
+/* ─── Tab Transition ─── */
+.tab-panel {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* ─── Hover Effects ─── */
+.hover-lift {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.hover-lift:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: var(--card-shadow);
+}
+
+.hover-scale {
+  transition: transform 0.15s ease;
+}
+.hover-scale:hover {
+  transform: scale(1.05);
+}
+.hover-scale:active {
+  transform: scale(0.98);
+}
+
+/* ─── Active Tab Pulse ─── */
+.tab-active-pulse {
+  position: relative;
+}
+.tab-active-pulse::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  background: var(--accent);
+  opacity: 0;
+  animation: tabPulse 2s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes tabPulse {
+  0%, 100% { opacity: 0; transform: scale(1); }
+  50% { opacity: 0.15; transform: scale(1.08); }
+}
+
+/* ─── Scrollbar Hide ─── */
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
 .scrollbar-hide {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+/* ─── Theme transition for components ─── */
+.theme-transition {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* ─── Summary Card ─── */
+.summary-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  box-shadow: var(--card-shadow);
 }

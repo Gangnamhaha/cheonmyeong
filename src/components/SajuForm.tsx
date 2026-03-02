@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
+import { useTheme } from './ThemeProvider'
 
 interface SajuFormData {
   year: number
@@ -28,7 +29,25 @@ function getDaysInMonth(year: number, month: number): number {
   return new Date(year, month, 0).getDate()
 }
 
+// Generate starfield positions deterministically
+function generateStars(count: number): { x: number; y: number; size: 'small' | 'large'; duration: number; delay: number }[] {
+  const stars = []
+  for (let i = 0; i < count; i++) {
+    stars.push({
+      x: (i * 7919 + 13) % 100, // pseudo-random x
+      y: (i * 6271 + 37) % 100, // pseudo-random y
+      size: (i % 7 === 0 ? 'large' : 'small') as 'small' | 'large',
+      duration: 2 + (i % 5) * 0.8,
+      delay: (i % 8) * 0.5,
+    })
+  }
+  return stars
+}
+
+const STARS = generateStars(60)
+
 export default function SajuForm({ onSubmit, loading = false }: SajuFormProps) {
+  const { theme, toggleTheme } = useTheme()
   const [year, setYear] = useState(1990)
   const [month, setMonth] = useState(1)
   const [day, setDay] = useState(1)
@@ -39,7 +58,7 @@ export default function SajuForm({ onSubmit, loading = false }: SajuFormProps) {
   const [gender, setGender] = useState<'male' | 'female'>('male')
 
   const daysInMonth = getDaysInMonth(year, month)
-  const days = Array.from({ length: daysInMonth }, (_, i) => i + 1)
+  const days = useMemo(() => Array.from({ length: daysInMonth }, (_, i) => i + 1), [daysInMonth])
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -47,45 +66,75 @@ export default function SajuForm({ onSubmit, loading = false }: SajuFormProps) {
   }
 
   const selectClass =
-    'w-full bg-slate-800 border border-slate-600 text-slate-100 rounded-lg px-3 py-2 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition-colors'
+    'w-full rounded-lg px-3 py-2 focus:outline-none focus:ring-1 transition-colors theme-transition'
+      + ' bg-[var(--bg-secondary)] border border-[var(--border-color)] text-[var(--text-primary)]'
+      + ' focus:border-[var(--accent)] focus:ring-[var(--accent)]'
+
+  const toggleBtnClass = (active: boolean) =>
+    `flex-1 py-2 text-sm font-medium transition-colors ${
+      active
+        ? 'bg-[var(--accent)] text-[var(--accent-text)]'
+        : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-[var(--bg-card-hover)]'
+    }`
 
   return (
-    <div className="min-h-screen bg-slate-900 flex items-center justify-center px-4">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center px-4 relative" style={{ background: 'var(--bg-primary)' }}>
+      {/* Starfield Background */}
+      <div className="starfield">
+        {STARS.map((star, i) => (
+          <div
+            key={i}
+            className={`star ${star.size === 'large' ? 'large' : ''}`}
+            style={{
+              left: `${star.x}%`,
+              top: `${star.y}%`,
+              '--duration': `${star.duration}s`,
+              '--delay': `${star.delay}s`,
+              color: theme === 'dark' ? 'rgba(251, 191, 36, 0.6)' : 'rgba(180, 83, 9, 0.3)',
+            } as React.CSSProperties}
+          />
+        ))}
+      </div>
+
+      <div className="w-full max-w-md relative z-10">
+        {/* Theme Toggle */}
+        <div className="flex justify-end mb-4">
+          <button
+            onClick={toggleTheme}
+            className="p-2 rounded-full hover-scale theme-transition"
+            style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)' }}
+            aria-label="테마 전환"
+          >
+            {theme === 'dark' ? '☀️' : '🌙'}
+          </button>
+        </div>
+
         {/* 헤더 */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-amber-400 mb-1">천명</h1>
-          <p className="text-slate-400 text-lg tracking-widest">天命</p>
-          <p className="text-slate-500 text-sm mt-2">나의 사주팔자 풀이</p>
+        <div className="text-center mb-8 form-section">
+          <h1 className="text-4xl font-bold mb-1" style={{ color: 'var(--text-accent)' }}>천명</h1>
+          <p className="text-lg tracking-widest" style={{ color: 'var(--text-secondary)' }}>天命</p>
+          <p className="text-sm mt-2" style={{ color: 'var(--text-muted)' }}>나의 사주팔자 풀이</p>
         </div>
 
         {/* 폼 카드 */}
-        <div className="bg-slate-800 rounded-2xl p-6 shadow-2xl border border-slate-700">
-          <p className="text-slate-300 text-sm mb-5 text-center">
+        <div className="rounded-2xl p-6 shadow-2xl form-section theme-transition" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)' }}>
+          <p className="text-sm mb-5 text-center" style={{ color: 'var(--text-secondary)' }}>
             생년월일시를 입력해 주세요
           </p>
 
           {/* 양력/음력 토글 */}
-          <div className="flex rounded-lg overflow-hidden border border-slate-600 mb-4">
+          <div className="flex rounded-lg overflow-hidden border border-[var(--border-color)] mb-4 form-section">
             <button
               type="button"
               onClick={() => { setCalendarType('solar'); setIsLeapMonth(false) }}
-              className={`flex-1 py-2 text-sm font-medium transition-colors ${
-                calendarType === 'solar'
-                  ? 'bg-amber-500 text-slate-900'
-                  : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
-              }`}
+              className={toggleBtnClass(calendarType === 'solar')}
             >
               양력 (陽曆)
             </button>
             <button
               type="button"
               onClick={() => setCalendarType('lunar')}
-              className={`flex-1 py-2 text-sm font-medium transition-colors ${
-                calendarType === 'lunar'
-                  ? 'bg-amber-500 text-slate-900'
-                  : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
-              }`}
+              className={toggleBtnClass(calendarType === 'lunar')}
             >
               음력 (陰曆)
             </button>
@@ -93,39 +142,32 @@ export default function SajuForm({ onSubmit, loading = false }: SajuFormProps) {
 
           {/* 윤달 체크박스 (음력일 때만 표시) */}
           {calendarType === 'lunar' && (
-            <label className="flex items-center gap-2 mb-4 cursor-pointer">
+            <label className="flex items-center gap-2 mb-4 cursor-pointer form-section">
               <input
                 type="checkbox"
                 checked={isLeapMonth}
                 onChange={e => setIsLeapMonth(e.target.checked)}
-                className="w-4 h-4 rounded border-slate-600 bg-slate-800 text-amber-500 focus:ring-amber-400 focus:ring-offset-0"
+                className="w-4 h-4 rounded"
+                style={{ accentColor: 'var(--accent)' }}
                 disabled={loading}
               />
-              <span className="text-slate-400 text-sm">윤달 (閏月)</span>
+              <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>윤달 (閏月)</span>
             </label>
           )}
 
           {/* 성별 선택 */}
-          <div className="flex rounded-lg overflow-hidden border border-slate-600 mb-4">
+          <div className="flex rounded-lg overflow-hidden border border-[var(--border-color)] mb-4 form-section">
             <button
               type="button"
               onClick={() => setGender('male')}
-              className={`flex-1 py-2 text-sm font-medium transition-colors ${
-                gender === 'male'
-                  ? 'bg-amber-500 text-slate-900'
-                  : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
-              }`}
+              className={toggleBtnClass(gender === 'male')}
             >
               남성 (男)
             </button>
             <button
               type="button"
               onClick={() => setGender('female')}
-              className={`flex-1 py-2 text-sm font-medium transition-colors ${
-                gender === 'female'
-                  ? 'bg-amber-500 text-slate-900'
-                  : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
-              }`}
+              className={toggleBtnClass(gender === 'female')}
             >
               여성 (女)
             </button>
@@ -133,8 +175,8 @@ export default function SajuForm({ onSubmit, loading = false }: SajuFormProps) {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* 연도 */}
-            <div>
-              <label className="block text-slate-400 text-xs mb-1 font-medium">
+            <div className="form-section">
+              <label className="block text-xs mb-1 font-medium" style={{ color: 'var(--text-secondary)' }}>
                 연도 (年)
               </label>
               <select
@@ -150,9 +192,9 @@ export default function SajuForm({ onSubmit, loading = false }: SajuFormProps) {
             </div>
 
             {/* 월 / 일 */}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-3 form-section">
               <div>
-                <label className="block text-slate-400 text-xs mb-1 font-medium">
+                <label className="block text-xs mb-1 font-medium" style={{ color: 'var(--text-secondary)' }}>
                   월 (月)
                 </label>
                 <select
@@ -172,7 +214,7 @@ export default function SajuForm({ onSubmit, loading = false }: SajuFormProps) {
                 </select>
               </div>
               <div>
-                <label className="block text-slate-400 text-xs mb-1 font-medium">
+                <label className="block text-xs mb-1 font-medium" style={{ color: 'var(--text-secondary)' }}>
                   일 (日)
                 </label>
                 <select
@@ -189,9 +231,9 @@ export default function SajuForm({ onSubmit, loading = false }: SajuFormProps) {
             </div>
 
             {/* 시 / 분 */}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-3 form-section">
               <div>
-                <label className="block text-slate-400 text-xs mb-1 font-medium">
+                <label className="block text-xs mb-1 font-medium" style={{ color: 'var(--text-secondary)' }}>
                   시 (時)
                 </label>
                 <select
@@ -206,7 +248,7 @@ export default function SajuForm({ onSubmit, loading = false }: SajuFormProps) {
                 </select>
               </div>
               <div>
-                <label className="block text-slate-400 text-xs mb-1 font-medium">
+                <label className="block text-xs mb-1 font-medium" style={{ color: 'var(--text-secondary)' }}>
                   분 (分)
                 </label>
                 <select
@@ -223,23 +265,26 @@ export default function SajuForm({ onSubmit, loading = false }: SajuFormProps) {
             </div>
 
             {/* 제출 버튼 */}
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full mt-2 bg-amber-500 hover:bg-amber-400 disabled:bg-slate-600 disabled:cursor-not-allowed text-slate-900 font-bold py-3 px-6 rounded-lg transition-colors text-base tracking-wide"
-            >
-              {loading ? (
-                <span className="flex items-center justify-center gap-2">
-                  <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-                  </svg>
-                  분석 중...
-                </span>
-              ) : (
-                '사주 풀이 보기'
-              )}
-            </button>
+            <div className="form-section">
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full mt-2 font-bold py-3 px-6 rounded-lg transition-colors text-base tracking-wide hover-scale disabled:cursor-not-allowed"
+                style={{
+                  background: loading ? 'var(--bg-secondary)' : 'var(--accent)',
+                  color: loading ? 'var(--text-muted)' : 'var(--accent-text)',
+                }}
+              >
+                {loading ? (
+                  <span className="flex items-center justify-center gap-3">
+                    <div className="yin-yang" style={{ width: '24px', height: '24px' }} />
+                    분석 중...
+                  </span>
+                ) : (
+                  '사주 풀이 보기'
+                )}
+              </button>
+            </div>
           </form>
         </div>
       </div>

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import './globals.css'
 import ErrorBoundary from '@/components/ErrorBoundary'
+import ThemeProvider from '@/components/ThemeProvider'
 
 export const metadata: Metadata = {
   title: '천명(天命) - AI 사주팔자 풀이',
@@ -30,9 +31,11 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="ko">
-      <body className="bg-slate-900 text-slate-100 antialiased min-h-screen">
-        <ErrorBoundary>{children}</ErrorBoundary>
+    <html lang="ko" className="dark" suppressHydrationWarning>
+      <body className="antialiased min-h-screen" style={{ background: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
+        <ThemeProvider>
+          <ErrorBoundary>{children}</ErrorBoundary>
+        </ThemeProvider>
       </body>
     </html>
   )
