@@ -26,7 +26,7 @@ export const authOptions: NextAuthOptions = {
             clientSecret: process.env.KAKAO_CLIENT_SECRET,
             authorization: {
               url: 'https://kauth.kakao.com/oauth/authorize',
-              params: { scope: 'profile_nickname profile_image account_email' },
+              params: { scope: 'profile_nickname profile_image' },
             },
             token: 'https://kauth.kakao.com/oauth/token',
             userinfo: 'https://kapi.kakao.com/v2/user/me',
