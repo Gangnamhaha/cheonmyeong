@@ -50,6 +50,8 @@ export default function Home() {
   const [followUpLoading, setFollowUpLoading] = useState(false)
   const [chatHistory, setChatHistory] = useState<{ role: 'user' | 'assistant'; content: string }[]>([])
   const [shareToast, setShareToast] = useState(false)
+  const [saveImageLoading, setSaveImageLoading] = useState(false)
+  const resultRef = useRef<HTMLDivElement>(null)
 
   const fetchInterpretation = useCallback(async (result: FullSajuResult, category: AiCategory) => {
     // Check cache first
@@ -196,6 +198,28 @@ export default function Home() {
     })
   }
 
+  async function handleSaveImage() {
+    if (!resultRef.current || saveImageLoading) return
+    setSaveImageLoading(true)
+    try {
+      const html2canvas = (await import('html2canvas')).default
+      const canvas = await html2canvas(resultRef.current, {
+        backgroundColor: '#0f172a',
+        scale: 2,
+        useCORS: true,
+        logging: false,
+      })
+      const link = document.createElement('a')
+      link.download = `천명_사주결과_${new Date().toISOString().slice(0, 10)}.png`
+      link.href = canvas.toDataURL('image/png')
+      link.click()
+    } catch {
+      alert('이미지 저장 중 오류가 발생했습니다.')
+    } finally {
+      setSaveImageLoading(false)
+    }
+  }
+
   function handleReset() {
     abortRef.current?.abort()
     setAppState('form')
@@ -220,11 +244,14 @@ export default function Home() {
                 {calcError}
               </div>
             )}
+            <a href="/gunghap" className="block text-center text-slate-500 hover:text-pink-400 text-sm mt-4 transition-colors">
+              💑 궁합 비교하러 가기
+            </a>
           </>
         )}
 
         {appState === 'result' && fullResult && (
-          <div className="space-y-8 animate-fadeIn">
+          <div className="space-y-8 animate-fadeIn" ref={resultRef}>
             {/* 헤더 */}
             <div className="text-center">
               <h1 className="text-3xl font-bold text-amber-400">천명</h1>
@@ -313,8 +340,20 @@ export default function Home() {
               </button>
             </div>
 
+            {/* 궁합 링크 */}
+            <a href="/gunghap" className="block w-full text-center bg-pink-500/10 hover:bg-pink-500/20 text-pink-300 font-medium py-3 px-6 rounded-lg transition-colors text-sm border border-pink-500/30">
+              💑 궁합 보기
+            </a>
+
             {/* 공유 + 다시보기 버튼 */}
             <div className="flex gap-3">
+              <button
+                onClick={handleSaveImage}
+                disabled={saveImageLoading}
+                className="flex-1 bg-slate-800 hover:bg-slate-700 disabled:bg-slate-600 text-slate-300 font-medium py-3 px-6 rounded-lg transition-colors text-sm border border-slate-700"
+              >
+                {saveImageLoading ? '저장 중...' : '이미지 저장'}
+              </button>
               <button
                 onClick={handleShare}
                 className="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium py-3 px-6 rounded-lg transition-colors text-sm border border-slate-700"

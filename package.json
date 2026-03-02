@@ -11,26 +11,27 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "next": "^14.0.0",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
     "@fullstackfamily/manseryeok": "latest",
-    "openai": "latest"
+    "html2canvas": "^1.4.1",
+    "next": "^14.0.0",
+    "openai": "latest",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
   },
   "devDependencies": {
-    "typescript": "^5.3.3",
+    "@testing-library/jest-dom": "latest",
+    "@testing-library/react": "latest",
+    "@types/jsdom": "latest",
     "@types/node": "^20.10.6",
     "@types/react": "^18.2.46",
     "@types/react-dom": "^18.2.18",
-    "tailwindcss": "^3.4.1",
-    "postcss": "^8.4.32",
     "autoprefixer": "^10.4.16",
     "eslint": "^8.56.0",
     "eslint-config-next": "^14.0.0",
-    "vitest": "latest",
-    "@testing-library/react": "latest",
-    "@testing-library/jest-dom": "latest",
     "jsdom": "latest",
-    "@types/jsdom": "latest"
+    "postcss": "^8.4.32",
+    "tailwindcss": "^3.4.1",
+    "typescript": "^5.3.3",
+    "vitest": "latest"
   }
 }

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import ErrorBoundary from '@/components/ErrorBoundary'
 
 export const metadata: Metadata = {
   title: '천명(天命) - AI 사주팔자 풀이',
@@ -31,7 +32,7 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <body className="bg-slate-900 text-slate-100 antialiased min-h-screen">
-        {children}
+        <ErrorBoundary>{children}</ErrorBoundary>
       </body>
     </html>
   )
