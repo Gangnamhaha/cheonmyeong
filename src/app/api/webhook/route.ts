@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
       const userId = metadata.userId
 
       console.log(`[Webhook] Adding ${planKey} credits to user ${userId}`)
-      addCredits(userId, planKey)
+      await addCredits(userId, planKey)
     }
   }
 

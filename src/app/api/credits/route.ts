@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { getUserCredits, useCredit, checkFreeLimit, useFreeCredit } from '@/lib/credits'
+import { getUserCredits, useCredit, useFreeCredit } from '@/lib/credits'
 
 // GET /api/credits — 현재 크레딧 잔여량 조회
 export async function GET() {
@@ -9,7 +9,7 @@ export async function GET() {
 
   if (session?.user) {
     const userId = (session.user as Record<string, unknown>).id as string
-    const credits = getUserCredits(userId)
+    const credits = await getUserCredits(userId)
     return NextResponse.json({
       authenticated: true,
       plan: credits.plan,
@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
 
   if (session?.user) {
     const userId = (session.user as Record<string, unknown>).id as string
-    const result = useCredit(userId)
+    const result = await useCredit(userId)
 
     if (!result.success) {
       return NextResponse.json(
@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
     || req.headers.get('x-real-ip')
     || 'unknown'
 
-  const result = useFreeCredit(ip)
+  const result = await useFreeCredit(ip)
 
   if (!result.success) {
     return NextResponse.json(

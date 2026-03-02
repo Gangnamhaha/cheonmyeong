@@ -2,9 +2,8 @@
  * Credit management system
  * 
  * Storage strategy:
- * - Logged-in users: Server-side Map (in-memory, resets on cold start)
- *   In production, replace with Redis/KV store
- * - Guest users: Rate limited by IP (existing logic in interpret route)
+ * - Production (Upstash Redis): Persistent across cold starts
+ * - Development fallback: In-memory Map (when REDIS_URL not set)
  * 
  * Credit tiers:
  * - Free: 3 AI interpretations per day (no login required)
@@ -12,6 +11,8 @@
  * - Pro: 100 credits (₩9,900)
  * - Unlimited: 500 credits (₩29,900)
  */
+
+import { Redis } from '@upstash/redis'
 
 export interface UserCredits {
   total: number
@@ -65,15 +66,32 @@ export const PLANS = {
 
 export type PlanKey = keyof typeof PLANS
 
-// ─── In-memory credit store (replace with Redis/KV in production) ───
-const creditStore = new Map<string, UserCredits>()
+// ─── Storage backend ───────────────────────────────────────────────
 
-// Daily free credit tracking by IP
-const dailyFreeUsage = new Map<string, { count: number; date: string }>()
+const redisUrl = process.env.REDIS_URL || process.env.KV_REST_API_URL
+const redisToken = process.env.REDIS_TOKEN || process.env.KV_REST_API_TOKEN
 
-export function getUserCredits(userId: string): UserCredits {
-  const existing = creditStore.get(userId)
-  if (existing) return existing
+const redis = redisUrl && redisToken
+  ? new Redis({ url: redisUrl, token: redisToken })
+  : null
+
+// In-memory fallback (dev mode / when Redis not configured)
+const memCreditStore = new Map<string, UserCredits>()
+const memFreeUsage = new Map<string, { count: number; date: string }>()
+
+const CREDIT_KEY = (userId: string) => `credits:user:${userId}`
+const FREE_KEY = (ip: string, date: string) => `credits:free:${ip}:${date}`
+
+// ─── User credit functions ─────────────────────────────────────────
+
+export async function getUserCredits(userId: string): Promise<UserCredits> {
+  if (redis) {
+    const data = await redis.get<UserCredits>(CREDIT_KEY(userId))
+    if (data) return data
+  } else {
+    const existing = memCreditStore.get(userId)
+    if (existing) return existing
+  }
 
   const defaultCredits: UserCredits = {
     total: PLANS.free.credits,
@@ -81,12 +99,18 @@ export function getUserCredits(userId: string): UserCredits {
     plan: 'free',
     lastRefill: new Date().toISOString().slice(0, 10),
   }
-  creditStore.set(userId, defaultCredits)
+
+  if (redis) {
+    await redis.set(CREDIT_KEY(userId), defaultCredits)
+  } else {
+    memCreditStore.set(userId, defaultCredits)
+  }
+
   return defaultCredits
 }
 
-export function addCredits(userId: string, plan: PlanKey): UserCredits {
-  const current = getUserCredits(userId)
+export async function addCredits(userId: string, plan: PlanKey): Promise<UserCredits> {
+  const current = await getUserCredits(userId)
   const planInfo = PLANS[plan]
   const updated: UserCredits = {
     total: current.total + planInfo.credits - current.used, // remaining + new
@@ -94,12 +118,18 @@ export function addCredits(userId: string, plan: PlanKey): UserCredits {
     plan: plan === 'free' ? current.plan : plan,
     lastRefill: new Date().toISOString().slice(0, 10),
   }
-  creditStore.set(userId, updated)
+
+  if (redis) {
+    await redis.set(CREDIT_KEY(userId), updated)
+  } else {
+    memCreditStore.set(userId, updated)
+  }
+
   return updated
 }
 
-export function useCredit(userId: string): { success: boolean; remaining: number } {
-  const credits = getUserCredits(userId)
+export async function useCredit(userId: string): Promise<{ success: boolean; remaining: number }> {
+  const credits = await getUserCredits(userId)
   const remaining = credits.total - credits.used
 
   if (remaining <= 0) {
@@ -107,22 +137,37 @@ export function useCredit(userId: string): { success: boolean; remaining: number
   }
 
   credits.used += 1
-  creditStore.set(userId, credits)
+
+  if (redis) {
+    await redis.set(CREDIT_KEY(userId), credits)
+  } else {
+    memCreditStore.set(userId, credits)
+  }
+
   return { success: true, remaining: remaining - 1 }
 }
 
-export function getRemainingCredits(userId: string): number {
-  const credits = getUserCredits(userId)
+export async function getRemainingCredits(userId: string): Promise<number> {
+  const credits = await getUserCredits(userId)
   return credits.total - credits.used
 }
 
-// ─── Free tier daily limit (by IP) ───
-export function checkFreeLimit(ip: string): { allowed: boolean; remaining: number } {
-  const today = new Date().toISOString().slice(0, 10)
-  const usage = dailyFreeUsage.get(ip)
+// ─── Free tier daily limit (by IP) ─────────────────────────────────
 
+export async function checkFreeLimit(ip: string): Promise<{ allowed: boolean; remaining: number }> {
+  const today = new Date().toISOString().slice(0, 10)
+
+  if (redis) {
+    const count = await redis.get<number>(FREE_KEY(ip, today))
+    const used = count ?? 0
+    const remaining = PLANS.free.credits - used
+    return { allowed: remaining > 0, remaining: Math.max(0, remaining) }
+  }
+
+  // In-memory fallback
+  const usage = memFreeUsage.get(ip)
   if (!usage || usage.date !== today) {
-    dailyFreeUsage.set(ip, { count: 0, date: today })
+    memFreeUsage.set(ip, { count: 0, date: today })
     return { allowed: true, remaining: PLANS.free.credits }
   }
 
@@ -130,9 +175,24 @@ export function checkFreeLimit(ip: string): { allowed: boolean; remaining: numbe
   return { allowed: remaining > 0, remaining: Math.max(0, remaining) }
 }
 
-export function useFreeCredit(ip: string): { success: boolean; remaining: number } {
+export async function useFreeCredit(ip: string): Promise<{ success: boolean; remaining: number }> {
   const today = new Date().toISOString().slice(0, 10)
-  const usage = dailyFreeUsage.get(ip) || { count: 0, date: today }
+
+  if (redis) {
+    const key = FREE_KEY(ip, today)
+    const count = await redis.get<number>(key) ?? 0
+
+    if (count >= PLANS.free.credits) {
+      return { success: false, remaining: 0 }
+    }
+
+    const newCount = count + 1
+    await redis.set(key, newCount, { ex: 86400 }) // TTL: 24 hours
+    return { success: true, remaining: PLANS.free.credits - newCount }
+  }
+
+  // In-memory fallback
+  const usage = memFreeUsage.get(ip) || { count: 0, date: today }
 
   if (usage.date !== today) {
     usage.count = 0
@@ -144,6 +204,6 @@ export function useFreeCredit(ip: string): { success: boolean; remaining: number
   }
 
   usage.count += 1
-  dailyFreeUsage.set(ip, usage)
+  memFreeUsage.set(ip, usage)
   return { success: true, remaining: PLANS.free.credits - usage.count }
 }
