@@ -2,16 +2,41 @@
 
 import { signIn } from 'next-auth/react'
 import { useState } from 'react'
+import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
+import { Suspense } from 'react'
 
-export default function LoginPage() {
+function LoginForm() {
+  const searchParams = useSearchParams()
+  const callbackError = searchParams.get('error')
+
   const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(
+    callbackError === 'CredentialsSignin' ? '이메일 또는 비밀번호가 올바르지 않습니다.' : '',
+  )
+
+  const isValid = email.trim() && password.length >= 1
 
   async function handleCredentialLogin(e: React.FormEvent) {
     e.preventDefault()
-    if (!email.trim()) return
+    if (!email.trim() || !password) return
+    setError('')
     setLoading(true)
-    await signIn('credentials', { email, callbackUrl: '/' })
+
+    const result = await signIn('credentials', {
+      email: email.trim(),
+      password,
+      redirect: false,
+    })
+
+    if (result?.error) {
+      setError('이메일 또는 비밀번호가 올바르지 않습니다.')
+      setLoading(false)
+    } else {
+      window.location.href = '/'
+    }
   }
 
   return (
@@ -50,12 +75,21 @@ export default function LoginPage() {
           {/* Divider */}
           <div className="flex items-center gap-3">
             <div className="flex-1 h-px" style={{ background: 'var(--border-color)' }} />
-            <span className="text-xs" style={{ color: 'var(--text-muted)' }}>또는</span>
+            <span className="text-xs" style={{ color: 'var(--text-muted)' }}>또는 이메일로 로그인</span>
             <div className="flex-1 h-px" style={{ background: 'var(--border-color)' }} />
           </div>
 
-          {/* Test Login */}
+          {/* Email/Password Login */}
           <form onSubmit={handleCredentialLogin} className="space-y-3">
+            {error && (
+              <div
+                className="rounded-xl px-4 py-2.5 text-sm"
+                style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444' }}
+              >
+                {error}
+              </div>
+            )}
+
             <input
               type="email"
               value={email}
@@ -69,21 +103,37 @@ export default function LoginPage() {
               }}
               disabled={loading}
             />
+            <input
+              type="password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              placeholder="비밀번호"
+              className="w-full rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-1 transition-colors"
+              style={{
+                background: 'var(--bg-secondary)',
+                border: '1px solid var(--border-color)',
+                color: 'var(--text-primary)',
+              }}
+              disabled={loading}
+            />
             <button
               type="submit"
-              disabled={loading || !email.trim()}
+              disabled={loading || !isValid}
               className="w-full py-3 rounded-xl font-medium text-sm hover-scale transition-all disabled:cursor-not-allowed"
               style={{
-                background: email.trim() ? 'var(--accent)' : 'var(--bg-secondary)',
-                color: email.trim() ? 'var(--accent-text)' : 'var(--text-muted)',
+                background: isValid ? 'var(--accent)' : 'var(--bg-secondary)',
+                color: isValid ? 'var(--accent-text)' : 'var(--text-muted)',
               }}
             >
               {loading ? '로그인 중...' : '이메일로 로그인'}
             </button>
           </form>
 
-          <p className="text-[10px] text-center" style={{ color: 'var(--text-muted)' }}>
-            테스트용 이메일 로그인입니다. 아무 이메일이나 입력하세요.
+          <p className="text-xs text-center" style={{ color: 'var(--text-muted)' }}>
+            계정이 없으신가요?{' '}
+            <Link href="/signup" className="underline" style={{ color: 'var(--text-accent)' }}>
+              회원가입
+            </Link>
           </p>
         </div>
 
@@ -92,5 +142,20 @@ export default function LoginPage() {
         </a>
       </div>
     </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg-primary)' }}>
+        <div className="text-center">
+          <p className="font-serif-kr text-3xl font-bold mb-1" style={{ color: 'var(--text-accent)' }}>천명</p>
+          <p style={{ color: 'var(--text-muted)' }}>로딩 중...</p>
+        </div>
+      </div>
+    }>
+      <LoginForm />
+    </Suspense>
   )
 }

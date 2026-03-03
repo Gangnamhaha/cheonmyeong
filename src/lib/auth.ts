@@ -3,6 +3,7 @@ import GoogleProvider from 'next-auth/providers/google'
 import KakaoProvider from 'next-auth/providers/kakao'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import { registerUser } from '@/lib/admin'
+import { verifyUserPassword } from '@/lib/user'
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -31,18 +32,23 @@ export const authOptions: NextAuthOptions = {
         ]
       : []),
 
-    // Demo credentials (for testing without OAuth setup)
+    // Email/password login
     CredentialsProvider({
-      name: '테스트 로그인',
+      name: '이메일 로그인',
       credentials: {
-        email: { label: '이메일', type: 'email', placeholder: 'test@example.com' },
+        email: { label: '이메일', type: 'email', placeholder: 'email@example.com' },
+        password: { label: '비밀번호', type: 'password' },
       },
       async authorize(credentials) {
-        if (!credentials?.email) return null
+        if (!credentials?.email || !credentials?.password) return null
+
+        const user = await verifyUserPassword(credentials.email, credentials.password)
+        if (!user) return null
+
         return {
-          id: credentials.email,
-          name: credentials.email.split('@')[0],
-          email: credentials.email,
+          id: user.id,
+          name: user.name,
+          email: user.email,
         }
       },
     }),
