@@ -54,6 +54,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     // V2: paymentId from frontend verify or PortOne server webhook
     const paymentId = (body.paymentId ?? body.data?.paymentId) as string | undefined
+    const isGuest = body.isGuest === true
 
     if (!paymentId) {
       return NextResponse.json({ error: 'paymentId가 필요합니다.' }, { status: 400 })
@@ -74,6 +75,21 @@ export async function POST(req: NextRequest) {
     if (payment.amount.total !== planInfo.price) {
       console.error(`Amount mismatch: expected ${planInfo.price}, got ${payment.amount.total}`)
       return NextResponse.json({ error: '결제 금액이 요금제와 일치하지 않습니다.' }, { status: 400 })
+    }
+
+    // Helper to build response with optional guest cookie
+    const buildResponse = (data: Record<string, unknown>) => {
+      const res = NextResponse.json(data)
+      if (isGuest && parsedData.userId) {
+        res.cookies.set('guest_user_id', parsedData.userId, {
+          path: '/',
+          maxAge: 365 * 24 * 60 * 60, // 1 year
+          httpOnly: true,
+          sameSite: 'lax',
+          secure: process.env.NODE_ENV === 'production',
+        })
+      }
+      return res
     }
 
     if (planInfo.type === 'subscription') {
@@ -103,11 +119,11 @@ export async function POST(req: NextRequest) {
         })
       }
 
-      return NextResponse.json({ received: true, type: 'subscription' })
+      return buildResponse({ received: true, type: 'subscription' })
     }
 
     await addCredits(parsedData.userId, parsedData.plan as OnetimePlanKey)
-    return NextResponse.json({ received: true, type: 'onetime' })
+    return buildResponse({ received: true, type: 'onetime' })
   } catch (error) {
     console.error('PortOne webhook handling error:', error)
     return NextResponse.json({ error: 'PortOne webhook 처리 중 오류가 발생했습니다.' }, { status: 500 })
