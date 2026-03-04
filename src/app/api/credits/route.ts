@@ -25,8 +25,11 @@ export async function GET() {
 
   if (userId) {
     const credits = await getUserCredits(userId)
+    const isGuest = !session?.user && userId.startsWith('email_')
     return NextResponse.json({
       authenticated: !!session?.user,
+      guest: isGuest,
+      guestEmail: isGuest ? userId.replace('email_', '') : undefined,
       plan: credits.plan,
       remaining: credits.total - credits.used,
       total: credits.total,

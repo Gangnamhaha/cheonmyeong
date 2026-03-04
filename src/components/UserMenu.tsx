@@ -5,6 +5,8 @@ import { useState, useEffect } from 'react'
 
 interface CreditInfo {
   authenticated: boolean
+  guest?: boolean
+  guestEmail?: string
   plan: string
   remaining: number
   total: number
@@ -32,6 +34,95 @@ export default function UserMenu() {
   if (status === 'loading') {
     return (
       <div className="h-9 w-20 rounded-full animate-pulse" style={{ background: 'var(--bg-secondary)' }} />
+    )
+  }
+
+  // 비회원 로그인 상태
+  if (!session && credits?.guest && credits.guestEmail) {
+    return (
+      <div className="relative">
+        <button
+          onClick={() => setMenuOpen(!menuOpen)}
+          className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium hover-scale theme-transition"
+          style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)' }}
+        >
+          {credits && (
+            <span
+              className="px-2 py-0.5 rounded-full text-[10px] font-bold"
+              style={{
+                background: credits.remaining > 10 ? 'rgba(74,222,128,0.15)' : credits.remaining > 0 ? 'rgba(250,204,21,0.15)' : 'rgba(248,113,113,0.15)',
+                color: credits.remaining > 10 ? '#4ade80' : credits.remaining > 0 ? '#facc15' : '#f87171',
+              }}
+            >
+              {credits.remaining}회
+            </span>
+          )}
+          <span style={{ color: 'var(--text-secondary)' }}>
+            {credits.guestEmail.length > 15 ? credits.guestEmail.slice(0, 15) + '…' : credits.guestEmail}
+          </span>
+          <span
+            className="px-1.5 py-0.5 rounded text-[9px]"
+            style={{ background: 'rgba(156,163,175,0.15)', color: 'var(--text-muted)' }}
+          >
+            비회원
+          </span>
+        </button>
+
+        {menuOpen && (
+          <>
+            <div className="fixed inset-0 z-40" onClick={() => setMenuOpen(false)} />
+            <div
+              className="absolute right-0 top-full mt-2 w-56 rounded-xl shadow-lg z-50 py-2 theme-transition"
+              style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)' }}
+            >
+              <div className="px-4 py-2 border-b" style={{ borderColor: 'var(--border-color)' }}>
+                <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                  비회원
+                </p>
+                <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                  {credits.guestEmail}
+                </p>
+              </div>
+
+              <div className="px-4 py-3 border-b" style={{ borderColor: 'var(--border-color)' }}>
+                <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>크레딧</span>
+                <p className="text-lg font-bold" style={{ color: 'var(--text-accent)' }}>
+                  {credits.remaining}회 <span className="text-xs font-normal" style={{ color: 'var(--text-muted)' }}>남음</span>
+                </p>
+              </div>
+
+              <a
+                href="/pricing"
+                className="block px-4 py-2.5 text-sm hover:opacity-80 transition-opacity"
+                style={{ color: 'var(--text-accent)' }}
+                onClick={() => setMenuOpen(false)}
+              >
+                ✨ 크레딧 충전하기
+              </a>
+              <a
+                href="/login"
+                className="block px-4 py-2.5 text-sm hover:opacity-80 transition-opacity"
+                style={{ color: 'var(--text-secondary)' }}
+                onClick={() => setMenuOpen(false)}
+              >
+                회원 로그인
+              </a>
+              <button
+                onClick={() => {
+                  fetch('/api/auth/guest', { method: 'DELETE' }).finally(() => {
+                    window.location.reload()
+                  })
+                  setMenuOpen(false)
+                }}
+                className="block w-full text-left px-4 py-2.5 text-sm hover:opacity-80 transition-opacity"
+                style={{ color: 'var(--text-muted)' }}
+              >
+                로그아웃
+              </button>
+            </div>
+          </>
+        )}
+      </div>
     )
   }
 
