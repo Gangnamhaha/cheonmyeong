@@ -29,3 +29,16 @@ export async function POST(request: Request) {
 
   return res
 }
+
+// DELETE /api/auth/guest — 비회원 로그아웃 (쿠키 삭제)
+export async function DELETE() {
+  const res = NextResponse.json({ success: true })
+  res.cookies.set('guest_user_id', '', {
+    path: '/',
+    maxAge: 0,
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production',
+  })
+  return res
+}
