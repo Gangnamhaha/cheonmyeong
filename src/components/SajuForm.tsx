@@ -491,6 +491,24 @@ export default function SajuForm({ onSubmit, loading = false }: SajuFormProps) {
         </section>
       )}
 
+      {/* ═══ GUNGHAP PROMO (C3) ═══ */}
+      <section className="px-4 pb-8 max-w-md mx-auto relative z-10">
+        <a
+          href="/gunghap"
+          className="block rounded-xl p-5 text-center hover-lift promo-glow theme-transition"
+          style={{
+            background: theme === 'dark' ? 'rgba(236,72,153,0.08)' : 'rgba(236,72,153,0.05)',
+            border: '1px solid rgba(244,114,182,0.25)',
+          }}
+        >
+          <div className="text-3xl mb-2">💑</div>
+          <div className="text-base font-bold mb-1" style={{ color: '#f472b6' }}>궁합 분석</div>
+          <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+            두 사람의 사주를 비교하고 AI가 궁합을 풀어드려요
+          </p>
+        </a>
+      </section>
+
       {/* ═══ HISTORY SECTION (C2) ═══ */}
       {history.length > 0 && (
         <section className="px-4 pb-8 max-w-md mx-auto relative z-10">
@@ -520,24 +538,6 @@ export default function SajuForm({ onSubmit, loading = false }: SajuFormProps) {
           </div>
         </section>
       )}
-
-      {/* ═══ GUNGHAP PROMO (C3) ═══ */}
-      <section className="px-4 pb-12 max-w-md mx-auto relative z-10">
-        <a
-          href="/gunghap"
-          className="block rounded-xl p-5 text-center hover-lift promo-glow theme-transition"
-          style={{
-            background: theme === 'dark' ? 'rgba(236,72,153,0.08)' : 'rgba(236,72,153,0.05)',
-            border: '1px solid rgba(244,114,182,0.25)',
-          }}
-        >
-          <div className="text-3xl mb-2">💑</div>
-          <div className="text-base font-bold mb-1" style={{ color: '#f472b6' }}>궁합 분석</div>
-          <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-            두 사람의 사주를 비교하고 AI가 궁합을 풀어드려요
-          </p>
-        </a>
-      </section>
     </div>
   )
 }
