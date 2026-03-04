@@ -350,36 +350,6 @@ export default function SajuForm({ onSubmit, loading = false }: SajuFormProps) {
         </div>
       </section>
 
-      {/* ═══ HISTORY SECTION (C2) ═══ */}
-      {history.length > 0 && (
-        <section className="px-4 pb-8 max-w-md mx-auto relative z-10">
-          <h3 className="text-sm font-bold mb-3" style={{ color: 'var(--text-secondary)' }}>
-            📋 최근 분석 기록
-          </h3>
-          <div className="space-y-2">
-            {history.map((entry, i) => (
-              <button
-                key={i}
-                className="history-card w-full text-left flex items-center justify-between"
-                onClick={() => handleHistoryClick(entry)}
-              >
-                <div>
-                  <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
-                    {entry.year}.{String(entry.month).padStart(2, '0')}.{String(entry.day).padStart(2, '0')}
-                  </span>
-                  <span className="text-xs ml-2" style={{ color: 'var(--text-muted)' }}>
-                    {entry.hour}시 · {entry.gender === 'male' ? '남' : '여'}
-                  </span>
-                </div>
-                <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                  {entry.date}
-                </span>
-              </button>
-            ))}
-          </div>
-        </section>
-      )}
-
       {/* ═══ FORM SECTION (B3, C5) ═══ */}
       {showForm && (
         <section className="px-4 pb-8 max-w-md mx-auto relative z-10" id="saju-form-card">
@@ -512,6 +482,36 @@ export default function SajuForm({ onSubmit, loading = false }: SajuFormProps) {
                 </button>
               </div>
             </form>
+          </div>
+        </section>
+      )}
+
+      {/* ═══ HISTORY SECTION (C2) ═══ */}
+      {history.length > 0 && (
+        <section className="px-4 pb-8 max-w-md mx-auto relative z-10">
+          <h3 className="text-sm font-bold mb-3" style={{ color: 'var(--text-secondary)' }}>
+            📋 최근 분석 기록
+          </h3>
+          <div className="space-y-2">
+            {history.map((entry, i) => (
+              <button
+                key={i}
+                className="history-card w-full text-left flex items-center justify-between"
+                onClick={() => handleHistoryClick(entry)}
+              >
+                <div>
+                  <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                    {entry.year}.{String(entry.month).padStart(2, '0')}.{String(entry.day).padStart(2, '0')}
+                  </span>
+                  <span className="text-xs ml-2" style={{ color: 'var(--text-muted)' }}>
+                    {entry.hour}시 · {entry.gender === 'male' ? '남' : '여'}
+                  </span>
+                </div>
+                <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                  {entry.date}
+                </span>
+              </button>
+            ))}
           </div>
         </section>
       )}
