@@ -60,6 +60,7 @@ function PricingContent() {
   const [credits, setCredits] = useState<{ remaining: number; plan: string } | null>(null)
   const [subscription, setSubscription] = useState<UserSubscription | null>(null)
   const [cancelingSubscription, setCancelingSubscription] = useState(false)
+  const [guestEmail, setGuestEmail] = useState('')
 
   const success = searchParams.get('success')
   const cancelled = searchParams.get('cancelled')
@@ -123,18 +124,17 @@ function PricingContent() {
   }
 
   // Verify payment (called after V2 SDK success or mobile redirect)
-  async function verifyPayment(paymentId: string) {
+  async function verifyPayment(paymentId: string, isGuest = false) {
     try {
       const verifyRes = await fetch('/api/portone/webhook', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ paymentId }),
+        body: JSON.stringify({ paymentId, isGuest }),
       })
       if (verifyRes.ok) {
         showToast('결제가 완료되었습니다! 🎉', 5000)
         fetchCredits()
         fetchSubscription()
-        // Clean up URL params
         window.history.replaceState({}, '', '/pricing')
       } else {
         showToast('결제 검증에 실패했습니다. 고객센터에 문의해 주세요.')
@@ -146,8 +146,16 @@ function PricingContent() {
 
   // PortOne V2 payment flow
   async function handlePayment(planKey: PlanKey) {
-    if (!session) {
-      window.location.href = '/login'
+    const isGuest = !session
+
+    // 비회원이면 이메일 필수
+    if (isGuest && !guestEmail.trim()) {
+      showToast('이메일 주소를 입력해주세요.')
+      return
+    }
+
+    if (isGuest && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(guestEmail.trim())) {
+      showToast('올바른 이메일 형식을 입력해주세요.')
       return
     }
 
@@ -158,7 +166,10 @@ function PricingContent() {
       const res = await fetch('/api/portone', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ plan: planKey }),
+        body: JSON.stringify({
+          plan: planKey,
+          ...(isGuest ? { guestEmail: guestEmail.trim() } : {}),
+        }),
       })
 
       if (!res.ok) {
@@ -177,7 +188,7 @@ function PricingContent() {
         return
       }
 
-      // 3. Call V2 SDK (Promise-based, not callback)
+      // 3. Call V2 SDK
       const response = await window.PortOne.requestPayment({
         storeId: data.storeId,
         channelKey: data.channelKey,
@@ -188,8 +199,8 @@ function PricingContent() {
         payMethod: 'CARD',
         redirectUrl: `${window.location.origin}/pricing`,
         customer: {
-          email: session.user?.email || undefined,
-          fullName: session.user?.name || undefined,
+          email: session?.user?.email || guestEmail.trim() || undefined,
+          fullName: session?.user?.name || undefined,
         },
         customData: JSON.stringify({ userId: data.userId, plan: planKey }),
       })
@@ -198,13 +209,12 @@ function PricingContent() {
       if (response?.code) {
         const isCanceled = response.code === 'PAY_PROCESS_CANCELED' || response.code === 'PAY_PROCESS_ABORTED'
         showToast(isCanceled ? '결제가 취소되었습니다.' : (response.message || '결제 처리 중 오류가 발생했습니다.'))
-
         setLoadingPlan(null)
         return
       }
 
       // 5. Verify on server
-      await verifyPayment(data.paymentId)
+      await verifyPayment(data.paymentId, isGuest)
     } catch {
       showToast('네트워크 오류가 발생했습니다.')
     } finally {
@@ -355,6 +365,33 @@ function PricingContent() {
           </div>
         </div>
 
+        {/* Guest email input */}
+        {!session && (
+          <div
+            className="rounded-2xl p-4 mb-6 theme-transition"
+            style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)' }}
+          >
+            <p className="text-xs mb-2 font-medium" style={{ color: 'var(--text-secondary)' }}>
+              비회원 결제 — 이메일을 입력하면 로그인 없이 결제할 수 있습니다.
+            </p>
+            <input
+              type="email"
+              value={guestEmail}
+              onChange={e => setGuestEmail(e.target.value)}
+              placeholder="이메일 주소"
+              className="w-full rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-1 transition-colors"
+              style={{
+                background: 'var(--bg-secondary)',
+                border: '1px solid var(--border-color)',
+                color: 'var(--text-primary)',
+              }}
+            />
+            <p className="text-[10px] mt-1.5" style={{ color: 'var(--text-muted)' }}>
+              나중에 같은 이메일로 회원가입하면 크레딧이 자동 연동됩니다.
+            </p>
+          </div>
+        )}
+
         {/* Plan Cards */}
         <div className="space-y-4">
           {currentPlans.map((key) => {
@@ -426,11 +463,9 @@ function PricingContent() {
                     ? '처리 중...'
                     : isCurrent
                       ? '현재 플랜'
-                      : !session
-                        ? '로그인 후 구매'
-                        : isSubscription
-                          ? '구독 시작'
-                          : '크레딧 충전'}
+                      : isSubscription
+                        ? '구독 시작'
+                        : '크레딧 충전'}
                 </button>
               </div>
             )
