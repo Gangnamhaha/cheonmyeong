@@ -3,6 +3,7 @@
 import { useState, useMemo, useEffect } from 'react'
 import { useTheme } from './ThemeProvider'
 import UserMenu from './UserMenu'
+import SajuChat from './SajuChat'
 
 interface SajuFormData {
   name: string
@@ -275,6 +276,10 @@ export default function SajuForm({ onSubmit, loading = false }: SajuFormProps) {
           </p>
         </div>
 
+        {/* AI 채팅 */}
+        <div className="w-full max-w-md mt-6 relative z-10">
+          <SajuChat />
+        </div>
         {/* D1: Daily quote */}
         <div
           className="mt-8 text-center relative z-10 max-w-sm mx-auto"

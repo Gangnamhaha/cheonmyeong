@@ -13,7 +13,6 @@ import DaeunTimeline from '@/components/DaeunTimeline'
 import FortuneCard from '@/components/FortuneCard'
 import { useTheme } from '@/components/ThemeProvider'
 import { calculateFullSaju, FullSajuResult } from '@/lib/saju'
-import SajuChat from '@/components/SajuChat'
 
 type AppState = 'form' | 'result'
 type ResultTab = '사주' | '분석' | '운세' | 'AI'
@@ -517,7 +516,6 @@ export default function Home() {
         {appState === 'form' && (
           <>
             <SajuForm onSubmit={handleFormSubmit} loading={loading} />
-            <SajuChat />
             {calcError && (
               <div className="mx-4 mb-8 bg-red-900/30 border border-red-700 rounded-lg p-4 text-red-300 text-sm text-center">
                 {calcError}
