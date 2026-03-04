@@ -65,7 +65,7 @@ function getGreeting(): string {
   if (h >= 12 && h < 14) return '점심 시간, 잠깐 운세를 들여다볼까요?'
   if (h >= 14 && h < 18) return '오후의 여유, 사주로 내일을 준비하세요.'
   if (h >= 18 && h < 21) return '해 질 녘, 별빛 아래 운명을 읽어봅니다.'
-  return '고요한 밤, 별이 당신의 사주를 비추고 있어요.'
+  return 'AI 해석을 읽으신 후 직접 채팅창에서 물어보실 수 있어요!'
 }
 
 // ─── Daily quote (D1) ───
