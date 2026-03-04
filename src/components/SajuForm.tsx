@@ -91,10 +91,12 @@ function getDailyQuote() {
 
 // ─── Feature cards (A3) ───
 const FEATURES = [
-  { icon: '🏛️', title: '사주팔자', desc: '생년월일시 기반 정밀 분석' },
-  { icon: '🔮', title: 'AI 해석', desc: 'GPT 기반 맞춤 사주 풀이' },
-  { icon: '📊', title: '오행·십신', desc: '오행 분포와 십신 관계도' },
-  { icon: '💑', title: '궁합 분석', desc: '두 사람의 사주 궁합 비교' },
+  { icon: '🏛️', title: '사주팔자 분석', desc: '생년월일시를 기반으로 천간·지지 팔자를 정밀 계산합니다' },
+  { icon: '🤖', title: 'AI 맞춤 해석', desc: '명리학 전문 AI가 당신의 사주를 성격, 연애, 직업, 재물 등 카테고리별로 풀어드립니다' },
+  { icon: '📊', title: '오행·십신·용신', desc: '오행 분포도, 십신 관계도, 용신 분석까지 한눈에 확인하세요' },
+  { icon: '🌟', title: '대운·세운·월운', desc: '10년 대운의 흐름과 올해 세운, 이달의 월운을 분석합니다' },
+  { icon: '💬', title: 'AI 사주 상담', desc: '사주에 대해 궁금한 점을 AI 전문가에게 자유롭게 질문하세요' },
+  { icon: '💑', title: '궁합 분석', desc: '두 사람의 사주를 비교하고 AI가 궁합을 풀어드립니다' },
 ]
 
 // ─── Taegeuk SVG (B1) ───
@@ -314,21 +316,35 @@ export default function SajuForm({ onSubmit, loading = false }: SajuFormProps) {
       {/* ═══ FEATURES SECTION (A3) ═══ */}
       <section className="px-4 py-12 max-w-md mx-auto relative z-10">
         <h2
-          className="font-serif-kr text-center text-lg font-bold mb-6"
-          style={{ color: 'var(--text-accent)', opacity: 0, animation: 'fadeIn 0.5s ease-out 0.5s forwards' }}
+          className="font-serif-kr text-center text-xl font-bold mb-2"
+          style={{ color: 'var(--text-accent)', opacity: 0, animation: 'fadeIn 0.5s ease-out 0.3s forwards' }}
         >
-          이런 걸 알 수 있어요
+          천명이 제공하는 기능
         </h2>
-        <div className="grid grid-cols-2 gap-3">
+        <p
+          className="text-center text-xs mb-8 max-w-xs mx-auto leading-relaxed"
+          style={{ color: 'var(--text-muted)', opacity: 0, animation: 'fadeIn 0.5s ease-out 0.5s forwards' }}
+        >
+          전통 명리학 이론과 AI 기술을 결합하여
+          누구나 쉽게 사주를 이해할 수 있도록 도와드립니다
+        </p>
+        <div className="space-y-3">
           {FEATURES.map((f, i) => (
             <div
               key={i}
-              className="feature-card rounded-xl p-4 text-center hover-lift theme-transition"
-              style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)' }}
+              className="feature-card rounded-xl p-4 flex items-start gap-3.5 hover-lift theme-transition"
+              style={{
+                background: 'var(--bg-card)',
+                border: '1px solid var(--border-color)',
+                opacity: 0,
+                animation: `fadeIn 0.4s ease-out ${0.4 + i * 0.08}s forwards`,
+              }}
             >
-              <div className="text-2xl mb-2">{f.icon}</div>
-              <div className="text-sm font-bold mb-1" style={{ color: 'var(--text-primary)' }}>{f.title}</div>
-              <div className="text-xs" style={{ color: 'var(--text-muted)' }}>{f.desc}</div>
+              <span className="text-2xl mt-0.5 flex-shrink-0">{f.icon}</span>
+              <div>
+                <p className="text-sm font-bold mb-0.5" style={{ color: 'var(--text-primary)' }}>{f.title}</p>
+                <p className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>{f.desc}</p>
+              </div>
             </div>
           ))}
         </div>
