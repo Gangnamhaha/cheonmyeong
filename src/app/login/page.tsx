@@ -13,11 +13,39 @@ function LoginForm() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
+  const [guestEmail, setGuestEmail] = useState('')
+  const [guestLoading, setGuestLoading] = useState(false)
   const [error, setError] = useState(
     callbackError === 'CredentialsSignin' ? '이메일 또는 비밀번호가 올바르지 않습니다.' : '',
   )
 
   const isValid = email.trim() && password.length >= 1
+
+  async function handleGuestLogin(e: React.FormEvent) {
+    e.preventDefault()
+    const trimmed = guestEmail.trim()
+    if (!trimmed) { setError('이메일을 입력해주세요.'); return }
+    setError('')
+    setGuestLoading(true)
+
+    try {
+      const res = await fetch('/api/auth/guest', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: trimmed }),
+      })
+      const data = (await res.json()) as { error?: string }
+      if (!res.ok) {
+        setError(data.error ?? '비회원 로그인에 실패했습니다.')
+        setGuestLoading(false)
+        return
+      }
+      window.location.href = '/'
+    } catch {
+      setError('네트워크 오류가 발생했습니다.')
+      setGuestLoading(false)
+    }
+  }
 
   async function handleCredentialLogin(e: React.FormEvent) {
     e.preventDefault()
@@ -134,6 +162,45 @@ function LoginForm() {
             <Link href="/signup" className="underline" style={{ color: 'var(--text-accent)' }}>
               회원가입
             </Link>
+          </p>
+
+          {/* Guest login */}
+          <div className="flex items-center gap-3 pt-2">
+            <div className="flex-1 h-px" style={{ background: 'var(--border-color)' }} />
+            <span className="text-xs" style={{ color: 'var(--text-muted)' }}>비회원 로그인</span>
+            <div className="flex-1 h-px" style={{ background: 'var(--border-color)' }} />
+          </div>
+
+          <form onSubmit={handleGuestLogin} className="space-y-3">
+            <input
+              type="email"
+              value={guestEmail}
+              onChange={e => setGuestEmail(e.target.value)}
+              placeholder="이메일 주소"
+              className="w-full rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-1 transition-colors"
+              style={{
+                background: 'var(--bg-secondary)',
+                border: '1px solid var(--border-color)',
+                color: 'var(--text-primary)',
+              }}
+              disabled={guestLoading}
+            />
+            <button
+              type="submit"
+              disabled={guestLoading || !guestEmail.trim()}
+              className="w-full py-3 rounded-xl font-medium text-sm hover-scale transition-all disabled:cursor-not-allowed"
+              style={{
+                background: 'var(--bg-secondary)',
+                color: guestEmail.trim() ? 'var(--text-primary)' : 'var(--text-muted)',
+                border: '1px solid var(--border-color)',
+              }}
+            >
+              {guestLoading ? '로그인 중...' : '이메일로 비회원 로그인'}
+            </button>
+          </form>
+
+          <p className="text-[10px] text-center" style={{ color: 'var(--text-muted)' }}>
+            비회원으로 결제한 크레딧을 사용할 수 있습니다.
           </p>
         </div>
 
