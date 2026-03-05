@@ -2,7 +2,7 @@
 
 import { type FormEvent, useCallback, useEffect, useMemo, useState } from 'react'
 
-type TabKey = 'dashboard' | 'users' | 'revenue' | 'credits' | 'announcements' | 'settings'
+type TabKey = 'dashboard' | 'users' | 'revenue' | 'credits' | 'announcements' | 'inquiries' | 'settings'
 
 interface DashboardStats {
   totalUsers: number
@@ -46,6 +46,18 @@ interface AdminAnnouncement {
   active: boolean
 }
 
+interface AdminInquiry {
+  id: string
+  email: string
+  name: string
+  subject: string
+  content: string
+  status: 'pending' | 'replied'
+  createdAt: string
+  reply?: string
+  repliedAt?: string
+}
+
 interface CreditAdjustment {
   id: string
   userId: string
@@ -74,6 +86,7 @@ const TABS: { key: TabKey; label: string }[] = [
   { key: 'revenue', label: '매출/결제' },
   { key: 'credits', label: '크레딧 관리' },
   { key: 'announcements', label: '공지사항' },
+  { key: 'inquiries', label: '고객문의' },
   { key: 'settings', label: '시스템 설정' },
 ]
 
@@ -126,6 +139,13 @@ export default function AdminDashboardClient() {
   const [settings, setSettings] = useState<SettingsResponse | null>(null)
   const [settingsLoading, setSettingsLoading] = useState(false)
   const [settingsError, setSettingsError] = useState<string | null>(null)
+
+  const [adminInquiries, setAdminInquiries] = useState<AdminInquiry[]>([])
+  const [inquiriesLoading, setInquiriesLoading] = useState(false)
+  const [inquiriesError, setInquiriesError] = useState<string | null>(null)
+  const [replyingId, setReplyingId] = useState<string | null>(null)
+  const [replyText, setReplyText] = useState('')
+  const [replyLoading, setReplyLoading] = useState(false)
 
   const fetchStats = useCallback(async () => {
     setStatsLoading(true)
@@ -203,6 +223,24 @@ export default function AdminDashboardClient() {
     }
   }, [])
 
+  const fetchInquiries = useCallback(async () => {
+    setInquiriesLoading(true)
+    setInquiriesError(null)
+    try {
+      const res = await fetch('/api/admin/inquiries')
+      const data = await res.json()
+      if (!res.ok) {
+        setInquiriesError(data.error ?? '문의 목록을 불러오지 못했습니다.')
+        return
+      }
+      setAdminInquiries(data.inquiries ?? [])
+    } catch {
+      setInquiriesError('문의 목록을 불러오지 못했습니다.')
+    } finally {
+      setInquiriesLoading(false)
+    }
+  }, [])
+
   useEffect(() => {
     async function checkAuth() {
       try {
@@ -212,6 +250,7 @@ export default function AdminDashboardClient() {
           fetchStats()
           fetchUsers(1)
           fetchAnnouncements()
+          fetchInquiries()
           fetchSettings()
         }
       } catch {
@@ -221,7 +260,7 @@ export default function AdminDashboardClient() {
       }
     }
     checkAuth()
-  }, [fetchAnnouncements, fetchSettings, fetchStats, fetchUsers])
+  }, [fetchAnnouncements, fetchInquiries, fetchSettings, fetchStats, fetchUsers])
 
   useEffect(() => {
     if (!isAuthenticated) return
@@ -257,6 +296,7 @@ export default function AdminDashboardClient() {
       fetchStats()
       fetchUsers(1)
       fetchAnnouncements()
+      fetchInquiries()
       fetchSettings()
     } catch {
       setLoginError('서버 연결에 실패했습니다.')
@@ -906,6 +946,95 @@ export default function AdminDashboardClient() {
                   </li>
                 ))}
               </ul>
+            </div>
+          </section>
+        )}
+
+        {activeTab === 'inquiries' && (
+          <section className="space-y-4">
+            <div className="rounded-xl border border-slate-700 bg-slate-800 p-4">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold text-amber-400">고객 문의 관리</h2>
+                <button onClick={fetchInquiries} className="rounded-lg border border-slate-600 px-3 py-1.5 text-xs text-slate-300 hover:bg-slate-700">새로고침</button>
+              </div>
+              {inquiriesLoading && <p className="text-sm text-slate-400">로딩 중...</p>}
+              {inquiriesError && <p className="text-sm text-red-300">{inquiriesError}</p>}
+              {!inquiriesLoading && adminInquiries.length === 0 && <p className="text-sm text-slate-500">등록된 문의가 없습니다.</p>}
+              <div className="space-y-3">
+                {adminInquiries.map((inq) => (
+                  <div key={inq.id} className="rounded-xl border border-slate-700 bg-slate-900 p-4">
+                    <div className="flex items-start justify-between gap-2 mb-2">
+                      <div>
+                        <p className="text-sm font-medium text-slate-100">{inq.subject}</p>
+                        <p className="text-xs text-slate-400 mt-0.5">{inq.name} &middot; {inq.email}</p>
+                      </div>
+                      <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold flex-shrink-0 ${inq.status === 'replied' ? 'bg-green-500/15 text-green-400' : 'bg-yellow-500/15 text-yellow-400'}`}>
+                        {inq.status === 'replied' ? '답변 완료' : '대기 중'}
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-300 leading-relaxed whitespace-pre-wrap">{inq.content}</p>
+                    <p className="text-[10px] text-slate-500 mt-1">{new Date(inq.createdAt).toLocaleString('ko-KR')}</p>
+
+                    {inq.reply && (
+                      <div className="mt-3 rounded-lg border border-slate-700 bg-slate-800 p-3">
+                        <p className="text-[10px] font-bold text-amber-400 mb-1">관리자 답변</p>
+                        <p className="text-xs text-slate-200 whitespace-pre-wrap">{inq.reply}</p>
+                        {inq.repliedAt && <p className="text-[10px] text-slate-500 mt-1">{new Date(inq.repliedAt).toLocaleString('ko-KR')}</p>}
+                      </div>
+                    )}
+
+                    {replyingId === inq.id ? (
+                      <div className="mt-3 space-y-2">
+                        <textarea
+                          value={replyText}
+                          onChange={(e) => setReplyText(e.target.value)}
+                          placeholder="답변을 입력하세요..."
+                          rows={3}
+                          className="w-full rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-500 resize-none"
+                        />
+                        <div className="flex gap-2">
+                          <button
+                            disabled={replyLoading || !replyText.trim()}
+                            onClick={async () => {
+                              setReplyLoading(true)
+                              try {
+                                const res = await fetch('/api/admin/inquiries', {
+                                  method: 'POST',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({ id: inq.id, reply: replyText }),
+                                })
+                                if (res.ok) {
+                                  setReplyingId(null)
+                                  setReplyText('')
+                                  fetchInquiries()
+                                }
+                              } finally {
+                                setReplyLoading(false)
+                              }
+                            }}
+                            className="rounded-lg bg-amber-500 px-4 py-2 text-xs font-semibold text-slate-950 hover:bg-amber-400 disabled:opacity-50"
+                          >
+                            {replyLoading ? '전송 중...' : '답변 전송'}
+                          </button>
+                          <button
+                            onClick={() => { setReplyingId(null); setReplyText('') }}
+                            className="rounded-lg border border-slate-600 px-4 py-2 text-xs text-slate-300 hover:bg-slate-700"
+                          >
+                            취소
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => { setReplyingId(inq.id); setReplyText(inq.reply ?? '') }}
+                        className="mt-2 rounded-lg border border-amber-500/40 px-3 py-1.5 text-xs text-amber-300 hover:bg-amber-900/20"
+                      >
+                        {inq.reply ? '답변 수정' : '답변하기'}
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
           </section>
         )}

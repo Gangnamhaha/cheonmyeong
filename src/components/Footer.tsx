@@ -21,6 +21,9 @@ export default function Footer() {
             <Link href="/refund" className="transition-colors hover:text-[var(--text-accent)]">
               환불정책
             </Link>
+            <Link href="/inquiry" className="transition-colors hover:text-[var(--text-accent)]">
+              고객문의
+            </Link>
             <Link href="/admin" className="transition-colors hover:text-[var(--text-accent)]">
               관리자
             </Link>
