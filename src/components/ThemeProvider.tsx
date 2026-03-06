@@ -84,9 +84,9 @@ export default function ThemeProvider({ children }: { children: React.ReactNode 
     })
   }, [])
 
-  // Prevent flash of wrong theme
+  // Prevent flash of wrong theme — render children directly (no extra wrapper div)
   if (!mounted) {
-    return <div className="dark">{children}</div>
+    return <>{children}</>
   }
 
   return (

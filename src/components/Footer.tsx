@@ -7,7 +7,7 @@ export default function Footer() {
     <footer className="mt-auto border-t border-[var(--border-color)] bg-[var(--bg-secondary)]/60">
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-4 py-5 sm:px-6">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-xs text-[var(--text-muted)]">© 2025 천명(天命). All rights reserved.</p>
+          <p className="text-xs text-[var(--text-muted)]">&copy; {new Date().getFullYear()} 천명(天命). All rights reserved.</p>
           <nav className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-[var(--text-secondary)]">
             <Link href="/" className="transition-colors hover:text-[var(--text-accent)]">
               홈
@@ -23,9 +23,6 @@ export default function Footer() {
             </Link>
             <Link href="/inquiry" className="transition-colors hover:text-[var(--text-accent)]">
               고객문의
-            </Link>
-            <Link href="/admin" className="transition-colors hover:text-[var(--text-accent)]">
-              관리자
             </Link>
           </nav>
         </div>

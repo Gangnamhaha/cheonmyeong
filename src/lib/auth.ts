@@ -67,7 +67,8 @@ export const authOptions: NextAuthOptions = {
         if (user.email) {
           try {
             await registerUser(user.id, user.email, user.name ?? undefined)
-          } catch {
+          } catch (err) {
+            console.error('Failed to register user in admin store:', err)
           }
         }
       }
@@ -85,5 +86,5 @@ export const authOptions: NextAuthOptions = {
     signIn: '/login',
   },
 
-  secret: process.env.NEXTAUTH_SECRET || 'cheonmyeong-dev-secret-change-in-production',
+  secret: process.env.NEXTAUTH_SECRET,
 }

@@ -122,6 +122,7 @@ const memCreditStore = new Map<string, UserCredits>()
 const memFreeUsage = new Map<string, { count: number; date: string }>()
 
 const CREDIT_KEY = (userId: string) => `credits:user:${userId}`
+const USED_COUNTER_KEY = (userId: string) => `credits:used:${userId}`
 const FREE_KEY = (ip: string, date: string) => `credits:free:${ip}:${date}`
 
 // ─── User credit functions ─────────────────────────────────────────
@@ -163,6 +164,8 @@ export async function addCredits(userId: string, plan: PlanKey): Promise<UserCre
 
   if (redis) {
     await redis.set(CREDIT_KEY(userId), updated)
+    // Reset the atomic counter to match used=0
+    await redis.set(USED_COUNTER_KEY(userId), 0)
   } else {
     memCreditStore.set(userId, updated)
   }
@@ -181,6 +184,8 @@ export async function refillSubscriptionCredits(userId: string, plan: Subscripti
 
   if (redis) {
     await redis.set(CREDIT_KEY(userId), updated)
+    // Reset the atomic counter to match used=0
+    await redis.set(USED_COUNTER_KEY(userId), 0)
   } else {
     memCreditStore.set(userId, updated)
   }
@@ -188,7 +193,59 @@ export async function refillSubscriptionCredits(userId: string, plan: Subscripti
   return updated
 }
 
+/**
+ * Atomically consume one credit.
+ *
+ * Strategy (Upstash Redis):
+ *   1. Read the full UserCredits object for the `total` value.
+ *   2. INCR an atomic counter key (`credits:used:<userId>`) — this is the
+ *      single source of truth for `used` count and is race-condition-safe.
+ *   3. If the incremented value exceeds `total`, DECR it back and reject.
+ *   4. Sync the `used` field in the main object (best-effort, non-critical).
+ */
 export async function useCredit(userId: string): Promise<{ success: boolean; remaining: number }> {
+  if (redis) {
+    const key = CREDIT_KEY(userId)
+    const data = await redis.get<UserCredits>(key)
+
+    if (!data) {
+      // First-time user: initialize defaults
+      const defaultCredits: UserCredits = {
+        total: PLANS.free.credits,
+        used: 0,
+        plan: 'free',
+        lastRefill: new Date().toISOString().slice(0, 10),
+      }
+      await redis.set(key, defaultCredits)
+    }
+
+    const credits = data ?? {
+      total: PLANS.free.credits,
+      used: 0,
+      plan: 'free' as PlanKey,
+      lastRefill: new Date().toISOString().slice(0, 10),
+    }
+
+    // Atomic increment — returns the value AFTER incrementing
+    const newUsed = await redis.incr(USED_COUNTER_KEY(userId))
+
+    if (newUsed > credits.total) {
+      // Over limit — roll back the increment
+      await redis.decr(USED_COUNTER_KEY(userId))
+      return { success: false, remaining: 0 }
+    }
+
+    // Best-effort sync of the main object (non-critical if this fails)
+    try {
+      await redis.set(key, { ...credits, used: newUsed })
+    } catch {
+      // Counter is the source of truth; object sync failure is non-fatal
+    }
+
+    return { success: true, remaining: credits.total - newUsed }
+  }
+
+  // In-memory fallback (dev only — single process, no race condition)
   const credits = await getUserCredits(userId)
   const remaining = credits.total - credits.used
 
@@ -197,13 +254,7 @@ export async function useCredit(userId: string): Promise<{ success: boolean; rem
   }
 
   credits.used += 1
-
-  if (redis) {
-    await redis.set(CREDIT_KEY(userId), credits)
-  } else {
-    memCreditStore.set(userId, credits)
-  }
-
+  memCreditStore.set(userId, credits)
   return { success: true, remaining: remaining - 1 }
 }
 

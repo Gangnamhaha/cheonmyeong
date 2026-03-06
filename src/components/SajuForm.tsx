@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useTheme } from './ThemeProvider'
 import UserMenu from './UserMenu'
 import SajuChat from './SajuChat'
@@ -166,10 +166,14 @@ export default function SajuForm({ onSubmit, loading = false }: SajuFormProps) {
   const daysInMonth = getDaysInMonth(year, month)
   const days = useMemo(() => Array.from({ length: daysInMonth }, (_, i) => i + 1), [daysInMonth])
 
-  const greeting = useMemo(() => getGreeting(), [])
-  const dailyQuote = useMemo(() => getDailyQuote(), [])
+  // Hydration-safe: defer time-dependent values to client
+  const [greeting, setGreeting] = useState('사주팔자로 당신의 운명을 알아보세요')
+  const [dailyQuote, setDailyQuote] = useState(QUOTES[0])
 
   useEffect(() => {
+    // Set time-dependent values on client only (prevents hydration mismatch)
+    setGreeting(getGreeting())
+    setDailyQuote(getDailyQuote())
     setHistory(getHistory())
     setTotalCount(getAnalysisCount())
     // Auto-show form after hero delay

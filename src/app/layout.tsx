@@ -4,8 +4,10 @@ import ErrorBoundary from '@/components/ErrorBoundary'
 import ThemeProvider from '@/components/ThemeProvider'
 import AuthProvider from '@/components/AuthProvider'
 import Footer from '@/components/Footer'
+import Navbar from '@/components/Navbar'
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://cheonmyeong.vercel.app'),
   title: '천명(天命) - AI 사주팔자 풀이',
   description: '생년월일시를 입력하면 사주팔자, 오행, 십신, 용신, 대운을 분석하고 AI가 해석해드립니다. 무료 사주 풀이 서비스.',
   keywords: ['사주', '사주팔자', '팔자', '오행', '십신', '용신', '대운', '운세', 'AI 사주', '무료 사주', '천명', '명리학'],
@@ -53,6 +55,7 @@ export default function RootLayout({
       <body className="antialiased min-h-screen flex flex-col" style={{ background: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
         <AuthProvider>
           <ThemeProvider>
+            <Navbar />
             <ErrorBoundary>{children}</ErrorBoundary>
             <Footer />
           </ThemeProvider>
