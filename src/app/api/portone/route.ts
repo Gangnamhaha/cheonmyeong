@@ -30,8 +30,9 @@ export async function POST(req: NextRequest) {
   const userId = session?.user
     ? (session.user as Record<string, unknown>).id as string
     : `email_${guestEmail}`
-  const userToken = Buffer.from(userId).toString('base64url')
-  const paymentId = `payment__${plan}__${userToken}__${Date.now()}`
+  // PortOne V2: paymentId must be alphanumeric + dash/underscore, 6-64 chars
+  const shortId = Date.now().toString(36) + Math.random().toString(36).slice(2, 6)
+  const paymentId = `pay-${plan}-${shortId}`
 
   return NextResponse.json({
     paymentId,
