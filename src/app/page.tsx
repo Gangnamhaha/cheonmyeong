@@ -407,9 +407,27 @@ export default function Home() {
         ] }),
         new Paragraph({ spacing: { before: 100, after: 100 }, children: [] }),
 
-        // \uC62C\uD574 \uC6B4\uC138
+        // 십신 분석
         new Paragraph({ heading: HeadingLevel.HEADING_1, children: [
-          new TextRun({ text: `${new Date().getFullYear()}\uB144 \uC6B4\uC138`, bold: true }),
+          new TextRun({ text: '십신 분석 (十神)', bold: true }),
+        ] }),
+        new Paragraph({ spacing: { after: 60 }, children: [
+          new TextRun({ text: [
+            `비겁: ${(fullResult.sipsin.summary.비견 || 0) + (fullResult.sipsin.summary.겁재 || 0)}개`,
+            `식상: ${(fullResult.sipsin.summary.식신 || 0) + (fullResult.sipsin.summary.상관 || 0)}개`,
+            `재성: ${(fullResult.sipsin.summary.편재 || 0) + (fullResult.sipsin.summary.정재 || 0)}개`,
+            `관성: ${(fullResult.sipsin.summary.편관 || 0) + (fullResult.sipsin.summary.정관 || 0)}개`,
+            `인성: ${(fullResult.sipsin.summary.편인 || 0) + (fullResult.sipsin.summary.정인 || 0)}개`,
+          ].join('  |  '), size: 22 }),
+        ] }),
+        new Paragraph({ spacing: { after: 60 }, children: [
+          new TextRun({ text: `년간: ${fullResult.sipsin.yearStem}  |  월간: ${fullResult.sipsin.monthStem}  |  일지: ${fullResult.sipsin.dayBranch}  |  시간: ${fullResult.sipsin.hourStem}`, size: 20, color: '666666' }),
+        ] }),
+        new Paragraph({ spacing: { before: 100, after: 100 }, children: [] }),
+
+        // 올해 운세
+        new Paragraph({ heading: HeadingLevel.HEADING_1, children: [
+          new TextRun({ text: `${new Date().getFullYear()}년 운세`, bold: true }),
         ] }),
         new Paragraph({ spacing: { after: 60 }, children: [
           new TextRun({ text: `\uD310\uC815: ${fullResult.yearlyFortune.rating}`, size: 22, bold: true }),
@@ -433,7 +451,45 @@ export default function Home() {
         )
       }
 
-      // \uD478\uD130
+      // 태을해석
+      if (traditionalResult) {
+        const tCategories: { key: keyof TraditionalInterpretationResult; label: string }[] = [
+          { key: 'personality', label: '📖 성격·십신' },
+          { key: 'dayPillar', label: '🏛️ 일주 해석' },
+          { key: 'career', label: '💼 직업 추천' },
+          { key: 'health', label: '🏥 건강 주의' },
+          { key: 'fortune', label: '🌟 운세 참고' },
+          { key: 'yongsinAdvice', label: '🔮 용신 조언' },
+          { key: 'children', label: '👶 자손운' },
+          { key: 'relationship', label: '💑 부부·연인' },
+          { key: 'general', label: '📋 종합 참고' },
+        ]
+        sections.push(
+          new Paragraph({ spacing: { before: 200, after: 100 }, children: [] }),
+          new Paragraph({ heading: HeadingLevel.HEADING_1, children: [
+            new TextRun({ text: '태을 해석 (전통 사주 해석)', bold: true }),
+          ] }),
+        )
+        for (const cat of tCategories) {
+          const entries = traditionalResult[cat.key]
+          if (entries && entries.length > 0) {
+            sections.push(
+              new Paragraph({ heading: HeadingLevel.HEADING_2, spacing: { before: 120 }, children: [
+                new TextRun({ text: cat.label, bold: true, size: 24 }),
+              ] }),
+            )
+            for (const entry of entries) {
+              sections.push(
+                new Paragraph({ spacing: { after: 60 }, children: [
+                  new TextRun({ text: `• ${entry.plain}`, size: 20, color: '333333' }),
+                ] }),
+              )
+            }
+          }
+        }
+      }
+
+      // 푸터
       sections.push(
         new Paragraph({ spacing: { before: 300 }, children: [] }),
         new Paragraph({ alignment: AlignmentType.CENTER, children: [
@@ -442,6 +498,13 @@ export default function Home() {
       )
 
       const doc = new Document({
+        styles: {
+          default: {
+            document: {
+              run: { font: 'Malgun Gothic' },
+            },
+          },
+        },
         sections: [{ children: sections }],
       })
 
@@ -942,8 +1005,7 @@ export default function Home() {
             </span>
           </div>
           <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '6px', lineHeight: '1.5' }}>
-            {fullResult.yearlyFortune.description.slice(0, 100)}
-            {fullResult.yearlyFortune.description.length > 100 ? '...' : ''}
+            {fullResult.yearlyFortune.description}
           </div>
         </div>
 
@@ -954,10 +1016,43 @@ export default function Home() {
               AI \uC885\uD569 \uD574\uC11D
             </div>
             <div style={{ fontSize: '12px', color: '#cbd5e1', lineHeight: '1.7', whiteSpace: 'pre-line' }}>
-              {aiInterpretation.slice(0, 300)}{aiInterpretation.length > 300 ? '...' : ''}
+              {aiInterpretation}
             </div>
           </div>
         )}
+
+        {/* 태을해석 요약 */}
+        {traditionalResult && (() => {
+          const imgCategories: { key: keyof TraditionalInterpretationResult; label: string }[] = [
+            { key: 'personality', label: '📖 성격' },
+            { key: 'career', label: '💼 직업' },
+            { key: 'health', label: '🏥 건강' },
+            { key: 'fortune', label: '🌟 운세' },
+            { key: 'children', label: '👶 자손' },
+            { key: 'relationship', label: '💑 부부' },
+          ]
+          const hasEntries = imgCategories.some(c => traditionalResult[c.key]?.length > 0)
+          if (!hasEntries) return null
+          return (
+            <div style={{ background: '#1e293b', borderRadius: '12px', padding: '16px', border: '1px solid #334155', marginBottom: '16px' }}>
+              <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#fbbf24', marginBottom: '10px' }}>
+                태을 해석 요약
+              </div>
+              {imgCategories.map(cat => {
+                const entries = traditionalResult[cat.key]
+                if (!entries || entries.length === 0) return null
+                return (
+                  <div key={cat.key} style={{ marginBottom: '8px' }}>
+                    <div style={{ fontSize: '11px', color: '#94a3b8', marginBottom: '3px' }}>{cat.label}</div>
+                    <div style={{ fontSize: '11px', color: '#cbd5e1', lineHeight: '1.5' }}>
+                      • {entries[0].plain}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )
+        })()}
 
         {/* 카카오톡 공유 */}
         <button
