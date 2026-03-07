@@ -9,22 +9,29 @@ import AiInterpretation from '@/components/AiInterpretation'
 import SipsinChart from '@/components/SipsinChart'
 import IlganStrengthBadge from '@/components/IlganStrengthBadge'
 import YongsinCard from '@/components/YongsinCard'
+import TraditionalInterpretation from '@/components/TraditionalInterpretation'
 import DaeunTimeline from '@/components/DaeunTimeline'
 import FortuneCard from '@/components/FortuneCard'
 import { useTheme } from '@/components/ThemeProvider'
 import { trackAnalysis, trackShare } from '@/lib/analytics'
 import { shareSajuResult } from '@/lib/kakao'
 import { calculateFullSaju, FullSajuResult } from '@/lib/saju'
+import {
+  getTraditionalInterpretation,
+  toTraditionalContextText,
+  type TraditionalInterpretation as TraditionalInterpretationResult,
+} from '@/lib/traditional-interpret'
 
 type AppState = 'form' | 'result'
-type ResultTab = '사주' | '분석' | '운세' | 'AI'
+type ResultTab = '사주' | '분석' | '운세' | '해석'
 type ViewMode = 'summary' | 'detail'
+type InterpretMode = '태을' | 'AI'
 
 const RESULT_TABS: { key: ResultTab; label: string; icon: string }[] = [
   { key: '사주', label: '사주', icon: '🏛️' },
   { key: '분석', label: '분석', icon: '🔍' },
   { key: '운세', label: '운세', icon: '🌟' },
-  { key: 'AI', label: 'AI', icon: '🤖' },
+  { key: '해석', label: '해석', icon: '📜' },
 ]
 
 type AiCategory = '종합' | '성격' | '연애' | '직업' | '건강' | '재물'
@@ -54,6 +61,8 @@ export default function Home() {
   const [appState, setAppState] = useState<AppState>('form')
   const [loading, setLoading] = useState(false)
   const [fullResult, setFullResult] = useState<FullSajuResult | null>(null)
+  const [traditionalResult, setTraditionalResult] = useState<TraditionalInterpretationResult | null>(null)
+  const [traditionalContext, setTraditionalContext] = useState('')
   const [formData, setFormData] = useState<FormData | null>(null)
   const [aiInterpretation, setAiInterpretation] = useState<string | null>(null)
   const [aiLoading, setAiLoading] = useState(false)
@@ -74,8 +83,13 @@ export default function Home() {
   // New state for tabs and view mode
   const [activeTab, setActiveTab] = useState<ResultTab>('사주')
   const [viewMode, setViewMode] = useState<ViewMode>('detail')
+  const [interpretMode, setInterpretMode] = useState<InterpretMode>('태을')
 
-  const fetchInterpretation = useCallback(async (result: FullSajuResult, category: AiCategory) => {
+  const fetchInterpretation = useCallback(async (
+    result: FullSajuResult,
+    category: AiCategory,
+    context: string = traditionalContext,
+  ) => {
     // Check cache first
     if (categoryCache[category]) {
       setAiInterpretation(categoryCache[category] ?? null)
@@ -117,6 +131,7 @@ export default function Home() {
           yearlyFortune: result.yearlyFortune,
           monthlyFortune: result.monthlyFortune,
           category,
+          traditionalContext: context || undefined,
         }),
         signal: controller.signal,
       })
@@ -153,7 +168,14 @@ export default function Home() {
     } finally {
       setAiLoading(false)
     }
-  }, [categoryCache])
+  }, [categoryCache, traditionalContext])
+
+  function handleInterpretModeChange(mode: InterpretMode) {
+    setInterpretMode(mode)
+    if (mode === 'AI' && fullResult && !categoryCache[activeCategory]) {
+      fetchInterpretation(fullResult, activeCategory)
+    }
+  }
 
   function handleCategoryChange(category: AiCategory) {
     setActiveCategory(category)
@@ -171,6 +193,9 @@ export default function Home() {
     setCategoryCache({})
     setActiveTab('사주')
     setViewMode('detail')
+    setInterpretMode('태을')
+    setTraditionalResult(null)
+    setTraditionalContext('')
     setFormData(data)
 
     try {
@@ -179,11 +204,14 @@ export default function Home() {
         data.calendarType, data.isLeapMonth, data.gender,
       )
 
+      const traditional = getTraditionalInterpretation(result, data.gender)
+      const context = toTraditionalContextText(traditional, 500)
+
       setFullResult(result)
+      setTraditionalResult(traditional)
+      setTraditionalContext(context)
       setAppState('result')
       trackAnalysis('사주분석')
-
-      fetchInterpretation(result, '종합')
     } catch (err) {
       setCalcError(err instanceof Error ? err.message : '사주 계산 중 오류가 발생했습니다.')
     } finally {
@@ -214,6 +242,7 @@ export default function Home() {
           category: '종합',
           followUp: question,
           stream: false,
+          traditionalContext: traditionalContext || undefined,
         }),
       })
       const data = await res.json()
@@ -436,10 +465,13 @@ export default function Home() {
     setCalcError(null)
     setActiveCategory('종합')
     setCategoryCache({})
+    setTraditionalResult(null)
+    setTraditionalContext('')
     setChatHistory([])
     setFollowUpQuestion('')
     setActiveTab('사주')
     setViewMode('detail')
+    setInterpretMode('태을')
   }
 
   // Summary view helper
@@ -609,86 +641,118 @@ export default function Home() {
                     </>
                   )}
 
-                  {activeTab === 'AI' && (
+                  {activeTab === '해석' && (
                     <>
-                      {/* 카테고리 탭 */}
-                      <div className="flex gap-1 overflow-x-auto pb-1 scrollbar-hide">
-                        {AI_CATEGORIES.map(cat => (
+                      {/* 해석 모드 토글 */}
+                      <div className="flex gap-1 p-1 rounded-xl mb-6" style={{ background: 'var(--bg-secondary)' }}>
+                        {([
+                          { key: '태을' as InterpretMode, label: '태을해석', icon: '📜' },
+                          { key: 'AI' as InterpretMode, label: 'AI해석', icon: '🤖' },
+                        ]).map(mode => (
                           <button
-                            key={cat.key}
-                            onClick={() => handleCategoryChange(cat.key)}
-                            className="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors hover-scale"
+                            key={mode.key}
+                            onClick={() => handleInterpretModeChange(mode.key)}
+                            className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all hover-scale ${
+                              interpretMode === mode.key ? 'tab-active-pulse' : ''
+                            }`}
                             style={{
-                              background: activeCategory === cat.key ? 'var(--accent)' : 'var(--bg-secondary)',
-                              color: activeCategory === cat.key ? 'var(--accent-text)' : 'var(--text-secondary)',
-                              border: activeCategory === cat.key ? 'none' : '1px solid var(--border-color)',
+                              background: interpretMode === mode.key ? 'var(--accent)' : 'transparent',
+                              color: interpretMode === mode.key ? 'var(--accent-text)' : 'var(--text-secondary)',
                             }}
                           >
-                            {cat.icon} {cat.label}
+                            {mode.icon} {mode.label}
                           </button>
                         ))}
                       </div>
 
-                      {/* AI 해석 */}
-                      <AiInterpretation
-                        interpretation={aiInterpretation}
-                        loading={aiLoading}
-                        error={aiError}
-                        onRetry={() => fetchInterpretation(fullResult, activeCategory)}
-                      />
-
-                      {/* 후속 질문 */}
-                      {chatHistory.length > 0 && (
-                        <div className="space-y-3">
-                          {chatHistory.map((msg, i) => (
-                            <div
-                              key={i}
-                              className={`text-sm p-3 rounded-lg ${msg.role === 'user' ? 'ml-8' : 'mr-8'}`}
-                              style={{
-                                background: msg.role === 'user'
-                                  ? 'rgba(245,158,11,0.1)'
-                                  : 'var(--bg-card)',
-                                border: `1px solid ${msg.role === 'user' ? 'rgba(245,158,11,0.2)' : 'var(--border-color)'}`,
-                                color: msg.role === 'user' ? 'var(--text-accent)' : 'var(--text-secondary)',
-                              }}
-                            >
-                              <span className="text-xs block mb-1" style={{ color: 'var(--text-muted)' }}>
-                                {msg.role === 'user' ? '나' : 'AI 명리사'}
-                              </span>
-                              <div className="whitespace-pre-line">{msg.content}</div>
-                            </div>
-                          ))}
-                        </div>
+                      {/* 태을해석 모드 */}
+                      {interpretMode === '태을' && traditionalResult && (
+                        <TraditionalInterpretation result={traditionalResult} />
                       )}
 
-                      {/* 후속 질문 입력 */}
-                      <div className="flex gap-2">
-                        <input
-                          type="text"
-                          value={followUpQuestion}
-                          onChange={e => setFollowUpQuestion(e.target.value)}
-                          onKeyDown={e => { if (e.key === 'Enter') handleFollowUp() }}
-                          placeholder="추가 질문을 입력하세요..."
-                          className="flex-1 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 transition-colors"
-                          style={{
-                            background: 'var(--bg-secondary)',
-                            border: '1px solid var(--border-color)',
-                            color: 'var(--text-primary)',
-                          }}
-                          disabled={followUpLoading}
-                        />
-                        <button
-                          onClick={handleFollowUp}
-                          disabled={followUpLoading || !followUpQuestion.trim()}
-                          className="font-bold px-4 py-2 rounded-lg transition-colors text-sm hover-scale disabled:cursor-not-allowed"
-                          style={{
-                            background: followUpLoading || !followUpQuestion.trim() ? 'var(--bg-secondary)' : 'var(--accent)',
-                            color: followUpLoading || !followUpQuestion.trim() ? 'var(--text-muted)' : 'var(--accent-text)',
-                          }}
-                        >
-                          {followUpLoading ? '...' : '물어보기'}
-                        </button>
-                      </div>
+                      {/* AI해석 모드 */}
+                      {interpretMode === 'AI' && (
+                        <>
+                          {/* 카테고리 탭 */}
+                          <div className="flex gap-1 overflow-x-auto pb-1 scrollbar-hide">
+                            {AI_CATEGORIES.map(cat => (
+                              <button
+                                key={cat.key}
+                                onClick={() => handleCategoryChange(cat.key)}
+                                className="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors hover-scale"
+                                style={{
+                                  background: activeCategory === cat.key ? 'var(--accent)' : 'var(--bg-secondary)',
+                                  color: activeCategory === cat.key ? 'var(--accent-text)' : 'var(--text-secondary)',
+                                  border: activeCategory === cat.key ? 'none' : '1px solid var(--border-color)',
+                                }}
+                              >
+                                {cat.icon} {cat.label}
+                              </button>
+                            ))}
+                          </div>
+
+                          {/* AI 해석 */}
+                          <AiInterpretation
+                            interpretation={aiInterpretation}
+                            loading={aiLoading}
+                            error={aiError}
+                            onRetry={() => fetchInterpretation(fullResult, activeCategory)}
+                          />
+
+                          {/* 후속 질문 */}
+                          {chatHistory.length > 0 && (
+                            <div className="space-y-3">
+                              {chatHistory.map((msg, i) => (
+                                <div
+                                  key={i}
+                                  className={`text-sm p-3 rounded-lg ${msg.role === 'user' ? 'ml-8' : 'mr-8'}`}
+                                  style={{
+                                    background: msg.role === 'user'
+                                      ? 'rgba(245,158,11,0.1)'
+                                      : 'var(--bg-card)',
+                                    border: `1px solid ${msg.role === 'user' ? 'rgba(245,158,11,0.2)' : 'var(--border-color)'}`,
+                                    color: msg.role === 'user' ? 'var(--text-accent)' : 'var(--text-secondary)',
+                                  }}
+                                >
+                                  <span className="text-xs block mb-1" style={{ color: 'var(--text-muted)' }}>
+                                    {msg.role === 'user' ? '나' : 'AI 명리사'}
+                                  </span>
+                                  <div className="whitespace-pre-line">{msg.content}</div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
+                          {/* 후속 질문 입력 */}
+                          <div className="flex gap-2">
+                            <input
+                              type="text"
+                              value={followUpQuestion}
+                              onChange={e => setFollowUpQuestion(e.target.value)}
+                              onKeyDown={e => { if (e.key === 'Enter') handleFollowUp() }}
+                              placeholder="추가 질문을 입력하세요..."
+                              className="flex-1 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 transition-colors"
+                              style={{
+                                background: 'var(--bg-secondary)',
+                                border: '1px solid var(--border-color)',
+                                color: 'var(--text-primary)',
+                              }}
+                              disabled={followUpLoading}
+                            />
+                            <button
+                              onClick={handleFollowUp}
+                              disabled={followUpLoading || !followUpQuestion.trim()}
+                              className="font-bold px-4 py-2 rounded-lg transition-colors text-sm hover-scale disabled:cursor-not-allowed"
+                              style={{
+                                background: followUpLoading || !followUpQuestion.trim() ? 'var(--bg-secondary)' : 'var(--accent)',
+                                color: followUpLoading || !followUpQuestion.trim() ? 'var(--text-muted)' : 'var(--accent-text)',
+                              }}
+                            >
+                              {followUpLoading ? '...' : '물어보기'}
+                            </button>
+                          </div>
+                        </>
+                      )}
                     </>
                   )}
                 </div>

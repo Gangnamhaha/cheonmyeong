@@ -88,6 +88,7 @@ export async function POST(req: NextRequest) {
     category = '종합',
     stream = true,
     followUp,
+    traditionalContext,
   } = body as {
     saju?: unknown
     oheng?: unknown
@@ -100,6 +101,7 @@ export async function POST(req: NextRequest) {
     category?: Category
     stream?: boolean
     followUp?: string
+    traditionalContext?: string
   }
 
   if (!saju || !oheng) {
@@ -121,6 +123,10 @@ export async function POST(req: NextRequest) {
   // If follow-up question, append it
   if (followUp) {
     userMessage += `\n\n위 사주에 대해 추가 질문이 있습니다: ${followUp}\n간결하게 300자 이내로 답변해 주세요.`
+  }
+
+  if (traditionalContext) {
+    userMessage += `\n\n전통 명리학 해설서 참고:\n${traditionalContext}`
   }
 
   // OpenAI 호출
