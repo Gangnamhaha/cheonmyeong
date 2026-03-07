@@ -146,3 +146,32 @@ export function calculateMonthlyFortune(
     description,
   }
 }
+
+// ─── Daily Fortune (60-group caching) ──────────────────────────────
+
+// 10 Heavenly Stems
+const DAILY_STEMS = ['갑','을','병','정','무','기','경','신','임','계']
+// 12 Earthly Branches
+const DAILY_BRANCHES = ['자','축','인','묘','진','사','오','미','신','유','술','해']
+
+// Map day pillar (stem+branch) to 60 Jiazi group index (0-59)
+export function getDayPillarGroupIndex(stem: string, branch: string): number {
+  const stemIdx = DAILY_STEMS.indexOf(stem)
+  const branchIdx = DAILY_BRANCHES.indexOf(branch)
+  if (stemIdx === -1 || branchIdx === -1) return 0
+  for (let i = 0; i < 60; i++) {
+    if (i % 10 === stemIdx && i % 12 === branchIdx) return i
+  }
+  return 0
+}
+
+// Generate the 60 Jiazi combinations
+export function get60Jiazi(): { index: number; stem: string; branch: string; name: string }[] {
+  const result = []
+  for (let i = 0; i < 60; i++) {
+    const stem = DAILY_STEMS[i % 10]
+    const branch = DAILY_BRANCHES[i % 12]
+    result.push({ index: i, stem, branch, name: `${stem}${branch}` })
+  }
+  return result
+}

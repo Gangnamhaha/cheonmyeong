@@ -1,1 +1,9 @@
-{"regions":["icn1"]}
+{
+  "regions": ["icn1"],
+  "crons": [
+    {
+      "path": "/api/cron/daily-fortune",
+      "schedule": "0 23 * * *"
+    }
+  ]
+}
