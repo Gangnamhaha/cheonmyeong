@@ -4,6 +4,12 @@ import KakaoProvider from 'next-auth/providers/kakao'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import { registerUser } from '@/lib/admin'
 import { verifyUserPassword } from '@/lib/user'
+import { getUserCredits, addCredits } from '@/lib/credits'
+import { Redis } from '@upstash/redis'
+
+const redisUrl = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL
+const redisToken = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN
+const authRedis = redisUrl && redisToken ? new Redis({ url: redisUrl, token: redisToken }) : null
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -69,6 +75,34 @@ export const authOptions: NextAuthOptions = {
             await registerUser(user.id, user.email, user.name ?? undefined)
           } catch (err) {
             console.error('Failed to register user in admin store:', err)
+          }
+
+          // Guest-to-member credit merge
+          try {
+            const guestUserId = `email_${user.email.toLowerCase().trim()}`
+            if (authRedis && user.id !== guestUserId) {
+              const guestCredits = await authRedis.get(`credits:user:${guestUserId}`)
+              if (guestCredits && typeof guestCredits === 'object' && 'total' in guestCredits) {
+                const gc = guestCredits as { total: number; used: number }
+                const remaining = gc.total - gc.used
+                if (remaining > 0) {
+                  // Merge guest credits to member account
+                  const memberCredits = await getUserCredits(user.id)
+                  const mergedTotal = memberCredits.total - memberCredits.used + remaining
+                  await authRedis.set(`credits:user:${user.id}`, {
+                    total: mergedTotal, used: 0,
+                    plan: memberCredits.plan === 'free' ? (gc as { plan?: string }).plan || 'free' : memberCredits.plan,
+                    lastRefill: new Date().toISOString().slice(0, 10),
+                  })
+                  // Clear guest credits to prevent double merge
+                  await authRedis.del(`credits:user:${guestUserId}`)
+                  await authRedis.del(`credits:used:${guestUserId}`)
+                  console.log(`Merged ${remaining} guest credits for ${user.email}`)
+                }
+              }
+            }
+          } catch (err) {
+            console.error('Failed to merge guest credits:', err)
           }
         }
       }
