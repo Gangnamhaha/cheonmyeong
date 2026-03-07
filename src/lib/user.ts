@@ -1,12 +1,15 @@
 /**
  * User management for email/password registration
  *
- * Storage: Redis (Upstash) with in-memory fallback
- * Key pattern: user:email:{email} → StoredUser
+ * Storage strategy:
+ * - Primary: Supabase PostgreSQL (when configured)
+ * - Fallback: Redis (Upstash) with in-memory fallback
+ * - Dual-write: writes to both Supabase and Redis when both available
  */
 
 import { Redis } from '@upstash/redis'
 import { hash, compare } from 'bcryptjs'
+import { getSupabase } from '@/lib/db'
 
 export interface StoredUser {
   id: string
@@ -55,9 +58,21 @@ export async function createUser(
     createdAt: new Date().toISOString(),
   }
 
+  // Dual-write: Supabase (primary) + Redis (cache)
+  const supabase = getSupabase()
+  if (supabase) {
+    await supabase.from('users').insert({
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      password_hash: user.passwordHash,
+      created_at: user.createdAt,
+    })
+  }
+
   if (redis) {
     await redis.set(USER_KEY(normalizedEmail), user)
-  } else {
+  } else if (!supabase) {
     memUsers.set(normalizedEmail, user)
   }
 
@@ -69,6 +84,26 @@ export async function createUser(
 export async function findUserByEmail(email: string): Promise<StoredUser | null> {
   const normalizedEmail = email.toLowerCase().trim()
 
+  // Try Supabase first
+  const supabase = getSupabase()
+  if (supabase) {
+    const { data } = await supabase
+      .from('users')
+      .select('*')
+      .eq('email', normalizedEmail)
+      .single()
+    if (data) {
+      return {
+        id: data.id,
+        email: data.email,
+        name: data.name,
+        passwordHash: data.password_hash,
+        createdAt: data.created_at,
+      }
+    }
+  }
+
+  // Fallback to Redis
   if (redis) {
     const user = await redis.get<StoredUser>(USER_KEY(normalizedEmail))
     return user ?? null

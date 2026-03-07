@@ -13,6 +13,7 @@
  */
 
 import { Redis } from '@upstash/redis'
+import { getSupabase } from '@/lib/db'
 
 export interface UserCredits {
   total: number
@@ -124,6 +125,21 @@ const memFreeUsage = new Map<string, { count: number; date: string }>()
 const CREDIT_KEY = (userId: string) => `credits:user:${userId}`
 const USED_COUNTER_KEY = (userId: string) => `credits:used:${userId}`
 const FREE_KEY = (ip: string, date: string) => `credits:free:${ip}:${date}`
+
+// ─── Supabase sync helper ──────────────────────────────────────────
+
+async function syncCreditsToSupabase(userId: string, credits: UserCredits): Promise<void> {
+  const supabase = getSupabase()
+  if (!supabase) return
+  try {
+    await supabase.from('credits').upsert({
+      user_id: userId, total: credits.total, used: credits.used,
+      plan: credits.plan, last_refill: credits.lastRefill,
+    }, { onConflict: 'user_id' })
+  } catch {
+    // Non-critical: Redis is source of truth for credits
+  }
+}
 
 // ─── User credit functions ─────────────────────────────────────────
 
@@ -237,7 +253,9 @@ export async function useCredit(userId: string): Promise<{ success: boolean; rem
 
     // Best-effort sync of the main object (non-critical if this fails)
     try {
-      await redis.set(key, { ...credits, used: newUsed })
+      const updatedCredits = { ...credits, used: newUsed }
+      await redis.set(key, updatedCredits)
+      syncCreditsToSupabase(userId, updatedCredits).catch(() => {})
     } catch {
       // Counter is the source of truth; object sync failure is non-fatal
     }
