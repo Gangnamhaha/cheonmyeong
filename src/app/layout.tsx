@@ -56,7 +56,7 @@ export default function RootLayout({
           rel="stylesheet"
         />
         <link rel="manifest" href="/manifest.json" />
-        <meta name="naver-site-verification" content="NAVER_VERIFICATION_CODE" />
+        <meta name="naver-site-verification" content="79258edfff8cfed2a6cd162dcfa591ac9a5a2770" />
         <meta name="theme-color" content="#f59e0b" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
