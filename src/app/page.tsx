@@ -454,15 +454,15 @@ export default function Home() {
       // 태을해석
       if (traditionalResult) {
         const tCategories: { key: keyof TraditionalInterpretationResult; label: string }[] = [
-          { key: 'personality', label: '📖 성격·십신' },
-          { key: 'dayPillar', label: '🏛️ 일주 해석' },
-          { key: 'career', label: '💼 직업 추천' },
-          { key: 'health', label: '🏥 건강 주의' },
-          { key: 'fortune', label: '🌟 운세 참고' },
-          { key: 'yongsinAdvice', label: '🔮 용신 조언' },
-          { key: 'children', label: '👶 자손운' },
-          { key: 'relationship', label: '💑 부부·연인' },
-          { key: 'general', label: '📋 종합 참고' },
+          { key: 'personality', label: '[성격/십신]' },
+          { key: 'dayPillar', label: '[일주 해석]' },
+          { key: 'career', label: '[직업 추천]' },
+          { key: 'health', label: '[건강 주의]' },
+          { key: 'fortune', label: '[운세 참고]' },
+          { key: 'yongsinAdvice', label: '[용신 조언]' },
+          { key: 'children', label: '[자손운]' },
+          { key: 'relationship', label: '[부부/연인]' },
+          { key: 'general', label: '[종합 참고]' },
         ]
         sections.push(
           new Paragraph({ spacing: { before: 200, after: 100 }, children: [] }),
@@ -481,7 +481,7 @@ export default function Home() {
             for (const entry of entries) {
               sections.push(
                 new Paragraph({ spacing: { after: 60 }, children: [
-                  new TextRun({ text: `• ${entry.plain}`, size: 20, color: '333333' }),
+                  new TextRun({ text: `- ${entry.plain}`, size: 20, color: '333333' }),
                 ] }),
               )
             }
@@ -511,7 +511,8 @@ export default function Home() {
       const blob = await Packer.toBlob(doc)
       const name = formData?.name ? `_${formData.name}` : ''
       saveAs(blob, `\uCC9C\uBA85_\uC0AC\uC8FC\uACB0\uACFC${name}_${new Date().toISOString().slice(0, 10)}.docx`)
-    } catch {
+    } catch (err) {
+      console.error('DOCX generation error:', err)
       alert('\uC6CC\uB4DC \uBB38\uC11C \uC800\uC7A5 \uC911 \uC624\uB958\uAC00 \uBC1C\uC0DD\uD588\uC2B5\uB2C8\uB2E4.')
     } finally {
       setSaveDocxLoading(false)
