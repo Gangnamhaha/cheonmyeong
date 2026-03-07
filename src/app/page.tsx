@@ -12,6 +12,7 @@ import YongsinCard from '@/components/YongsinCard'
 import DaeunTimeline from '@/components/DaeunTimeline'
 import FortuneCard from '@/components/FortuneCard'
 import { useTheme } from '@/components/ThemeProvider'
+import { trackAnalysis } from '@/lib/analytics'
 import { calculateFullSaju, FullSajuResult } from '@/lib/saju'
 
 type AppState = 'form' | 'result'
@@ -179,6 +180,7 @@ export default function Home() {
 
       setFullResult(result)
       setAppState('result')
+      trackAnalysis('사주분석')
 
       fetchInterpretation(result, '종합')
     } catch (err) {

@@ -7,6 +7,7 @@ import { useSearchParams } from 'next/navigation'
 import { PLANS, type PlanKey, type SubscriptionPlanKey, type OnetimePlanKey } from '@/lib/credits'
 import { useTheme } from '@/components/ThemeProvider'
 import type { UserSubscription } from '@/lib/subscription'
+import { trackPurchase } from '@/lib/analytics'
 
 // PortOne V2 Browser SDK (loaded via CDN)
 declare global {
@@ -133,6 +134,7 @@ function PricingContent() {
       })
       if (verifyRes.ok) {
         showToast('결제가 완료되었습니다! 🎉', 5000)
+        trackPurchase({ paymentId, planName: 'plan', amount: 0 })
         fetchCredits()
         fetchSubscription()
         window.history.replaceState({}, '', '/pricing')
