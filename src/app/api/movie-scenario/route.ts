@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import OpenAI from 'openai'
+import { recordAnalysisEvent } from '@/lib/admin'
 
 export interface MovieScene {
   type: 'prologue' | 'birth' | 'pillars' | 'elements' | 'guardian' | 'fortune' | 'message' | 'epilogue'
@@ -159,6 +160,9 @@ ${traditionalSummary ? `[전통 해석 요약]\n${traditionalSummary}` : ''}`
     if (!scenario.scenes || !Array.isArray(scenario.scenes) || scenario.scenes.length < 6) {
       return NextResponse.json({ error: 'Invalid scenario structure' }, { status: 500 })
     }
+
+    // Track credit consumption (fire-and-forget)
+    recordAnalysisEvent().catch(() => {})
 
     return NextResponse.json({ scenario })
   } catch (err) {
