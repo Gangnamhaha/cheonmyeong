@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import OpenAI from 'openai'
 import { getSupabase } from '@/lib/db'
 import { Redis } from '@upstash/redis'
+import { broadcastPush } from '@/lib/push'
 
 const redisUrl = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL
 const redisToken = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN
@@ -89,11 +90,26 @@ export async function GET(req: NextRequest) {
     }
   }
 
+  // Send daily fortune push notification to all subscribers
+  let pushResult = { success: 0, failure: 0 }
+  if (generated > 0) {
+    try {
+      pushResult = await broadcastPush({
+        title: '🔮 오늘의 운세가 도착했어요!',
+        body: '천명 AI가 분석한 오늘의 사주 운세를 확인해보세요.',
+        url: 'https://cheonmyeong.vercel.app',
+      })
+    } catch (e) {
+      console.error('Push broadcast failed:', e)
+    }
+  }
+
   return NextResponse.json({ 
     ok: true, 
     date: today, 
     generated, 
     skipped, 
-    total: 60 
+    total: 60,
+    push: pushResult,
   })
 }

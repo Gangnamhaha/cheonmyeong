@@ -6,6 +6,7 @@ import ThemeProvider from '@/components/ThemeProvider'
 import AuthProvider from '@/components/AuthProvider'
 import Footer from '@/components/Footer'
 import Navbar from '@/components/Navbar'
+import PushNotificationBanner from '@/components/PushNotificationBanner'
 
 const GA_ID = process.env.NEXT_PUBLIC_GA4_ID
 
@@ -123,6 +124,7 @@ export default function RootLayout({
             <Navbar />
             <ErrorBoundary>{children}</ErrorBoundary>
             <Footer />
+            <PushNotificationBanner />
           </ThemeProvider>
         </AuthProvider>
       </body>
