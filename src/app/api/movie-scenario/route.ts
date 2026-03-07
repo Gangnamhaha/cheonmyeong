@@ -83,6 +83,20 @@ const SYSTEM_PROMPT = `당신은 사주팔자 데이터를 한 편의 단편 영
 7. mood 값은 반드시 mystical, dramatic, warm, intense, serene, hopeful 중 하나
 8. subtitle은 2-5글자의 장면 제목`
 
+const GENRE_INSTRUCTIONS: Record<string, string> = {
+  classic: '전통적인 명리학 해석을 서정적이고 격조 있는 문체로 영화화하세요.',
+  romance:
+    '사랑과 인연을 중심 테마로, 로맨틱하고 감성적인 톤으로 작성하세요. 연애운/궁합/인연의 관점에서 사주를 해석하고, 감정선을 섬세하게 표현하세요.',
+  growth:
+    '시련과 극복, 성장의 서사로 작성하세요. 사주의 약점을 "시련"으로, 강점을 "극복의 힘"으로 표현하고, 용신을 "각성의 계기"로 인격화하세요.',
+  adventure:
+    '영웅의 대서사시 톤으로 작성하세요. 웅장하고 역동적인 문체를 사용하고, 사주의 각 요소를 모험의 동반자/적/보물로 비유하세요.',
+  fantasy:
+    '신비로운 판타지 세계관으로 작성하세요. 오행을 원소 마법으로, 십신을 수호 정령으로, 용신을 전설의 존재로 표현하세요. 몽환적이고 신비로운 분위기를 극대화하세요.',
+  period:
+    '조선시대 사극풍으로 작성하세요. 고풍스러운 문체와 한자를 적극 활용하고, 운명을 "천명(天命)"으로 표현하세요. 역사적 비유와 고전적 지혜를 녹여내세요.',
+}
+
 export async function POST(req: NextRequest) {
   const apiKey = process.env.OPENAI_API_KEY
   if (!apiKey) {
@@ -96,7 +110,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid request' }, { status: 400 })
   }
 
-  const { formData, saju, oheng, ilganStrength, yongsin, yearlyFortune, traditionalSummary } = body as {
+  const {
+    formData,
+    saju,
+    oheng,
+    ilganStrength,
+    yongsin,
+    yearlyFortune,
+    traditionalSummary,
+    genre = 'classic',
+  } = body as {
     formData?: { name?: string; year?: number; month?: number; day?: number; gender?: string }
     saju?: unknown
     oheng?: unknown
@@ -104,6 +127,7 @@ export async function POST(req: NextRequest) {
     yongsin?: unknown
     yearlyFortune?: unknown
     traditionalSummary?: string
+    genre?: string
   }
 
   if (!saju || !oheng) {
@@ -130,9 +154,12 @@ ${JSON.stringify(ilganStrength)}
 ${JSON.stringify(yongsin)}
 
 [올해 운세]
-${JSON.stringify(yearlyFortune)}
+  ${JSON.stringify(yearlyFortune)}
 
-${traditionalSummary ? `[전통 해석 요약]\n${traditionalSummary}` : ''}`
+  ${traditionalSummary ? `[전통 해석 요약]\n${traditionalSummary}` : ''}`
+
+  const genreInstruction = GENRE_INSTRUCTIONS[genre as string] ?? GENRE_INSTRUCTIONS.classic
+  const fullSystemPrompt = `${SYSTEM_PROMPT}\n\n장르 지시: ${genreInstruction}`
 
   try {
     const openai = new OpenAI({ apiKey })
@@ -142,7 +169,7 @@ ${traditionalSummary ? `[전통 해석 요약]\n${traditionalSummary}` : ''}`
       max_tokens: 2000,
       response_format: { type: 'json_object' },
       messages: [
-        { role: 'system', content: SYSTEM_PROMPT },
+        { role: 'system', content: fullSystemPrompt },
         { role: 'user', content: userMessage },
       ],
     })

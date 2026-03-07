@@ -30,6 +30,7 @@ interface SajuMoviePlayerProps {
 
 type OhengKey = '목' | '화' | '토' | '금' | '수'
 type MoodType = 'mystical' | 'dramatic' | 'warm' | 'intense' | 'serene' | 'hopeful'
+type MovieGenre = 'classic' | 'romance' | 'growth' | 'adventure' | 'fantasy' | 'period'
 
 /* ------------------------------------------------------------------ */
 /*  Constants                                                          */
@@ -49,6 +50,15 @@ const MOOD_COLORS: Record<MoodType, { bg: string; accent: string; glow: string }
   serene: { bg: '#0a1a1a', accent: '#5eead4', glow: 'rgba(94, 234, 212, 0.1)' },
   hopeful: { bg: '#0f1a0a', accent: '#fbbf24', glow: 'rgba(251, 191, 36, 0.14)' },
 }
+
+const MOVIE_GENRES: { id: MovieGenre; label: string; icon: string; description: string; color: string }[] = [
+  { id: 'classic', label: '클래식 운명극', icon: '🎭', description: '전통적인 사주 해석을 서정적 영화로', color: '#c4b5fd' },
+  { id: 'romance', label: '로맨스', icon: '💕', description: '사랑과 인연의 이야기로 풀어낸 운명', color: '#fb7185' },
+  { id: 'growth', label: '성장 서사', icon: '🌱', description: '시련과 극복, 성장의 여정', color: '#34d399' },
+  { id: 'adventure', label: '모험', icon: '⚔️', description: '운명에 맞서는 영웅의 대서사시', color: '#f59e0b' },
+  { id: 'fantasy', label: '판타지', icon: '✨', description: '신비로운 세계관 속 운명의 이야기', color: '#818cf8' },
+  { id: 'period', label: '시대극', icon: '🏯', description: '조선시대 배경의 사극풍 운명 서사', color: '#a78bfa' },
+]
 
 /* ------------------------------------------------------------------ */
 /*  Particles                                                          */
@@ -365,6 +375,7 @@ export default function SajuMoviePlayer({
   const [scenario, setScenario] = useState<MovieScenario | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [selectedGenre, setSelectedGenre] = useState<MovieGenre | null>(null)
   const [currentScene, setCurrentScene] = useState(0)
   const [isPlaying, setIsPlaying] = useState(false)
   const [showControls, setShowControls] = useState(false)
@@ -378,10 +389,19 @@ export default function SajuMoviePlayer({
 
   /* ---------- Fetch scenario from API ---------- */
   useEffect(() => {
+    if (!selectedGenre) return
     let cancelled = false
 
     async function fetchScenario() {
       try {
+        setLoading(true)
+        setError(null)
+        setScenario(null)
+
+        audioRef.current?.stop()
+        audioRef.current?.destroy()
+        audioRef.current = null
+
         // Build traditional summary
         let traditionalSummary = ''
         if (traditionalResult) {
@@ -411,6 +431,7 @@ export default function SajuMoviePlayer({
             yongsin: fullResult.yongsin,
             yearlyFortune: fullResult.yearlyFortune,
             traditionalSummary,
+            genre: selectedGenre,
           }),
         })
 
@@ -418,6 +439,9 @@ export default function SajuMoviePlayer({
         const data = await res.json()
 
         if (!cancelled && data.scenario) {
+          setCurrentScene(0)
+          setShowControls(false)
+          setIsMuted(false)
           setScenario(data.scenario)
           setLoading(false)
           // Start playback
@@ -440,7 +464,7 @@ export default function SajuMoviePlayer({
     fetchScenario()
     return () => { cancelled = true }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [selectedGenre])
 
   /* ---------- Scene auto-advance ---------- */
   useEffect(() => {
@@ -485,11 +509,15 @@ export default function SajuMoviePlayer({
 
   /* ---------- Handlers ---------- */
   const handleReplay = useCallback(() => {
+    audioRef.current?.stop()
     setCurrentScene(0)
-    setIsPlaying(true)
+    setScenario(null)
+    setLoading(true)
+    setError(null)
+    setSelectedGenre(null)
+    setIsPlaying(false)
     setShowControls(false)
-    audioRef.current?.play(scenario?.scenes[0]?.mood as MoodType ?? 'mystical')
-  }, [scenario])
+  }, [])
 
   const handleToggleMute = useCallback(() => {
     const muted = audioRef.current?.toggleMute() ?? false
@@ -944,6 +972,77 @@ export default function SajuMoviePlayer({
   }
 
   /* ---------- Loading state ---------- */
+  if (selectedGenre === null) {
+    return (
+      <div className="fixed inset-0 z-50 flex flex-col bg-[#0a0e1a] text-slate-100" style={{ fontFamily: KOREAN_FONT }}>
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(245,158,11,0.18),transparent_45%),radial-gradient(circle_at_80%_25%,rgba(129,140,248,0.16),transparent_48%),radial-gradient(circle_at_50%_85%,rgba(51,65,85,0.5),transparent_58%)]" />
+        <div className="relative z-10 mx-auto flex h-full w-full max-w-4xl flex-col justify-center px-6 py-12">
+          <motion.div
+            className="text-center"
+            initial={{ opacity: 0, y: 22 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, ease: 'easeOut' }}
+          >
+            <h2 className="text-3xl font-black tracking-wide text-amber-300 sm:text-4xl">🎬 운명의 장르를 선택하세요</h2>
+            <p className="mx-auto mt-3 max-w-xl text-sm text-slate-400 sm:text-base">당신의 사주를 어떤 이야기로 풀어볼까요?</p>
+          </motion.div>
+
+          <motion.div
+            className="mt-10 grid grid-cols-2 gap-4 md:grid-cols-3"
+            variants={{
+              hidden: {},
+              visible: {
+                transition: {
+                  staggerChildren: 0.08,
+                },
+              },
+            }}
+            initial="hidden"
+            animate="visible"
+          >
+            {MOVIE_GENRES.map((genre) => (
+              <motion.button
+                key={genre.id}
+                type="button"
+                className="group relative overflow-hidden rounded-2xl border bg-slate-900/45 px-4 py-5 text-left backdrop-blur transition-colors"
+                style={{ borderColor: `${genre.color}44` }}
+                onClick={() => setSelectedGenre(genre.id)}
+                variants={{ hidden: { opacity: 0, y: 24 }, visible: { opacity: 1, y: 0 } }}
+                whileHover={{ scale: 1.03, borderColor: `${genre.color}cc`, boxShadow: `0 0 24px ${genre.color}44` }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <span
+                  className="pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full blur-2xl"
+                  style={{ backgroundColor: `${genre.color}44` }}
+                />
+                <div className="relative z-10">
+                  <p className="text-3xl">{genre.icon}</p>
+                  <p className="mt-3 text-base font-bold" style={{ color: genre.color }}>{genre.label}</p>
+                  <p className="mt-2 text-xs leading-relaxed text-slate-300/90">{genre.description}</p>
+                </div>
+              </motion.button>
+            ))}
+          </motion.div>
+
+          <motion.div
+            className="mt-8 flex justify-center"
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.35, duration: 0.6 }}
+          >
+            <button
+              type="button"
+              className="rounded-lg border border-slate-600 bg-slate-900/50 px-5 py-2.5 text-sm text-slate-300 transition hover:border-slate-400 hover:bg-slate-800"
+              onClick={handleClose}
+            >
+              닫기
+            </button>
+          </motion.div>
+        </div>
+      </div>
+    )
+  }
+
   if (loading) {
     return (
       <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#0a0e1a]">
