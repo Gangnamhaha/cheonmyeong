@@ -55,6 +55,7 @@ export default function RootLayout({
           rel="stylesheet"
         />
         <link rel="manifest" href="/manifest.json" />
+        <meta name="naver-site-verification" content="NAVER_VERIFICATION_CODE" />
         <meta name="theme-color" content="#f59e0b" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -83,6 +84,32 @@ export default function RootLayout({
             }
           `}
         </Script>
+        {/* JSON-LD Structured Data for SEO */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "WebApplication",
+              "name": "천명(天命) - AI 사주팔자 풀이",
+              "url": "https://cheonmyeong.vercel.app",
+              "description": "생년월일시를 입력하면 사주팔자, 오행, 십신, 용신, 대운을 분석하고 AI가 해석해드립니다.",
+              "applicationCategory": "LifestyleApplication",
+              "operatingSystem": "Web",
+              "offers": {
+                "@type": "AggregateOffer",
+                "lowPrice": "0",
+                "highPrice": "29900",
+                "priceCurrency": "KRW"
+              },
+              "inLanguage": "ko",
+              "creator": {
+                "@type": "Organization",
+                "name": "천명(天命)"
+              }
+            })
+          }}
+        />
       </head>
       <body className="antialiased min-h-screen flex flex-col" style={{ background: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
         <AuthProvider>
