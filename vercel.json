@@ -4,6 +4,10 @@
     {
       "path": "/api/cron/daily-fortune",
       "schedule": "0 23 * * *"
+    },
+    {
+      "path": "/api/cron/renew-subscriptions",
+      "schedule": "0 6 * * *"
     }
   ]
 }

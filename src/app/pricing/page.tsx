@@ -33,6 +33,21 @@ declare global {
         paymentId?: string
         transactionType?: string
       }>
+      requestIssueBillingKey: (params: {
+        storeId: string
+        channelKey: string
+        billingKeyMethod: string
+        issueName?: string
+        customer?: {
+          id?: string
+          email?: string
+          fullName?: string
+        }
+      }) => Promise<{
+        code?: string
+        message?: string
+        billingKey?: string
+      }>
     }
   }
 }
@@ -217,6 +232,101 @@ function PricingContent() {
 
       // 5. Verify on server
       await verifyPayment(data.paymentId, isGuest)
+    } catch {
+      showToast('네트워크 오류가 발생했습니다.')
+    } finally {
+      setLoadingPlan(null)
+    }
+  }
+
+  // PortOne V2 billingKey subscription flow
+  async function handleSubscription(planKey: SubscriptionPlanKey) {
+    if (!session) {
+      showToast('구독은 로그인이 필요합니다.')
+      return
+    }
+
+    setLoadingPlan(planKey)
+
+    try {
+      // 1. Get billingKey issuance params from server
+      const res = await fetch('/api/portone/billing', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plan: planKey }),
+      })
+
+      if (!res.ok) {
+        const err = await res.json()
+        showToast(err.error || '구독 준비에 실패했습니다.')
+        setLoadingPlan(null)
+        return
+      }
+
+      const data = await res.json()
+
+      // 2. Check SDK loaded
+      if (!window.PortOne?.requestIssueBillingKey) {
+        showToast('결제 모듈을 로딩 중입니다. 잠시 후 다시 시도해 주세요.')
+        setLoadingPlan(null)
+        return
+      }
+
+      // 3. Issue billingKey via SDK
+      const billingResult = await window.PortOne.requestIssueBillingKey({
+        storeId: data.storeId,
+        channelKey: data.channelKey,
+        billingKeyMethod: 'CARD',
+        issueName: data.issueName,
+        customer: {
+          id: data.userId,
+          email: session.user?.email || undefined,
+          fullName: session.user?.name || undefined,
+        },
+      })
+
+      // 4. Check result
+      if (billingResult?.code) {
+        const isCanceled = billingResult.code === 'PAY_PROCESS_CANCELED' || billingResult.code === 'PAY_PROCESS_ABORTED'
+        showToast(isCanceled ? '카드 등록이 취소되었습니다.' : (billingResult.message || '카드 등록에 실패했습니다.'))
+        setLoadingPlan(null)
+        return
+      }
+
+      if (!billingResult?.billingKey) {
+        showToast('빌링키 발급에 실패했습니다.')
+        setLoadingPlan(null)
+        return
+      }
+
+      // 5. Send billingKey to server for first charge + subscription creation
+      const payRes = await fetch('/api/portone/billing/pay', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          billingKey: billingResult.billingKey,
+          plan: planKey,
+        }),
+      })
+
+      if (!payRes.ok) {
+        const err = await payRes.json()
+        showToast(err.error || '첫 결제에 실패했습니다.')
+        setLoadingPlan(null)
+        return
+      }
+
+      const payData = await payRes.json()
+
+      // 6. Track purchase
+      trackPurchase({
+        paymentId: payData.paymentId,
+        planName: PLANS[planKey].name,
+        amount: PLANS[planKey].price,
+      })
+
+      showToast('구독이 시작되었습니다! 크레딧이 충전되었습니다.', 5000)
+      fetchSubscription()
     } catch {
       showToast('네트워크 오류가 발생했습니다.')
     } finally {
@@ -452,7 +562,7 @@ function PricingContent() {
                 </ul>
 
                 <button
-                  onClick={() => handlePayment(key)}
+                  onClick={() => isSubscription ? handleSubscription(key as SubscriptionPlanKey) : handlePayment(key)}
                   disabled={loadingPlan === key}
                   className="w-full py-3 rounded-xl text-sm font-bold hover-scale transition-all disabled:cursor-not-allowed"
                   style={{
