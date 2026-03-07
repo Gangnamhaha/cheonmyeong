@@ -1,5 +1,5 @@
 /**
- * Web Push notification management via FCM (Firebase Cloud Messaging).
+ * Web Push notification management via FCM (Firebase Cloud Messaging) V1 API.
  *
  * Client-side: Request notification permission + get FCM token
  * Server-side: Store tokens in Supabase + send push via FCM HTTP v1
@@ -10,10 +10,11 @@
  * - NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
  * - NEXT_PUBLIC_FIREBASE_APP_ID
  * - NEXT_PUBLIC_FIREBASE_VAPID_KEY (for push subscription)
- * - FIREBASE_SERVER_KEY (legacy server key for FCM HTTP API)
+ * - FIREBASE_SERVICE_ACCOUNT_KEY (JSON string of service account key)
  */
 
 import { getSupabase } from '@/lib/db'
+import * as crypto from 'crypto'
 
 // ─── Server-side: Token Storage ────────────────────────────────────
 
@@ -66,11 +67,95 @@ export async function getUserPushTokens(userId: string): Promise<string[]> {
   return (data || []).map((d: { token: string }) => d.token)
 }
 
-// ─── Server-side: Send Push ────────────────────────────────────────
+// ─── Server-side: FCM V1 Auth ──────────────────────────────────────
 
-const FCM_URL = 'https://fcm.googleapis.com/fcm/send'
+const FCM_SCOPE = 'https://www.googleapis.com/auth/firebase.messaging'
 
-/** Send push notification to specific tokens via FCM legacy HTTP API */
+/** Cached access token */
+let cachedToken: { token: string; expiresAt: number } | null = null
+
+/** Base64url encode */
+function base64url(input: Buffer | string): string {
+  const buf = typeof input === 'string' ? Buffer.from(input) : input
+  return buf.toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+}
+
+/** Get service account config from env */
+function getServiceAccount(): { client_email: string; private_key: string; project_id: string } | null {
+  const raw = process.env.FIREBASE_SERVICE_ACCOUNT_KEY
+  if (!raw) return null
+  try {
+    return JSON.parse(raw)
+  } catch {
+    console.error('[push] Failed to parse FIREBASE_SERVICE_ACCOUNT_KEY')
+    return null
+  }
+}
+
+/** Create a signed JWT for Google OAuth2 (no external dependency) */
+function createSignedJwt(sa: { client_email: string; private_key: string }): string {
+  const now = Math.floor(Date.now() / 1000)
+  const header = { alg: 'RS256', typ: 'JWT' }
+  const payload = {
+    iss: sa.client_email,
+    scope: FCM_SCOPE,
+    aud: 'https://oauth2.googleapis.com/token',
+    iat: now,
+    exp: now + 3600,
+  }
+
+  const segments = [base64url(JSON.stringify(header)), base64url(JSON.stringify(payload))]
+  const signingInput = segments.join('.')
+
+  const sign = crypto.createSign('RSA-SHA256')
+  sign.update(signingInput)
+  const signature = sign.sign(sa.private_key)
+
+  return `${signingInput}.${base64url(signature)}`
+}
+
+/** Get OAuth2 access token from service account (with caching) */
+async function getAccessToken(): Promise<string | null> {
+  // Return cached token if still valid (5 min buffer)
+  if (cachedToken && cachedToken.expiresAt > Date.now() + 300_000) {
+    return cachedToken.token
+  }
+
+  const sa = getServiceAccount()
+  if (!sa) {
+    console.warn('[push] FIREBASE_SERVICE_ACCOUNT_KEY not configured')
+    return null
+  }
+
+  try {
+    const jwt = createSignedJwt(sa)
+
+    const response = await fetch('https://oauth2.googleapis.com/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: `grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Ajwt-bearer&assertion=${jwt}`,
+    })
+
+    if (!response.ok) {
+      console.error('[push] OAuth2 token request failed:', response.status)
+      return null
+    }
+
+    const data = await response.json()
+    cachedToken = {
+      token: data.access_token,
+      expiresAt: Date.now() + (data.expires_in || 3600) * 1000,
+    }
+    return cachedToken.token
+  } catch (e) {
+    console.error('[push] Failed to get access token:', e)
+    return null
+  }
+}
+
+// ─── Server-side: Send Push via FCM V1 ─────────────────────────────
+
+/** Send push notification to specific tokens via FCM V1 HTTP API */
 export async function sendPushNotification(params: {
   tokens: string[]
   title: string
@@ -78,9 +163,9 @@ export async function sendPushNotification(params: {
   icon?: string
   url?: string
 }): Promise<{ success: number; failure: number }> {
-  const serverKey = process.env.FIREBASE_SERVER_KEY
-  if (!serverKey) {
-    console.warn('[push] FIREBASE_SERVER_KEY not configured')
+  const sa = getServiceAccount()
+  if (!sa) {
+    console.warn('[push] FIREBASE_SERVICE_ACCOUNT_KEY not configured')
     return { success: 0, failure: 0 }
   }
 
@@ -88,61 +173,71 @@ export async function sendPushNotification(params: {
     return { success: 0, failure: 0 }
   }
 
+  const accessToken = await getAccessToken()
+  if (!accessToken) {
+    return { success: 0, failure: 0 }
+  }
+
+  const fcmUrl = `https://fcm.googleapis.com/v1/projects/${sa.project_id}/messages:send`
   let success = 0
   let failure = 0
 
-  // FCM legacy API supports up to 1000 registration_ids per request
-  const chunks = []
-  for (let i = 0; i < params.tokens.length; i += 1000) {
-    chunks.push(params.tokens.slice(i, i + 1000))
-  }
-
-  for (const chunk of chunks) {
-    try {
-      const response = await fetch(FCM_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `key=${serverKey}`,
-        },
-        body: JSON.stringify({
-          registration_ids: chunk,
-          notification: {
-            title: params.title,
-            body: params.body,
-            icon: params.icon || '/app_icon_128.png',
-            click_action: params.url || 'https://cheonmyeong.vercel.app',
+  // FCM V1 API sends one message per request — batch with Promise.allSettled
+  const CONCURRENCY = 10
+  for (let i = 0; i < params.tokens.length; i += CONCURRENCY) {
+    const batch = params.tokens.slice(i, i + CONCURRENCY)
+    const results = await Promise.allSettled(
+      batch.map(async (token) => {
+        const response = await fetch(fcmUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${accessToken}`,
           },
-          data: {
-            url: params.url || 'https://cheonmyeong.vercel.app',
-          },
-        }),
-      })
+          body: JSON.stringify({
+            message: {
+              token,
+              notification: {
+                title: params.title,
+                body: params.body,
+              },
+              webpush: {
+                notification: {
+                  icon: params.icon || '/app_icon_128.png',
+                },
+                fcm_options: {
+                  link: params.url || 'https://cheonmyeong.vercel.app',
+                },
+              },
+              data: {
+                url: params.url || 'https://cheonmyeong.vercel.app',
+              },
+            },
+          }),
+        })
 
-      if (response.ok) {
-        const result = await response.json()
-        success += result.success || 0
-        failure += result.failure || 0
-
-        // Clean up invalid tokens
-        if (result.results) {
-          const invalidTokens: string[] = []
-          result.results.forEach((r: { error?: string }, idx: number) => {
-            if (r.error === 'InvalidRegistration' || r.error === 'NotRegistered') {
-              invalidTokens.push(chunk[idx])
-            }
-          })
-          // Remove invalid tokens in background
-          for (const token of invalidTokens) {
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}))
+          const errorCode = errorData?.error?.details?.[0]?.errorCode
+            || errorData?.error?.status
+            || ''
+          // Clean up invalid/unregistered tokens
+          if (
+            errorCode === 'UNREGISTERED' ||
+            errorCode === 'INVALID_ARGUMENT' ||
+            response.status === 404
+          ) {
             removePushToken(token).catch(() => {})
           }
+          throw new Error(`FCM error ${response.status}: ${errorCode}`)
         }
-      } else {
-        failure += chunk.length
-      }
-    } catch (e) {
-      console.error('[push] Send failed:', e)
-      failure += chunk.length
+        return true
+      })
+    )
+
+    for (const r of results) {
+      if (r.status === 'fulfilled') success++
+      else failure++
     }
   }
 
