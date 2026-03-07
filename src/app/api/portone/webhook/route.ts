@@ -9,6 +9,12 @@ import {
 } from '@/lib/credits'
 import { createSubscription, getSubscription, updateSubscription } from '@/lib/subscription'
 import { verifyPortonePayment } from '@/lib/portone'
+import { getSupabase } from '@/lib/db'
+import { Redis } from '@upstash/redis'
+
+const _redisUrl = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL
+const _redisToken = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN
+const idempotencyRedis = _redisUrl && _redisToken ? new Redis({ url: _redisUrl, token: _redisToken }) : null
 
 interface ParsedPaymentData {
   userId: string
@@ -60,6 +66,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'paymentId가 필요합니다.' }, { status: 400 })
     }
 
+    // Idempotency: skip if already processed
+    if (idempotencyRedis) {
+      const already = await idempotencyRedis.get(`payment:done:${paymentId}`)
+      if (already) {
+        return NextResponse.json({ received: true, duplicate: true })
+      }
+    }
+
     const payment = await verifyPortonePayment(paymentId)
     if (payment.status !== 'PAID') {
       return NextResponse.json({ received: true, ignored: true, status: payment.status })
@@ -90,6 +104,25 @@ export async function POST(req: NextRequest) {
         })
       }
       return res
+    }
+
+    // Mark processed (idempotency) + record to DB
+    if (idempotencyRedis) {
+      await idempotencyRedis.set(`payment:done:${paymentId}`, '1', { ex: 86400 * 30 })
+    }
+    const supabase = getSupabase()
+    if (supabase) {
+      try {
+        await supabase.from('payments').upsert({
+          payment_id: paymentId,
+          user_id: parsedData.userId,
+          plan: parsedData.plan,
+          amount: payment.amount.total,
+          currency: 'KRW',
+          status: 'paid',
+          payment_provider: 'portone',
+        }, { onConflict: 'payment_id' })
+      } catch (e) { console.error('Payment record failed:', e) }
     }
 
     if (planInfo.type === 'subscription') {
