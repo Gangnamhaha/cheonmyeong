@@ -16,6 +16,7 @@ import { useTheme } from '@/components/ThemeProvider'
 import { trackAnalysis, trackShare } from '@/lib/analytics'
 import { shareSajuResult } from '@/lib/kakao'
 import { calculateFullSaju, FullSajuResult } from '@/lib/saju'
+import SajuAnimationPlayer from '@/components/SajuAnimationPlayer'
 import {
   getTraditionalInterpretation,
   toTraditionalContextText,
@@ -77,6 +78,7 @@ export default function Home() {
   const [shareToast, setShareToast] = useState(false)
   const [saveImageLoading, setSaveImageLoading] = useState(false)
   const [saveDocxLoading, setSaveDocxLoading] = useState(false)
+  const [showAnimation, setShowAnimation] = useState(false)
   const resultRef = useRef<HTMLDivElement>(null)
   const downloadRef = useRef<HTMLDivElement>(null)
 
@@ -841,8 +843,21 @@ export default function Home() {
               💑 궁합 보기
             </a>
 
+            {/* 운명 스토리 보기 버튼 */}
+            <button
+              onClick={() => setShowAnimation(true)}
+              className="w-full mt-4 font-bold py-3.5 px-4 rounded-xl text-sm transition-all hover:scale-[1.02] active:scale-[0.98]"
+              style={{
+                background: 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)',
+                color: '#1e293b',
+                boxShadow: '0 4px 14px rgba(251, 191, 36, 0.3)',
+              }}
+            >
+              ✨ 운명 스토리 보기
+            </button>
+
             {/* 다운로드 + 공유 + 다시보기 버튼 */}
-            <div className="grid grid-cols-2 gap-3 mt-4">
+            <div className="grid grid-cols-2 gap-3 mt-3">
               <button
                 onClick={handleSaveImage}
                 disabled={saveImageLoading}
@@ -1106,6 +1121,17 @@ export default function Home() {
           </span>
         </div>
       </div>
+    )}
+
+    {/* === 운명 스토리 애니메이션 플레이어 === */}
+    {showAnimation && fullResult && formData && (
+      <SajuAnimationPlayer
+        fullResult={fullResult}
+        formData={formData}
+        traditionalResult={traditionalResult}
+        aiInterpretation={aiInterpretation}
+        onClose={() => setShowAnimation(false)}
+      />
     )}
 
     </>
