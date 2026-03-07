@@ -14,6 +14,8 @@ export interface TraditionalInterpretation {
   dayPillar: TraditionalEntry[]
   fortune: TraditionalEntry[]
   yongsinAdvice: TraditionalEntry[]
+  children: TraditionalEntry[]
+  relationship: TraditionalEntry[]
   general: TraditionalEntry[]
 }
 
@@ -28,30 +30,32 @@ const SIPSIN_GROUP_MAP: Record<SipsinGroup, SipsinName[]> = {
 }
 
 const SIPSIN_ORDER: SipsinGroup[] = ['비겁', '식상', '재성', '관성', '인성']
+
+const MAX_PER_CATEGORY = 8
+
 const EMPTY_RESULT: TraditionalInterpretation = {
-  personality: [] as TraditionalEntry[],
-  career: [] as TraditionalEntry[],
-  health: [] as TraditionalEntry[],
-  dayPillar: [] as TraditionalEntry[],
-  fortune: [] as TraditionalEntry[],
-  yongsinAdvice: [] as TraditionalEntry[],
-  general: [] as TraditionalEntry[],
+  personality: [],
+  career: [],
+  health: [],
+  dayPillar: [],
+  fortune: [],
+  yongsinAdvice: [],
+  children: [],
+  relationship: [],
+  general: [],
 }
 
-function pickDominantSipsinGroup(summary: Record<SipsinName, number>): SipsinGroup {
-  let dominant: SipsinGroup = '비겁'
-  let maxCount = -1
-
+/**
+ * 사주에 존재하는 모든 십신 그룹을 반환 (count > 0)
+ */
+function getPresentSipsinGroups(summary: Record<SipsinName, number>): Set<SipsinGroup> {
+  const present = new Set<SipsinGroup>()
   for (const group of SIPSIN_ORDER) {
     const names = SIPSIN_GROUP_MAP[group]
     const count = names.reduce((sum, name) => sum + (summary[name] ?? 0), 0)
-    if (count > maxCount) {
-      maxCount = count
-      dominant = group
-    }
+    if (count > 0) present.add(group)
   }
-
-  return dominant
+  return present
 }
 
 function getStrongWeakElements(result: FullSajuResult): { strong: Set<string>; weak: Set<string> } {
@@ -69,18 +73,33 @@ function getStrongWeakElements(result: FullSajuResult): { strong: Set<string>; w
   return { strong, weak }
 }
 
+/**
+ * 의미 있는 태그(category: 제외)가 1개 이상 있는지 검사
+ */
+function hasMeaningfulTags(tags: string[]): boolean {
+  return tags.some((tag) => !tag.startsWith('category:'))
+}
+
+/**
+ * 엔트리가 사용자 프로필에 매칭되는지 검사
+ * - sipsin 매칭: 사주에 존재하는 모든 십신 그룹과 비교 (dominant만이 아님)
+ * - 의미 있는 태그가 없는 엔트리는 제외 (무차별 매칭 방지)
+ */
 function matchesEntry(
   tags: string[],
   profile: {
     dayElement: string
     strength: string
     gender: 'male' | 'female'
-    dominantSipsin: SipsinGroup
+    presentSipsins: Set<SipsinGroup>
     yongsin: string
     strongElements: Set<string>
     weakElements: Set<string>
   }
 ): boolean {
+  // 의미 있는 태그가 없으면 무시 (누구에게나 매칭되는 엔트리 방지)
+  if (!hasMeaningfulTags(tags)) return false
+
   return tags.every((tag) => {
     if (tag.startsWith('category:')) return true
 
@@ -94,7 +113,8 @@ function matchesEntry(
       return profile.gender === tag.slice('gender:'.length)
     }
     if (tag.startsWith('sipsin:')) {
-      return profile.dominantSipsin === tag.slice('sipsin:'.length)
+      // 사주에 해당 십신 그룹이 존재하면 매칭 (dominant만이 아닌 전체)
+      return profile.presentSipsins.has(tag.slice('sipsin:'.length) as SipsinGroup)
     }
     if (tag.startsWith('yongsin:')) {
       return profile.yongsin === tag.slice('yongsin:'.length)
@@ -121,11 +141,14 @@ function makeEntry(condition: string, text: string, plainText: string): Traditio
   }
 }
 
-function pushLimited(target: TraditionalEntry[], value: TraditionalEntry, max = 5) {
+function pushLimited(target: TraditionalEntry[], value: TraditionalEntry, max = MAX_PER_CATEGORY) {
   if (target.length >= max) return
   if (target.some((e) => e.original === value.original)) return
   target.push(value)
 }
+
+// 궁합 전용 챕터 (개인 해석에서 제외)
+const GUNGHAP_CHAPTERS = new Set([19, 20])
 
 export function getTraditionalInterpretation(
   result: FullSajuResult,
@@ -133,29 +156,34 @@ export function getTraditionalInterpretation(
 ): TraditionalInterpretation {
   if (!result) return { ...EMPTY_RESULT }
 
-  const dominantSipsin = pickDominantSipsinGroup(result.sipsin.summary)
+  const presentSipsins = getPresentSipsinGroups(result.sipsin.summary)
   const { strong, weak } = getStrongWeakElements(result)
   const profile = {
     dayElement: result.saju.dayPillar.element,
     strength: result.ilganStrength.strength,
     gender,
-    dominantSipsin,
+    presentSipsins,
     yongsin: result.yongsin.yongsin,
     strongElements: strong,
     weakElements: weak,
   }
 
   const output: TraditionalInterpretation = {
-    personality: [] as TraditionalEntry[],
-    career: [] as TraditionalEntry[],
-    health: [] as TraditionalEntry[],
-    dayPillar: [] as TraditionalEntry[],
-    fortune: [] as TraditionalEntry[],
-    yongsinAdvice: [] as TraditionalEntry[],
-    general: [] as TraditionalEntry[],
+    personality: [],
+    career: [],
+    health: [],
+    dayPillar: [],
+    fortune: [],
+    yongsinAdvice: [],
+    children: [],
+    relationship: [],
+    general: [],
   }
 
   for (const chapter of SAJU_MANUAL) {
+    // 궁합 챕터는 개인 해석에서 제외
+    if (GUNGHAP_CHAPTERS.has(chapter.chapter)) continue
+
     for (const entry of chapter.entries) {
       if (!matchesEntry(entry.tags, profile)) continue
       const item = makeEntry(entry.condition, entry.text, entry.plainText)
@@ -172,7 +200,12 @@ export function getTraditionalInterpretation(
         pushLimited(output.fortune, item)
       } else if (chapter.chapter === 17) {
         pushLimited(output.yongsinAdvice, item)
+      } else if (chapter.chapter === 10) {
+        pushLimited(output.children, item)
+      } else if (chapter.chapter === 18) {
+        pushLimited(output.relationship, item)
       } else {
+        // Ch8(형충역마), Ch21(학업), Ch22(약신), Ch23(기타), Ch24(오행)
         pushLimited(output.general, item)
       }
     }
@@ -189,6 +222,8 @@ export function toTraditionalContextText(result: TraditionalInterpretation, maxC
     ...result.health,
     ...result.fortune,
     ...result.yongsinAdvice,
+    ...result.children,
+    ...result.relationship,
     ...result.general,
   ]
   const merged = entries.map((e) => e.plain).join(' | ').trim()

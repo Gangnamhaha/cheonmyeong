@@ -23,6 +23,9 @@ export default function TraditionalInterpretation({ result }: TraditionalInterpr
       { key: 'health', title: '건강 주의', icon: '🏥', items: result.health },
       { key: 'fortune', title: '운세 참고', icon: '🌟', items: result.fortune },
       { key: 'yongsinAdvice', title: '용신 조언', icon: '🔮', items: result.yongsinAdvice },
+      { key: 'children', title: '자손운', icon: '👶', items: result.children },
+      { key: 'relationship', title: '부부·연인', icon: '💑', items: result.relationship },
+      { key: 'general', title: '종합 참고', icon: '📋', items: result.general },
     ].filter((section) => section.items.length > 0)
   }, [result])
 
