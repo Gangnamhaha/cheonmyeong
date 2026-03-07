@@ -295,6 +295,7 @@ export default function Home() {
       const docx = await import('docx')
       const { saveAs } = await import('file-saver')
       const { Document, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, AlignmentType, BorderStyle, HeadingLevel, Packer } = docx
+      console.log('[DOCX] imports ok, Packer:', typeof Packer, 'toBlob:', typeof Packer?.toBlob)
 
       const pillars = [
         { label: '\uC2DC\uC8FC (\u6642\u67F1)', p: fullResult.saju.hourPillar },
@@ -497,11 +498,13 @@ export default function Home() {
         ] }),
       )
 
+      console.log('[DOCX] sections count:', sections.length)
       const doc = new Document({
         sections: [{ children: sections }],
       })
-
+      console.log('[DOCX] Document created')
       const blob = await Packer.toBlob(doc)
+      console.log('[DOCX] Blob created, size:', blob.size)
       const name = formData?.name ? `_${formData.name}` : ''
       saveAs(blob, `\uCC9C\uBA85_\uC0AC\uC8FC\uACB0\uACFC${name}_${new Date().toISOString().slice(0, 10)}.docx`)
     } catch (err) {
