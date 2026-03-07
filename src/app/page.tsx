@@ -355,7 +355,7 @@ export default function Home() {
 
       const sections = [
         new Paragraph({ heading: HeadingLevel.TITLE, alignment: AlignmentType.CENTER, children: [
-          new TextRun({ text: '\uCC9C\uBA85 (\u5929\u547D) \uC0AC\uC8FC\uBD84\uC11D', bold: true, size: 36 }),
+          new TextRun({ text: '천명 (天命) 사주분석', bold: true, size: 36, font: 'Malgun Gothic' }),
         ] }),
         new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 200 }, children: [
           new TextRun({
@@ -372,14 +372,14 @@ export default function Home() {
 
         // \uC0AC\uC8FC\uD314\uC790
         new Paragraph({ heading: HeadingLevel.HEADING_1, children: [
-          new TextRun({ text: '\uC0AC\uC8FC\uD314\uC790 (\u56DB\u67F1\u516B\u5B57)', bold: true }),
+          new TextRun({ text: '사주팔자 (四柱八字)', bold: true, font: 'Malgun Gothic' }),
         ] }),
         pillarTable,
         new Paragraph({ spacing: { before: 100, after: 100 }, children: [] }),
 
         // \uC624\uD589
         new Paragraph({ heading: HeadingLevel.HEADING_1, children: [
-          new TextRun({ text: '\uC624\uD589 \uBD84\uD3EC (\u4E94\u884C)', bold: true }),
+          new TextRun({ text: '오행 분포 (五行)', bold: true, font: 'Malgun Gothic' }),
         ] }),
         new Paragraph({ spacing: { after: 100 }, children: [
           new TextRun({ text: ohengLine, size: 22 }),
@@ -391,7 +391,7 @@ export default function Home() {
 
         // \uC77C\uAC04 \uAC15\uC57D + \uC6A9\uC2E0
         new Paragraph({ heading: HeadingLevel.HEADING_1, children: [
-          new TextRun({ text: '\uC77C\uAC04 \uAC15\uC57D \u00B7 \uC6A9\uC2E0', bold: true }),
+          new TextRun({ text: '일간 강약 · 용신', bold: true, font: 'Malgun Gothic' }),
         ] }),
         new Paragraph({ spacing: { after: 60 }, children: [
           new TextRun({ text: '\uC77C\uAC04 \uAC15\uC57D: ', size: 22 }),
@@ -408,7 +408,7 @@ export default function Home() {
 
         // 십신 분석
         new Paragraph({ heading: HeadingLevel.HEADING_1, children: [
-          new TextRun({ text: '십신 분석 (十神)', bold: true }),
+          new TextRun({ text: '십신 분석 (十神)', bold: true, font: 'Malgun Gothic' }),
         ] }),
         new Paragraph({ spacing: { after: 60 }, children: [
           new TextRun({ text: [
@@ -426,7 +426,7 @@ export default function Home() {
 
         // 올해 운세
         new Paragraph({ heading: HeadingLevel.HEADING_1, children: [
-          new TextRun({ text: `${new Date().getFullYear()}년 운세`, bold: true }),
+          new TextRun({ text: `${new Date().getFullYear()}년 운세`, bold: true, font: 'Malgun Gothic' }),
         ] }),
         new Paragraph({ spacing: { after: 60 }, children: [
           new TextRun({ text: `\uD310\uC815: ${fullResult.yearlyFortune.rating}`, size: 22, bold: true }),
@@ -442,7 +442,7 @@ export default function Home() {
         sections.push(
           new Paragraph({ spacing: { before: 200, after: 100 }, children: [] }),
           new Paragraph({ heading: HeadingLevel.HEADING_1, children: [
-            new TextRun({ text: 'AI \uC885\uD569 \uD574\uC11D', bold: true }),
+            new TextRun({ text: 'AI 종합 해석', bold: true, font: 'Malgun Gothic' }),
           ] }),
           new Paragraph({ children: [
             new TextRun({ text: aiInterpretation, size: 20, color: '333333' }),
@@ -466,7 +466,7 @@ export default function Home() {
         sections.push(
           new Paragraph({ spacing: { before: 200, after: 100 }, children: [] }),
           new Paragraph({ heading: HeadingLevel.HEADING_1, children: [
-            new TextRun({ text: '태을 해석 (전통 사주 해석)', bold: true }),
+            new TextRun({ text: '태을 해석 (전통 사주 해석)', bold: true, font: 'Malgun Gothic' }),
           ] }),
         )
         for (const cat of tCategories) {
@@ -474,7 +474,7 @@ export default function Home() {
           if (entries && entries.length > 0) {
             sections.push(
               new Paragraph({ heading: HeadingLevel.HEADING_2, spacing: { before: 120 }, children: [
-                new TextRun({ text: cat.label, bold: true, size: 24 }),
+                new TextRun({ text: cat.label, bold: true, size: 24, font: 'Malgun Gothic' }),
               ] }),
             )
             for (const entry of entries) {
@@ -496,12 +496,15 @@ export default function Home() {
         ] }),
       )
 
+      const KR_FONT = 'Malgun Gothic'
       const doc = new Document({
         styles: {
           default: {
-            document: {
-              run: { font: 'Malgun Gothic' },
-            },
+            document: { run: { font: KR_FONT } },
+            title: { run: { font: KR_FONT } },
+            heading1: { run: { font: KR_FONT } },
+            heading2: { run: { font: KR_FONT } },
+            heading3: { run: { font: KR_FONT } },
           },
         },
         sections: [{ children: sections }],
