@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import type { TraditionalInterpretation as TraditionalInterpretationResult } from '@/lib/traditional-interpret'
+import type { TraditionalInterpretation as TraditionalInterpretationResult, TraditionalEntry } from '@/lib/traditional-interpret'
 
 interface TraditionalInterpretationProps {
   result: TraditionalInterpretationResult
@@ -11,7 +11,7 @@ type Section = {
   key: string
   title: string
   icon: string
-  items: string[]
+  items: TraditionalEntry[]
 }
 
 export default function TraditionalInterpretation({ result }: TraditionalInterpretationProps) {
@@ -30,6 +30,8 @@ export default function TraditionalInterpretation({ result }: TraditionalInterpr
     personality: true,
     dayPillar: true,
   })
+
+  const [showOriginal, setShowOriginal] = useState<Record<string, boolean>>({})
 
   if (!sections.length) return null
 
@@ -78,13 +80,44 @@ export default function TraditionalInterpretation({ result }: TraditionalInterpr
               </button>
 
               {isOpen && (
-                <ul className="px-4 pb-3 space-y-2">
-                  {section.items.map((item, idx) => (
-                    <li key={`${section.key}-${idx}`} className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-                      • {item}
-                    </li>
-                  ))}
-                </ul>
+                <div className="px-4 pb-3 space-y-3">
+                  {section.items.map((item, idx) => {
+                    const itemKey = `${section.key}-${idx}`
+                    const isOriginalVisible = showOriginal[itemKey] ?? false
+                    return (
+                      <div
+                        key={itemKey}
+                        className="text-sm leading-relaxed"
+                        style={{
+                          borderBottom: idx < section.items.length - 1 ? '1px solid var(--border-color)' : 'none',
+                          paddingBottom: idx < section.items.length - 1 ? '0.75rem' : 0,
+                        }}
+                      >
+                        <p style={{ color: 'var(--text-primary)' }}>{item.plain}</p>
+                        <button
+                          onClick={() => setShowOriginal((prev) => ({ ...prev, [itemKey]: !isOriginalVisible }))}
+                          className="mt-1 text-xs flex items-center gap-1"
+                          style={{ color: 'var(--text-tertiary, var(--text-secondary))', opacity: 0.7 }}
+                        >
+                          {isOriginalVisible ? '▼ 원문 접기' : '▶ 원문 보기'}
+                        </button>
+                        {isOriginalVisible && (
+                          <p
+                            className="mt-1 text-xs leading-relaxed px-2 py-1.5 rounded"
+                            style={{
+                              color: 'var(--text-secondary)',
+                              background: 'var(--bg-tertiary, var(--bg-card))',
+                              borderLeft: '2px solid var(--accent)',
+                              opacity: 0.8,
+                            }}
+                          >
+                            {item.original}
+                          </p>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
               )}
             </div>
           )

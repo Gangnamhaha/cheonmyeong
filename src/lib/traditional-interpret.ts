@@ -2,14 +2,19 @@ import { SAJU_MANUAL } from '@/data/saju-manual'
 import type { FullSajuResult } from './saju'
 import type { SipsinName } from './sipsin'
 
+export interface TraditionalEntry {
+  original: string
+  plain: string
+}
+
 export interface TraditionalInterpretation {
-  personality: string[]
-  career: string[]
-  health: string[]
-  dayPillar: string[]
-  fortune: string[]
-  yongsinAdvice: string[]
-  general: string[]
+  personality: TraditionalEntry[]
+  career: TraditionalEntry[]
+  health: TraditionalEntry[]
+  dayPillar: TraditionalEntry[]
+  fortune: TraditionalEntry[]
+  yongsinAdvice: TraditionalEntry[]
+  general: TraditionalEntry[]
 }
 
 type SipsinGroup = '비겁' | '식상' | '재성' | '관성' | '인성'
@@ -24,13 +29,13 @@ const SIPSIN_GROUP_MAP: Record<SipsinGroup, SipsinName[]> = {
 
 const SIPSIN_ORDER: SipsinGroup[] = ['비겁', '식상', '재성', '관성', '인성']
 const EMPTY_RESULT: TraditionalInterpretation = {
-  personality: [],
-  career: [],
-  health: [],
-  dayPillar: [],
-  fortune: [],
-  yongsinAdvice: [],
-  general: [],
+  personality: [] as TraditionalEntry[],
+  career: [] as TraditionalEntry[],
+  health: [] as TraditionalEntry[],
+  dayPillar: [] as TraditionalEntry[],
+  fortune: [] as TraditionalEntry[],
+  yongsinAdvice: [] as TraditionalEntry[],
+  general: [] as TraditionalEntry[],
 }
 
 function pickDominantSipsinGroup(summary: Record<SipsinName, number>): SipsinGroup {
@@ -109,13 +114,16 @@ function matchesEntry(
   })
 }
 
-function formatEntry(condition: string, text: string): string {
-  return `${condition} ${text}`.trim()
+function makeEntry(condition: string, text: string, plainText: string): TraditionalEntry {
+  return {
+    original: `${condition} ${text}`.trim(),
+    plain: plainText || `${condition} ${text}`.trim(),
+  }
 }
 
-function pushLimited(target: string[], value: string, max = 5) {
+function pushLimited(target: TraditionalEntry[], value: TraditionalEntry, max = 5) {
   if (target.length >= max) return
-  if (target.includes(value)) return
+  if (target.some((e) => e.original === value.original)) return
   target.push(value)
 }
 
@@ -138,34 +146,34 @@ export function getTraditionalInterpretation(
   }
 
   const output: TraditionalInterpretation = {
-    personality: [],
-    career: [],
-    health: [],
-    dayPillar: [],
-    fortune: [],
-    yongsinAdvice: [],
-    general: [],
+    personality: [] as TraditionalEntry[],
+    career: [] as TraditionalEntry[],
+    health: [] as TraditionalEntry[],
+    dayPillar: [] as TraditionalEntry[],
+    fortune: [] as TraditionalEntry[],
+    yongsinAdvice: [] as TraditionalEntry[],
+    general: [] as TraditionalEntry[],
   }
 
   for (const chapter of SAJU_MANUAL) {
     for (const entry of chapter.entries) {
       if (!matchesEntry(entry.tags, profile)) continue
-      const sentence = formatEntry(entry.condition, entry.text)
+      const item = makeEntry(entry.condition, entry.text, entry.plainText)
 
       if (chapter.chapter >= 1 && chapter.chapter <= 5) {
-        pushLimited(output.personality, sentence)
+        pushLimited(output.personality, item)
       } else if (chapter.chapter === 6) {
-        pushLimited(output.career, sentence)
+        pushLimited(output.career, item)
       } else if (chapter.chapter === 7) {
-        pushLimited(output.health, sentence)
+        pushLimited(output.health, item)
       } else if (chapter.chapter >= 12 && chapter.chapter <= 16) {
-        pushLimited(output.dayPillar, sentence)
+        pushLimited(output.dayPillar, item)
       } else if (chapter.chapter === 9 || chapter.chapter === 11) {
-        pushLimited(output.fortune, sentence)
+        pushLimited(output.fortune, item)
       } else if (chapter.chapter === 17) {
-        pushLimited(output.yongsinAdvice, sentence)
+        pushLimited(output.yongsinAdvice, item)
       } else {
-        pushLimited(output.general, sentence)
+        pushLimited(output.general, item)
       }
     }
   }
@@ -174,7 +182,7 @@ export function getTraditionalInterpretation(
 }
 
 export function toTraditionalContextText(result: TraditionalInterpretation, maxChars = 500): string {
-  const chunks = [
+  const entries = [
     ...result.personality,
     ...result.dayPillar,
     ...result.career,
@@ -183,7 +191,7 @@ export function toTraditionalContextText(result: TraditionalInterpretation, maxC
     ...result.yongsinAdvice,
     ...result.general,
   ]
-  const merged = chunks.join(' | ').trim()
+  const merged = entries.map((e) => e.plain).join(' | ').trim()
   if (!merged) return ''
   return merged.length > maxChars ? `${merged.slice(0, maxChars)}...` : merged
 }
