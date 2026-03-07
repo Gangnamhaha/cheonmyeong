@@ -914,18 +914,18 @@ export default function Home() {
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: '24px' }}>
           <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#fbbf24', letterSpacing: '2px' }}>
-            \uCC9C\uBA85
+            {'천명'}
           </div>
           <div style={{ fontSize: '12px', color: '#64748b', letterSpacing: '4px', marginTop: '2px' }}>
-            \u5929\u547D \uC0AC\uC8FC\uBD84\uC11D
+            {'天命 사주분석'}
           </div>
           {formData && (
             <div style={{ marginTop: '12px', color: '#94a3b8', fontSize: '13px' }}>
               {formData.name && <span style={{ color: '#e2e8f0', fontWeight: 'bold' }}>{formData.name}</span>}
-              {formData.name && ' \u00B7 '}
-              {formData.gender === 'male' ? '\uB0A8' : '\uC5EC'} \u00B7{' '}
-              {formData.year}\uB144 {formData.month}\uC6D4 {formData.day}\uC77C {formData.hour}\uC2DC
-              {formData.calendarType === 'lunar' && ' (\uC74C\uB825)'}
+              {formData.name && ' · '}
+              {formData.gender === 'male' ? '남' : '여'}{' · '}
+              {formData.year}{'년 '}{formData.month}{'월 '}{formData.day}{'일 '}{formData.hour}{'시'}
+              {formData.calendarType === 'lunar' && ' (음력)'}
             </div>
           )}
         </div>
@@ -964,7 +964,7 @@ export default function Home() {
         {/* \uC624\uD589 \uBD84\uD3EC */}
         <div style={{ background: '#1e293b', borderRadius: '12px', padding: '16px', marginBottom: '12px', border: '1px solid #334155' }}>
           <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#fbbf24', marginBottom: '10px' }}>
-            \uC624\uD589 \uBD84\uD3EC
+            {'오행 분포'}
           </div>
           <div style={{ display: 'flex', gap: '16px', justifyContent: 'center' }}>
             {(['\uBAA9', '\uD654', '\uD1A0', '\uAE08', '\uC218'] as const).map(e => (
@@ -981,14 +981,14 @@ export default function Home() {
         {/* \uC77C\uAC04 \uAC15\uC57D + \uC6A9\uC2E0 */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '12px' }}>
           <div style={{ background: '#1e293b', borderRadius: '12px', padding: '14px', border: '1px solid #334155', textAlign: 'center' }}>
-            <div style={{ fontSize: '11px', color: '#94a3b8' }}>\uC77C\uAC04 \uAC15\uC57D</div>
+            <div style={{ fontSize: '11px', color: '#94a3b8' }}>{'일간 강약'}</div>
             <div style={{
               fontSize: '20px', fontWeight: 'bold', marginTop: '4px',
-              color: fullResult.ilganStrength.strength === '\uC2E0\uAC15' ? '#3b82f6' : '#f97316',
+              color: fullResult.ilganStrength.strength === '신강' ? '#3b82f6' : '#f97316',
             }}>{fullResult.ilganStrength.strength}</div>
           </div>
           <div style={{ background: '#1e293b', borderRadius: '12px', padding: '14px', border: '1px solid #334155', textAlign: 'center' }}>
-            <div style={{ fontSize: '11px', color: '#94a3b8' }}>\uC6A9\uC2E0 (\u7528\u795E)</div>
+            <div style={{ fontSize: '11px', color: '#94a3b8' }}>{'용신 (用神)'}</div>
             <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#fbbf24', marginTop: '4px' }}>
               {fullResult.yongsin.yongsin}
             </div>
@@ -999,14 +999,14 @@ export default function Home() {
         <div style={{ background: '#1e293b', borderRadius: '12px', padding: '14px', border: '1px solid #334155', marginBottom: '16px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '12px', color: '#94a3b8' }}>
-              {new Date().getFullYear()}\uB144 \uC6B4\uC138
+              {new Date().getFullYear()}{'년 운세'}
             </span>
             <span style={{
               fontSize: '16px', fontWeight: 'bold',
-              color: fullResult.yearlyFortune.rating === '\uAE38' ? '#4ade80'
-                : fullResult.yearlyFortune.rating === '\uD749' ? '#f87171' : '#fbbf24',
+              color: fullResult.yearlyFortune.rating === '길' ? '#4ade80'
+                : fullResult.yearlyFortune.rating === '흉' ? '#f87171' : '#fbbf24',
             }}>
-              {fullResult.yearlyFortune.rating === '\uAE38' ? '\u25CF ' : fullResult.yearlyFortune.rating === '\uD749' ? '\u25CF ' : '\u25CF '}
+              {'● '}
               {fullResult.yearlyFortune.rating}
             </span>
           </div>
@@ -1019,7 +1019,7 @@ export default function Home() {
         {aiInterpretation && (
           <div style={{ background: '#1e293b', borderRadius: '12px', padding: '16px', border: '1px solid #334155', marginBottom: '16px' }}>
             <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#fbbf24', marginBottom: '8px' }}>
-              AI \uC885\uD569 \uD574\uC11D
+              {'AI 종합 해석'}
             </div>
             <div style={{ fontSize: '12px', color: '#cbd5e1', lineHeight: '1.7', whiteSpace: 'pre-line' }}>
               {aiInterpretation}
