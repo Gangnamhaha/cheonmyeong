@@ -474,7 +474,7 @@ export default function Home() {
           const entries = traditionalResult[cat.key]
           if (entries && entries.length > 0) {
             sections.push(
-              new Paragraph({ heading: HeadingLevel.HEADING_2, spacing: { before: 120 }, children: [
+              new Paragraph({ heading: HeadingLevel.HEADING_1, spacing: { before: 120 }, children: [
                 new TextRun({ text: cat.label, bold: true, size: 24 }),
               ] }),
             )
@@ -498,13 +498,6 @@ export default function Home() {
       )
 
       const doc = new Document({
-        styles: {
-          default: {
-            document: {
-              run: { font: 'Malgun Gothic' },
-            },
-          },
-        },
         sections: [{ children: sections }],
       })
 
