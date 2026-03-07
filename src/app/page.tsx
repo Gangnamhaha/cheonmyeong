@@ -17,6 +17,7 @@ import { trackAnalysis, trackShare } from '@/lib/analytics'
 import { shareSajuResult } from '@/lib/kakao'
 import { calculateFullSaju, FullSajuResult } from '@/lib/saju'
 import SajuAnimationPlayer from '@/components/SajuAnimationPlayer'
+import SajuMoviePlayer from '@/components/SajuMoviePlayer'
 import {
   getTraditionalInterpretation,
   toTraditionalContextText,
@@ -79,6 +80,7 @@ export default function Home() {
   const [saveImageLoading, setSaveImageLoading] = useState(false)
   const [saveDocxLoading, setSaveDocxLoading] = useState(false)
   const [showAnimation, setShowAnimation] = useState(false)
+  const [showMovie, setShowMovie] = useState(false)
   const resultRef = useRef<HTMLDivElement>(null)
   const downloadRef = useRef<HTMLDivElement>(null)
 
@@ -856,6 +858,19 @@ export default function Home() {
               ✨ 운명 스토리 보기
             </button>
 
+            {/* 운명 영화 보기 버튼 */}
+            <button
+              onClick={() => setShowMovie(true)}
+              className="w-full mt-2 font-bold py-3.5 px-4 rounded-xl text-sm transition-all hover:scale-[1.02] active:scale-[0.98]"
+              style={{
+                background: 'linear-gradient(135deg, #a855f7 0%, #6366f1 100%)',
+                color: '#f8fafc',
+                boxShadow: '0 4px 14px rgba(168, 85, 247, 0.3)',
+              }}
+            >
+              🎬 운명 영화 보기
+            </button>
+
             {/* 다운로드 + 공유 + 다시보기 버튼 */}
             <div className="grid grid-cols-2 gap-3 mt-3">
               <button
@@ -1131,6 +1146,17 @@ export default function Home() {
         traditionalResult={traditionalResult}
         aiInterpretation={aiInterpretation}
         onClose={() => setShowAnimation(false)}
+      />
+    )}
+
+    {/* === 운명 영화 플레이어 === */}
+    {showMovie && fullResult && formData && (
+      <SajuMoviePlayer
+        fullResult={fullResult}
+        formData={formData}
+        traditionalResult={traditionalResult}
+        aiInterpretation={aiInterpretation}
+        onClose={() => setShowMovie(false)}
       />
     )}
 
