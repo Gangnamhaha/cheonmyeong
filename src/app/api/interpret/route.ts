@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import OpenAI from 'openai'
 import { recordAnalysisEvent } from '@/lib/admin'
+import { formatSajuForAI } from '@/lib/format-saju-ai'
+import type { FullSajuResult } from '@/lib/saju'
+import type { TraditionalInterpretation } from '@/lib/traditional-interpret'
 
 // Rate limiting: IP -> timestamps of requests
 const RATE_LIMIT = new Map<string, number[]>()
@@ -31,20 +34,40 @@ function getClientIp(req: NextRequest): string {
 
 type Category = '종합' | '성격' | '연애' | '직업' | '건강' | '재물'
 
-function getSystemPrompt(category: Category): string {
-  const basePrompt = `당신은 20년 경력의 한국 명리학 전문가입니다. 사주팔자, 오행, 십신, 용신, 대운 분석 데이터를 받아 자연스러운 한국어로 해석해 주세요.`
+// ──────────────────────────────────────────
+// 공통 시스템 프롬프트 (모든 카테고리 공유)
+// 카테고리별 분기는 유저 메시지의 CATEGORY_FOCUS에서 처리
+// ──────────────────────────────────────────
+const SYSTEM_PROMPT = `당신은 20년 이상 임상 상담 경험을 가진 한국 명리학자입니다.
+사용자가 제공한 "계산 결과"를 재계산하지 말고, 그 근거를 바탕으로 전통 명리학의 언어로 해석하되 현대 삶에 적용 가능한 조언으로 연결하세요.
 
-  const categoryPrompts: Record<Category, string> = {
-    '종합': `${basePrompt}\n\n다음 내용을 포함하여 작성하세요:\n1. 사주 개요 (전체적인 사주의 특징)\n2. 성격과 기질 (타고난 성품)\n3. 재능과 적성 (잘 맞는 분야)\n4. 주의할 점 (보완해야 할 부분)\n5. 종합 조언 (삶의 방향)\n\n따뜻하고 공감적이되 구체적인 조언을 제공하세요. 800자 이내로 작성하세요.`,
-    '성격': `${basePrompt}\n\n다음 내용을 포함하여 작성하세요:\n1. 성격과 기질\n2. 대인관계 스타일\n3. 감정 패턴\n\n600자 이내로 작성하세요.`,
-    '연애': `${basePrompt}\n\n다음 내용을 포함하여 작성하세요:\n1. 연애 스타일\n2. 이상형\n3. 궁합 포인트\n4. 주의할 점\n\n600자 이내로 작성하세요.`,
-    '직업': `${basePrompt}\n\n다음 내용을 포함하여 작성하세요:\n1. 적성\n2. 직업 추천\n3. 직장 스타일\n4. 재물운\n\n600자 이내로 작성하세요.`,
-    '건강': `${basePrompt}\n\n다음 내용을 포함하여 작성하세요:\n1. 건강 취약점\n2. 주의 장기\n3. 건강 관리법\n\n600자 이내로 작성하세요.`,
-    '재물': `${basePrompt}\n\n다음 내용을 포함하여 작성하세요:\n1. 재물운\n2. 투자 성향\n3. 돈 관리 조언\n\n600자 이내로 작성하세요.`,
-  }
+■ 해석 원칙
+- 과장된 단정, 공포 조장, 확정적 예언은 금지. "경향 + 선택지 + 관리 포인트"로 말하세요.
+- 근거 없는 세부(특정 사건, 날짜, 금액, 병명)는 언급하지 마세요.
+- 건강/재물은 참고 수준의 체질·습관 조언으로, 전문 진단이나 투자 확언처럼 쓰지 마세요.
 
-  return categoryPrompts[category]
-}
+■ 해석 절차 (반드시 이 순서로 내부 판단 후 서술)
+1) 일간/월령 중심으로 체질(기본 기세) 파악 → 신강/신약과 오행 편중/결핍으로 "무엇이 과하고 무엇이 모자란지" 정리
+2) 십신 분포로 성향/관계/일 처리 방식의 '반복 패턴'을 잡고, 강점 2개와 약점 2개를 근거와 함께 선택
+3) 용신/희신을 "생활 운영 원칙"으로 번역 (환경, 사람, 일의 방식, 리듬), 기피 오행은 "피해야 할 과몰입"으로 설명
+4) 대운 → 올해 → 이번달 순으로 타이밍을 읽되, 사건 예언이 아니라 "유리한 전략/주의점"으로 제시
+5) 전통 문구는 그대로 베끼지 말고 의미를 살려 자연스럽게 1~2회만 섞어 신뢰감을 높이세요 (과도한 인용 금지)
+
+■ 문체 규칙
+- 첫 줄은 반드시 이 사주의 핵심 한줄 진단 (20자 내외)
+- 둘째 줄은 키워드 4~6개 (예: "화기강 / 신약 / 식신주도 / 정인운")
+- 이후 단락은 줄바꿈으로 구분 (마크다운 서식 금지, 순수 텍스트)
+- 같은 말을 반복하지 마세요
+- 사주 데이터의 실제 값(천간, 지지, 오행, 십신명)을 자연스럽게 녹여 근거 있는 해석을 하세요
+- 사용자 입력의 [REQUEST] 블록에서 카테고리와 분량 지시를 확인하고 정확히 따르세요
+- 따뜻하고 공감적이되 구체적이고 실용적인 조언을 제공하세요`
+
+const FOLLOWUP_SYSTEM_PROMPT = `당신은 20년 이상 경험의 한국 명리학 전문가입니다.
+사주 데이터와 이전 해석을 바탕으로 추가 질문에 답변합니다.
+- 사주 데이터의 실제 값을 근거로 구체적으로 답변하세요
+- 과장이나 확정적 예언 없이, 경향과 조언으로 답하세요
+- 마크다운 서식 없이 순수 텍스트로 답변하세요
+- 400자 이내로 간결하게 작성하세요`
 
 export async function POST(req: NextRequest) {
   // Rate limiting
@@ -89,6 +112,8 @@ export async function POST(req: NextRequest) {
     stream = true,
     followUp,
     traditionalContext,
+    traditionalResult,
+    formData,
   } = body as {
     saju?: unknown
     oheng?: unknown
@@ -102,6 +127,8 @@ export async function POST(req: NextRequest) {
     stream?: boolean
     followUp?: string
     traditionalContext?: string
+    traditionalResult?: TraditionalInterpretation | null
+    formData?: { name?: string; year?: number; month?: number; day?: number; gender?: string }
   }
 
   if (!saju || !oheng) {
@@ -117,33 +144,61 @@ export async function POST(req: NextRequest) {
     ? (category as Category)
     : '종합'
 
-  // Build user message with all available data
-  let userMessage = `다음 사주팔자를 해석해 주세요:\n\n사주팔자: ${JSON.stringify(saju)}\n\n오행 분석: ${JSON.stringify(oheng)}\n\n십신 분석: ${sipsin ? JSON.stringify(sipsin) : '없음'}\n\n일간 강약: ${ilganStrength ? JSON.stringify(ilganStrength) : '없음'}\n\n용신: ${yongsin ? JSON.stringify(yongsin) : '없음'}\n\n대운: ${daeun ? JSON.stringify(daeun) : '없음'}\n\n올해 세운: ${yearlyFortune ? JSON.stringify(yearlyFortune) : '없음'}\n\n이번 달 월운: ${monthlyFortune ? JSON.stringify(monthlyFortune) : '없음'}`
+  // ──────────────────────────────────────────
+  // 유저 메시지 구성: formatSajuForAI 사용
+  // ──────────────────────────────────────────
+  let userMessage: string
 
-  // If follow-up question, append it
+  // 구조화된 포맷팅 (모든 필수 데이터가 있을 때)
+  if (sipsin && ilganStrength && yongsin && daeun && yearlyFortune && monthlyFortune) {
+    const fullResult: FullSajuResult = {
+      saju: saju as FullSajuResult['saju'],
+      oheng: oheng as FullSajuResult['oheng'],
+      sipsin: sipsin as FullSajuResult['sipsin'],
+      ilganStrength: ilganStrength as FullSajuResult['ilganStrength'],
+      yongsin: yongsin as FullSajuResult['yongsin'],
+      daeun: daeun as FullSajuResult['daeun'],
+      yearlyFortune: yearlyFortune as FullSajuResult['yearlyFortune'],
+      monthlyFortune: monthlyFortune as FullSajuResult['monthlyFortune'],
+    }
+
+    userMessage = formatSajuForAI(fullResult, selectedCategory, formData ?? undefined, traditionalResult)
+  } else {
+    // 기존 방식 폴백 (일부 데이터만 있을 때)
+    userMessage = `다음 사주팔자를 해석해 주세요:\n\n사주팔자: ${JSON.stringify(saju)}\n\n오행 분석: ${JSON.stringify(oheng)}\n\n십신 분석: ${sipsin ? JSON.stringify(sipsin) : '없음'}\n\n일간 강약: ${ilganStrength ? JSON.stringify(ilganStrength) : '없음'}\n\n용신: ${yongsin ? JSON.stringify(yongsin) : '없음'}\n\n대운: ${daeun ? JSON.stringify(daeun) : '없음'}\n\n올해 세운: ${yearlyFortune ? JSON.stringify(yearlyFortune) : '없음'}\n\n이번 달 월운: ${monthlyFortune ? JSON.stringify(monthlyFortune) : '없음'}`
+
+    if (traditionalContext) {
+      userMessage += `\n\n전통 명리학 해설서 참고:\n${traditionalContext}`
+    }
+  }
+
+  // 후속 질문
   if (followUp) {
-    userMessage += `\n\n위 사주에 대해 추가 질문이 있습니다: ${followUp}\n간결하게 300자 이내로 답변해 주세요.`
+    userMessage += `\n\n위 사주에 대해 추가 질문이 있습니다: ${followUp}\n간결하게 400자 이내로 답변해 주세요.`
   }
 
-  if (traditionalContext) {
-    userMessage += `\n\n전통 명리학 해설서 참고:\n${traditionalContext}`
+  // ──────────────────────────────────────────
+  // OpenAI 호출 (파라미터 최적화)
+  // ──────────────────────────────────────────
+  const isComprehensive = selectedCategory === '종합'
+  const modelParams = {
+    temperature: followUp ? 0.5 : (isComprehensive ? 0.5 : 0.55),
+    max_tokens: followUp ? 600 : (isComprehensive ? 2000 : 1200),
+    presence_penalty: 0.2,
   }
 
-  // OpenAI 호출
   try {
     const openai = new OpenAI({ apiKey })
-
-    const systemPrompt = getSystemPrompt(selectedCategory)
+    const systemContent = followUp ? FOLLOWUP_SYSTEM_PROMPT : SYSTEM_PROMPT
 
     // Streaming 모드
     if (stream) {
       const streamResponse = await openai.chat.completions.create({
         model: 'gpt-4o-mini',
-        temperature: 0.7,
-        max_tokens: 1500,
+        ...modelParams,
         stream: true,
         messages: [
-          { role: 'system', content: followUp ? '당신은 20년 경력의 한국 명리학 전문가입니다. 사주 데이터를 바탕으로 추가 질문에 따뜻하고 구체적으로 답변해 주세요.' : systemPrompt },
+          { role: 'system', content: systemContent },
           { role: 'user', content: userMessage },
         ],
       })
@@ -181,10 +236,9 @@ export async function POST(req: NextRequest) {
     // Non-streaming fallback (backward compatibility)
     const completion = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
-      temperature: 0.7,
-      max_tokens: 1500,
+      ...modelParams,
       messages: [
-        { role: 'system', content: followUp ? '당신은 20년 경력의 한국 명리학 전문가입니다. 사주 데이터를 바탕으로 추가 질문에 따뜻하고 구체적으로 답변해 주세요.' : systemPrompt },
+        { role: 'system', content: systemContent },
         { role: 'user', content: userMessage },
       ],
     })

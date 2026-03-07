@@ -136,6 +136,8 @@ export default function Home() {
           monthlyFortune: result.monthlyFortune,
           category,
           traditionalContext: context || undefined,
+          traditionalResult: traditionalResult || undefined,
+          formData: formData || undefined,
         }),
         signal: controller.signal,
       })
@@ -172,7 +174,7 @@ export default function Home() {
     } finally {
       setAiLoading(false)
     }
-  }, [categoryCache, traditionalContext])
+  }, [categoryCache, traditionalContext, traditionalResult, formData])
 
   function handleInterpretModeChange(mode: InterpretMode) {
     setInterpretMode(mode)
@@ -247,6 +249,8 @@ export default function Home() {
           followUp: question,
           stream: false,
           traditionalContext: traditionalContext || undefined,
+          traditionalResult: traditionalResult || undefined,
+          formData: formData || undefined,
         }),
       })
       const data = await res.json()
