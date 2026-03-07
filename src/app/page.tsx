@@ -293,9 +293,7 @@ export default function Home() {
     setSaveDocxLoading(true)
     try {
       const docx = await import('docx')
-      const { saveAs } = await import('file-saver')
       const { Document, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, AlignmentType, BorderStyle, HeadingLevel, Packer } = docx
-      console.log('[DOCX] imports ok, Packer:', typeof Packer, 'toBlob:', typeof Packer?.toBlob)
 
       const pillars = [
         { label: '\uC2DC\uC8FC (\u6642\u67F1)', p: fullResult.saju.hourPillar },
@@ -475,7 +473,7 @@ export default function Home() {
           const entries = traditionalResult[cat.key]
           if (entries && entries.length > 0) {
             sections.push(
-              new Paragraph({ heading: HeadingLevel.HEADING_1, spacing: { before: 120 }, children: [
+              new Paragraph({ heading: HeadingLevel.HEADING_2, spacing: { before: 120 }, children: [
                 new TextRun({ text: cat.label, bold: true, size: 24 }),
               ] }),
             )
@@ -498,18 +496,26 @@ export default function Home() {
         ] }),
       )
 
-      console.log('[DOCX] sections count:', sections.length)
       const doc = new Document({
+        styles: {
+          default: {
+            document: {
+              run: { font: 'Malgun Gothic' },
+            },
+          },
+        },
         sections: [{ children: sections }],
       })
-      console.log('[DOCX] Document created')
       const blob = await Packer.toBlob(doc)
-      console.log('[DOCX] Blob created, size:', blob.size)
       const name = formData?.name ? `_${formData.name}` : ''
-      saveAs(blob, `\uCC9C\uBA85_\uC0AC\uC8FC\uACB0\uACFC${name}_${new Date().toISOString().slice(0, 10)}.docx`)
-    } catch (err) {
-      console.error('DOCX generation error:', err)
-      alert('\uC6CC\uB4DC \uBB38\uC11C \uC800\uC7A5 \uC911 \uC624\uB958\uAC00 \uBC1C\uC0DD\uD588\uC2B5\uB2C8\uB2E4.')
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `천명_사주결과${name}_${new Date().toISOString().slice(0, 10)}.docx`
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch {
+      alert('워드 문서 저장 중 오류가 발생했습니다.')
     } finally {
       setSaveDocxLoading(false)
     }
