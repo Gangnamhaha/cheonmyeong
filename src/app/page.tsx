@@ -12,7 +12,8 @@ import YongsinCard from '@/components/YongsinCard'
 import DaeunTimeline from '@/components/DaeunTimeline'
 import FortuneCard from '@/components/FortuneCard'
 import { useTheme } from '@/components/ThemeProvider'
-import { trackAnalysis } from '@/lib/analytics'
+import { trackAnalysis, trackShare } from '@/lib/analytics'
+import { shareSajuResult } from '@/lib/kakao'
 import { calculateFullSaju, FullSajuResult } from '@/lib/saju'
 
 type AppState = 'form' | 'result'
@@ -893,6 +894,42 @@ export default function Home() {
             </div>
           </div>
         )}
+
+        {/* 카카오톡 공유 */}
+        <button
+          onClick={() => {
+            if (fullResult && formData) {
+              shareSajuResult({
+                name: formData.name || '사용자',
+                dayPillar: `${fullResult.saju.dayPillar.heavenlyStemHanja || fullResult.saju.dayPillar.heavenlyStem}${fullResult.saju.dayPillar.earthlyBranchHanja || fullResult.saju.dayPillar.earthlyBranch}`,
+                yongsin: fullResult.yongsin.yongsin,
+                summary: aiInterpretation?.slice(0, 100),
+              })
+              trackShare('kakao', 'saju')
+            }
+          }}
+          style={{
+            width: '100%',
+            padding: '12px',
+            background: '#FEE500',
+            color: '#191919',
+            border: 'none',
+            borderRadius: '8px',
+            fontSize: '14px',
+            fontWeight: 'bold',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px',
+            marginBottom: '12px',
+          }}
+        >
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+            <path d="M9 1C4.58 1 1 3.87 1 7.35c0 2.14 1.39 4.03 3.5 5.12l-.9 3.28c-.08.28.25.5.48.33l3.84-2.54c.35.04.71.06 1.08.06 4.42 0 8-2.87 8-6.25S13.42 1 9 1z" fill="#191919"/>
+          </svg>
+          카카오톡으로 공유하기
+        </button>
 
         {/* Footer */}
         <div style={{ borderTop: '1px solid #334155', paddingTop: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

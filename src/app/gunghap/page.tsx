@@ -3,6 +3,8 @@
 import { useState, useRef } from 'react'
 import { calculateFullSaju, FullSajuResult } from '@/lib/saju'
 import { analyzeGunghap, GunghapResult } from '@/lib/gunghap'
+import { shareGunghapResult } from '@/lib/kakao'
+import { trackShare } from '@/lib/analytics'
 
 const YEARS = Array.from({ length: 151 }, (_, i) => 1900 + i)
 const MONTHS = Array.from({ length: 12 }, (_, i) => i + 1)
@@ -319,6 +321,27 @@ export default function GunghapPage() {
                 <div className="text-sm text-slate-300 leading-relaxed whitespace-pre-line">{aiText}</div>
               )}
             </div>
+
+            {/* 카카오톡 공유 */}
+            <button
+              onClick={() => {
+                if (result) {
+                  shareGunghapResult({
+                    person1: person1.name || '나',
+                    person2: person2.name || '상대방',
+                    score: result.gunghap.score,
+                  })
+                  trackShare('kakao', 'gunghap')
+                }
+              }}
+              className="w-full py-3 rounded-lg font-bold text-sm flex items-center justify-center gap-2 mb-3"
+              style={{ background: '#FEE500', color: '#191919' }}
+            >
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                <path d="M9 1C4.58 1 1 3.87 1 7.35c0 2.14 1.39 4.03 3.5 5.12l-.9 3.28c-.08.28.25.5.48.33l3.84-2.54c.35.04.71.06 1.08.06 4.42 0 8-2.87 8-6.25S13.42 1 9 1z" fill="#191919"/>
+              </svg>
+              카카오톡으로 공유하기
+            </button>
 
             <div className="flex gap-3">
               <button onClick={handleReset}
