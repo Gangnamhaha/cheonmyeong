@@ -909,7 +909,7 @@ export default function Home() {
       <div ref={downloadRef} style={{
         position: 'fixed', left: '-10000px', top: 0, width: '420px',
         background: '#0f172a', padding: '32px 24px',
-        fontFamily: 'system-ui, -apple-system, sans-serif',
+        fontFamily: '"Malgun Gothic", "맑은 고딕", "Apple SD Gothic Neo", "Noto Sans KR", system-ui, sans-serif',
       }}>
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: '24px' }}>
@@ -1030,12 +1030,12 @@ export default function Home() {
         {/* 태을해석 요약 */}
         {traditionalResult && (() => {
           const imgCategories: { key: keyof TraditionalInterpretationResult; label: string }[] = [
-            { key: 'personality', label: '📖 성격' },
-            { key: 'career', label: '💼 직업' },
-            { key: 'health', label: '🏥 건강' },
-            { key: 'fortune', label: '🌟 운세' },
-            { key: 'children', label: '👶 자손' },
-            { key: 'relationship', label: '💑 부부' },
+            { key: 'personality', label: '성격' },
+            { key: 'career', label: '직업' },
+            { key: 'health', label: '건강' },
+            { key: 'fortune', label: '운세' },
+            { key: 'children', label: '자손' },
+            { key: 'relationship', label: '부부' },
           ]
           const hasEntries = imgCategories.some(c => traditionalResult[c.key]?.length > 0)
           if (!hasEntries) return null
