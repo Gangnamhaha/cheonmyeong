@@ -8,7 +8,7 @@ import type { FullSajuResult, SajuPillar } from './saju'
 import type { SipsinName } from './sipsin'
 import type { TraditionalInterpretation, TraditionalEntry } from './traditional-interpret'
 
-type AiCategory = '종합' | '성격' | '연애' | '직업' | '건강' | '재물'
+type AiCategory = '종합' | '성격' | '연애' | '직업' | '건강' | '재물' | '인생성장'
 
 interface FormDataForAI {
   name?: string
@@ -195,6 +195,40 @@ function getCategoryFocus(category: AiCategory): string {
 - 올해/현재 대운 재물 전략
 ※ 특정 투자 상품/수익률 추천 금지, 습관·리스크 관리 중심
 분량: 700~1000자`,
+
+    '인생성장': `근묘화실(根苗花實) 이론에 따라 인생을 4단계로 나누어 해석하세요.
+각 단계를 사주 기둥과 해당 시기의 대운 흐름을 결합하여 분석합니다.
+
+출력 구조 (반드시 4단계 순서로):
+
+🌱 1단계: 초년운 — 뿌리를 내리는 시기 (년주 / 0~20세)
+- 년주 천간·지지의 오행과 십신으로 유년기 환경 해석
+- 조상·가문의 기운, 어린 시절의 경제적·정서적 환경
+- 타고난 기질과 본능적 성향
+- 해당 시기 대운과의 상호작용
+
+🌿 2단계: 청년운 — 사회적 기반을 닦는 시기 (월주 / 21~40세)
+- 월주 천간·지지의 오행과 십신으로 청년기 해석
+- 부모·형제의 영향, 학업과 사회 진출
+- 직업적 방향성과 사회적 관계 형성
+- 해당 시기 대운과의 상호작용
+
+🌸 3단계: 중년운 — 꽃을 피우는 시기 (일주 / 41~60세)
+- 일주 천간·지지의 오행과 십신으로 중년기 해석
+- 자기 주체적 삶의 완성, 배우자와의 관계
+- 경제적 성취의 정점, 건강 관리
+- 해당 시기 대운과의 상호작용
+
+🍎 4단계: 말년운 — 열매를 거두는 시기 (시주 / 61세 이후)
+- 시주 천간·지지의 오행과 십신으로 말년기 해석
+- 자녀운과 후세에 남기는 유산
+- 노후의 경제적·신체적 안정
+- 해당 시기 대운과의 상호작용
+
+■ 해석 공식: (해당 기둥의 십신) + (해당 시기 대운 흐름) = 그 시기의 삶의 모습
+■ 각 단계마다 구체적인 사주 데이터(천간, 지지, 십신명)를 근거로 제시하세요
+■ 단계 간 연결성을 보여주세요 — 이전 단계가 다음 단계에 어떤 영향을 미치는지
+분량: 1500~2000자`,
   }
   return focuses[category]
 }
@@ -247,6 +281,16 @@ export function selectTraditionalClues(
       { key: 'fortune', max: 3 },
       { key: 'general', max: 2 },
       { key: 'personality', max: 2 },
+    ],
+    '인생성장': [
+      { key: 'personality', max: 2 },
+      { key: 'dayPillar', max: 2 },
+      { key: 'fortune', max: 2 },
+      { key: 'career', max: 1 },
+      { key: 'children', max: 1 },
+      { key: 'relationship', max: 1 },
+      { key: 'health', max: 1 },
+      { key: 'general', max: 2 },
     ],
   }
 

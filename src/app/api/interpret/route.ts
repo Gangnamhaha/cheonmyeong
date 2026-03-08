@@ -32,7 +32,7 @@ function getClientIp(req: NextRequest): string {
   return req.ip ?? '127.0.0.1'
 }
 
-type Category = '종합' | '성격' | '연애' | '직업' | '건강' | '재물'
+type Category = '종합' | '성격' | '연애' | '직업' | '건강' | '재물' | '인생성장'
 
 // ──────────────────────────────────────────
 // 공통 시스템 프롬프트 (모든 카테고리 공유)
@@ -139,7 +139,7 @@ export async function POST(req: NextRequest) {
   }
 
   // Validate category
-  const validCategories: Category[] = ['종합', '성격', '연애', '직업', '건강', '재물']
+  const validCategories: Category[] = ['종합', '성격', '연애', '직업', '건강', '재물', '인생성장']
   const selectedCategory: Category = validCategories.includes(category as Category)
     ? (category as Category)
     : '종합'
@@ -180,7 +180,7 @@ export async function POST(req: NextRequest) {
   // ──────────────────────────────────────────
   // OpenAI 호출 (파라미터 최적화)
   // ──────────────────────────────────────────
-  const isComprehensive = selectedCategory === '종합'
+  const isComprehensive = selectedCategory === '종합' || selectedCategory === '인생성장'
   const modelParams = {
     temperature: followUp ? 0.5 : (isComprehensive ? 0.5 : 0.55),
     max_tokens: followUp ? 600 : (isComprehensive ? 2000 : 1200),

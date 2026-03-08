@@ -37,9 +37,10 @@ const RESULT_TABS: { key: ResultTab; label: string; icon: string }[] = [
   { key: '해석', label: 'AI해석', icon: '🤖' },
 ]
 
-type AiCategory = '종합' | '성격' | '연애' | '직업' | '건강' | '재물'
+type AiCategory = '종합' | '성격' | '연애' | '직업' | '건강' | '재물' | '인생성장'
 const AI_CATEGORIES: { key: AiCategory; label: string; icon: string }[] = [
   { key: '종합', label: '종합', icon: '🔮' },
+  { key: '인생성장', label: '인생성장', icon: '🌱' },
   { key: '성격', label: '성격', icon: '🧠' },
   { key: '연애', label: '연애', icon: '💕' },
   { key: '직업', label: '직업', icon: '💼' },
