@@ -414,7 +414,13 @@ export default function SajuMoviePlayer({
   const [imageProgress, setImageProgress] = useState(0)
   const [loadingPhase, setLoadingPhase] = useState<'scenario' | 'images' | null>(null)
 
-  const { isSupported: ttsSupported, isSpeaking, speak, stop: stopNarration, unlock: unlockTts } = useSpeechSynthesis()
+  const { isSupported: ttsSupported, isSpeaking, speak, stop: stopNarration, unlock: unlockTts, isMobile } = useSpeechSynthesis()
+
+  // On mobile, disable auto-narration by default — user must tap 🔈 to enable
+  // (mobile browsers block programmatic speak() without user gesture)
+  useEffect(() => {
+    if (isMobile) setNarrationEnabled(false)
+  }, [isMobile])
 
   const audioRef = useRef<MovieAudioEngine | null>(null)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)

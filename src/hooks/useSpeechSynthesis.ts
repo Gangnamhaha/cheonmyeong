@@ -6,6 +6,7 @@ export function useSpeechSynthesis() {
   const [isSpeaking, setIsSpeaking] = useState(false)
   const [isPaused, setIsPaused] = useState(false)
   const [voice, setVoice] = useState<SpeechSynthesisVoice | null>(null)
+  const [isMobile, setIsMobile] = useState(false)
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null)
   const keepAliveRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const unlockedRef = useRef(false)
@@ -21,6 +22,11 @@ export function useSpeechSynthesis() {
   const isIOS = useMemo(() => {
     if (typeof navigator === 'undefined') return false
     return /iPhone|iPad|iPod/.test(navigator.userAgent)
+  }, [])
+
+  // Detect mobile device (set via useEffect to avoid SSR hydration mismatch)
+  useEffect(() => {
+    setIsMobile(/iPhone|iPad|iPod|Android/i.test(navigator.userAgent))
   }, [])
 
   useEffect(() => {
@@ -67,8 +73,8 @@ export function useSpeechSynthesis() {
   /**
    * Unlock TTS for mobile browsers.
    * Must be called inside a user gesture handler (click/tap).
-   * Speaks a nearly-silent utterance to satisfy the browser's
-   * autoplay policy so subsequent programmatic speak() calls work.
+   * Speaks a short utterance to satisfy the browser's autoplay
+   * policy so subsequent programmatic speak() calls work.
    */
   const unlock = useCallback(() => {
     if (!isSupported || typeof window === 'undefined' || unlockedRef.current) {
@@ -76,14 +82,16 @@ export function useSpeechSynthesis() {
     }
 
     const synth = window.speechSynthesis
-    const utterance = new SpeechSynthesisUtterance(' ')
+    // Use actual pronounceable text — empty/space text is ignored by many TTS engines
+    const utterance = new SpeechSynthesisUtterance('.')
     utterance.lang = 'ko-KR'
     utterance.volume = 0.01
-    utterance.rate = 10
+    utterance.rate = 5
+    if (voice) utterance.voice = voice
     utterance.onend = () => { unlockedRef.current = true }
     utterance.onerror = () => { unlockedRef.current = true }
     synth.speak(utterance)
-  }, [isSupported])
+  }, [isSupported, voice])
 
   const stop = useCallback(() => {
     if (!isSupported || typeof window === 'undefined') {
@@ -108,7 +116,11 @@ export function useSpeechSynthesis() {
     }
 
     const synth = window.speechSynthesis
-    synth.cancel()
+    // Only cancel if there's active/pending speech.
+    // Chrome Android bug: calling cancel() when idle can block the next speak().
+    if (synth.speaking || synth.pending) {
+      synth.cancel()
+    }
     clearKeepAlive()
 
     const utterance = new SpeechSynthesisUtterance(normalized)
@@ -186,6 +198,7 @@ export function useSpeechSynthesis() {
     isSpeaking,
     isPaused,
     isSupported,
+    isMobile,
     speak,
     stop,
     pause,
