@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useRef } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import SajuForm from '@/components/SajuForm'
 import SajuResultCard from '@/components/SajuResult'
 import OhengChart from '@/components/OhengChart'
@@ -19,6 +19,7 @@ import { shareSajuResult } from '@/lib/kakao'
 import { calculateFullSaju, FullSajuResult } from '@/lib/saju'
 import SajuAnimationPlayer from '@/components/SajuAnimationPlayer'
 import SajuMoviePlayer from '@/components/SajuMoviePlayer'
+import { useSpeechRecognition } from '@/hooks/useSpeechRecognition'
 import {
   getTraditionalInterpretation,
   toTraditionalContextText,
@@ -77,6 +78,15 @@ export default function Home() {
   const [followUpQuestion, setFollowUpQuestion] = useState('')
   const [followUpLoading, setFollowUpLoading] = useState(false)
   const [chatHistory, setChatHistory] = useState<{ role: 'user' | 'assistant'; content: string }[]>([])
+  const {
+    isListening,
+    transcript,
+    interimTranscript,
+    isSupported: sttSupported,
+    startListening,
+    stopListening,
+    resetTranscript,
+  } = useSpeechRecognition()
   const [shareToast, setShareToast] = useState(false)
   const [saveImageLoading, setSaveImageLoading] = useState(false)
   const [saveDocxLoading, setSaveDocxLoading] = useState(false)
@@ -265,6 +275,23 @@ export default function Home() {
     } finally {
       setFollowUpLoading(false)
     }
+  }
+
+  // STT transcript → followUpQuestion 동기화
+  useEffect(() => {
+    const recognized = `${transcript} ${interimTranscript}`.trim()
+    if (recognized) {
+      setFollowUpQuestion(recognized)
+    }
+  }, [transcript, interimTranscript])
+
+  function handleMicToggle() {
+    if (isListening) {
+      stopListening()
+      return
+    }
+    resetTranscript()
+    startListening()
   }
 
   function handleShare() {
@@ -805,26 +832,42 @@ export default function Home() {
                             </div>
                           )}
 
-                          {/* 후속 질문 입력 */}
-                          <div className="flex gap-2">
+                           {/* 후속 질문 입력 */}
+                          <div className="flex gap-2 items-center">
                             <input
                               type="text"
                               value={followUpQuestion}
                               onChange={e => setFollowUpQuestion(e.target.value)}
                               onKeyDown={e => { if (e.key === 'Enter') handleFollowUp() }}
-                              placeholder="추가 질문을 입력하세요..."
+                              placeholder={isListening ? '말씀하세요...' : '추가 질문을 입력하세요...'}
                               className="flex-1 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 transition-colors"
                               style={{
                                 background: 'var(--bg-secondary)',
-                                border: '1px solid var(--border-color)',
+                                border: `1px solid ${isListening ? '#ef4444' : 'var(--border-color)'}`,
                                 color: 'var(--text-primary)',
                               }}
                               disabled={followUpLoading}
                             />
                             <button
+                              type="button"
+                              onClick={handleMicToggle}
+                              disabled={followUpLoading}
+                              className="shrink-0 w-9 h-9 flex items-center justify-center rounded-lg transition-all text-base disabled:cursor-not-allowed"
+                              style={{
+                                background: isListening ? 'rgba(239,68,68,0.15)' : 'var(--bg-secondary)',
+                                border: `1px solid ${isListening ? 'rgba(239,68,68,0.4)' : 'var(--border-color)'}`,
+                                color: isListening ? '#ef4444' : 'var(--text-muted)',
+                              }}
+                              title={isListening ? '음성 입력 중지' : '음성으로 질문하기'}
+                            >
+                              {isListening ? (
+                                <span className="animate-pulse">⏺</span>
+                              ) : '🎤'}
+                            </button>
+                            <button
                               onClick={handleFollowUp}
                               disabled={followUpLoading || !followUpQuestion.trim()}
-                              className="font-bold px-4 py-2 rounded-lg transition-colors text-sm hover-scale disabled:cursor-not-allowed"
+                              className="shrink-0 font-bold px-4 py-2 rounded-lg transition-colors text-sm hover-scale disabled:cursor-not-allowed"
                               style={{
                                 background: followUpLoading || !followUpQuestion.trim() ? 'var(--bg-secondary)' : 'var(--accent)',
                                 color: followUpLoading || !followUpQuestion.trim() ? 'var(--text-muted)' : 'var(--accent-text)',
