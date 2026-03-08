@@ -12,6 +12,7 @@ import YongsinCard from '@/components/YongsinCard'
 import TraditionalInterpretation from '@/components/TraditionalInterpretation'
 import DaeunTimeline from '@/components/DaeunTimeline'
 import FortuneCard from '@/components/FortuneCard'
+import DailyFortuneCard from '@/components/DailyFortuneCard'
 import { useTheme } from '@/components/ThemeProvider'
 import { trackAnalysis, trackShare } from '@/lib/analytics'
 import { shareSajuResult } from '@/lib/kakao'
@@ -713,6 +714,10 @@ export default function Home() {
 
                   {activeTab === '운세' && (
                     <>
+                      <DailyFortuneCard
+                        stem={fullResult.saju.dayPillar.heavenlyStem}
+                        branch={fullResult.saju.dayPillar.earthlyBranch}
+                      />
                       <DaeunTimeline result={fullResult.daeun} />
                       <FortuneCard yearlyFortune={fullResult.yearlyFortune} monthlyFortune={fullResult.monthlyFortune} />
                     </>

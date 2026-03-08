@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { signIn } from 'next-auth/react'
 import Link from 'next/link'
+import { trackSignUp } from '@/lib/analytics'
 
 export default function SignupPage() {
   const [name, setName] = useState('')
@@ -39,6 +40,9 @@ export default function SignupPage() {
         setLoading(false)
         return
       }
+
+      // Track signup event
+      trackSignUp('email')
 
       // Auto-login after signup
       await signIn('credentials', {
