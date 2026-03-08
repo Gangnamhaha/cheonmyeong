@@ -252,10 +252,36 @@ function drawSceneForCanvas(
   scene: MovieScene,
   fullResult: FullSajuResult,
   formData: SajuMoviePlayerProps['formData'],
+  bgImage?: HTMLImageElement | null,
 ) {
   const mood = (scene.mood || 'mystical') as MoodType
   const accent = MOOD_COLORS[mood]?.accent ?? '#fbbf24'
-  drawMovieBackground(ctx, w, h, mood)
+
+  // Draw background: AI image or mood gradient
+  if (bgImage && bgImage.complete && bgImage.naturalWidth > 0) {
+    const imgW = bgImage.naturalWidth
+    const imgH = bgImage.naturalHeight
+    const imgRatio = imgW / imgH
+    const canvasRatio = w / h
+    let sx = 0, sy = 0, sw = imgW, sh = imgH
+    if (imgRatio > canvasRatio) {
+      sw = imgH * canvasRatio
+      sx = (imgW - sw) / 2
+    } else {
+      sh = imgW / canvasRatio
+      sy = (imgH - sh) / 2
+    }
+    ctx.drawImage(bgImage, sx, sy, sw, sh, 0, 0, w, h)
+    // Dark overlay for text readability
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.45)'
+    ctx.fillRect(0, 0, w, h)
+    // Letterbox bars
+    ctx.fillStyle = '#000'
+    ctx.fillRect(0, 0, w, LETTERBOX_H * 2)
+    ctx.fillRect(0, h - LETTERBOX_H * 2, w, LETTERBOX_H * 2)
+  } else {
+    drawMovieBackground(ctx, w, h, mood)
+  }
 
   // Subtitle at top
   drawCenteredText(ctx, scene.subtitle, w / 2, LETTERBOX_H * 2 + 60, 28, '#94a3b8')
@@ -384,23 +410,34 @@ export default function SajuMoviePlayer({
   const [recordProgress, setRecordProgress] = useState(0)
   const [isMuted, setIsMuted] = useState(false)
   const [narrationEnabled, setNarrationEnabled] = useState(true)
+  const [sceneImages, setSceneImages] = useState<(string | null)[]>([])
+  const [imageProgress, setImageProgress] = useState(0)
+  const [loadingPhase, setLoadingPhase] = useState<'scenario' | 'images' | null>(null)
 
   const { isSupported: ttsSupported, isSpeaking, speak, stop: stopNarration } = useSpeechSynthesis()
 
   const audioRef = useRef<MovieAudioEngine | null>(null)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const imageElsRef = useRef<(HTMLImageElement | null)[]>([])
+  const imageAbortRef = useRef<AbortController | null>(null)
+  const sceneImagesRef = useRef<(string | null)[]>([])
 
-  /* ---------- Fetch scenario from API ---------- */
+  /* ---------- Fetch scenario & generate scene images ---------- */
   useEffect(() => {
     if (!selectedGenre) return
     let cancelled = false
+    const imgAbort = new AbortController()
+    imageAbortRef.current = imgAbort
 
-    async function fetchScenario() {
+    async function fetchScenarioAndImages() {
       try {
         setLoading(true)
         setError(null)
         setScenario(null)
+        setSceneImages([])
+        setImageProgress(0)
+        setLoadingPhase('scenario')
 
         audioRef.current?.stop()
         audioRef.current?.destroy()
@@ -442,31 +479,88 @@ export default function SajuMoviePlayer({
         if (!res.ok) throw new Error('시나리오 생성 실패')
         const data = await res.json()
 
-        if (!cancelled && data.scenario) {
-          setCurrentScene(0)
-          setShowControls(false)
-          setIsMuted(false)
-          setScenario(data.scenario)
-          setLoading(false)
-          // Start playback
-          setIsPlaying(true)
-          // Init audio
-          const engine = new MovieAudioEngine()
-          await engine.init()
-          audioRef.current = engine
-          engine.play(data.scenario.scenes[0]?.mood ?? 'mystical')
-        }
+        if (cancelled || !data.scenario) return
+
+        setCurrentScene(0)
+        setShowControls(false)
+        setIsMuted(false)
+        setScenario(data.scenario)
+
+        // --- Phase 2: Generate AI scene images ---
+        setLoadingPhase('images')
+        const scenes: MovieScene[] = data.scenario.scenes
+        const imgUrls: (string | null)[] = new Array(scenes.length).fill(null)
+        const imgEls: (HTMLImageElement | null)[] = new Array(scenes.length).fill(null)
+        let completed = 0
+
+        await Promise.allSettled(
+          scenes.map(async (scene: MovieScene, idx: number) => {
+            if (imgAbort.signal.aborted) return
+            try {
+              const imgRes = await fetch('/api/generate-scene-image', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  gender: formData.gender,
+                  birthYear: formData.year,
+                  sceneType: scene.type,
+                  narration: scene.narration,
+                  mood: scene.mood,
+                  genre: selectedGenre,
+                }),
+                signal: imgAbort.signal,
+              })
+              if (imgRes.ok) {
+                const imgData = await imgRes.json()
+                if (imgData.image) {
+                  const bin = atob(imgData.image)
+                  const bytes = new Uint8Array(bin.length)
+                  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i)
+                  const blob = new Blob([bytes], { type: 'image/png' })
+                  const url = URL.createObjectURL(blob)
+                  imgUrls[idx] = url
+                  const el = new Image()
+                  el.src = url
+                  imgEls[idx] = el
+                }
+              }
+            } catch {
+              /* silent fail — scene plays without image */
+            }
+            completed++
+            if (!imgAbort.signal.aborted) setImageProgress(completed)
+          }),
+        )
+
+        if (cancelled) return
+
+        setSceneImages([...imgUrls])
+        sceneImagesRef.current = imgUrls
+        imageElsRef.current = imgEls
+        setLoadingPhase(null)
+        setLoading(false)
+        setIsPlaying(true)
+
+        // Init audio
+        const engine = new MovieAudioEngine()
+        await engine.init()
+        audioRef.current = engine
+        engine.play(data.scenario.scenes[0]?.mood ?? 'mystical')
       } catch (err) {
         if (!cancelled) {
           console.error(err)
           setError('시나리오를 생성하지 못했습니다.')
           setLoading(false)
+          setLoadingPhase(null)
         }
       }
     }
 
-    fetchScenario()
-    return () => { cancelled = true }
+    fetchScenarioAndImages()
+    return () => {
+      cancelled = true
+      imgAbort.abort()
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedGenre])
 
@@ -509,6 +603,8 @@ export default function SajuMoviePlayer({
     return () => {
       audioRef.current?.destroy()
       stopNarration()
+      imageAbortRef.current?.abort()
+      sceneImagesRef.current.forEach(url => { if (url) URL.revokeObjectURL(url) })
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -535,6 +631,11 @@ export default function SajuMoviePlayer({
   const handleReplay = useCallback(() => {
     audioRef.current?.stop()
     stopNarration()
+    imageAbortRef.current?.abort()
+    sceneImagesRef.current.forEach(url => { if (url) URL.revokeObjectURL(url) })
+    setSceneImages([])
+    sceneImagesRef.current = []
+    imageElsRef.current = []
     setCurrentScene(0)
     setScenario(null)
     setLoading(true)
@@ -552,6 +653,8 @@ export default function SajuMoviePlayer({
   const handleClose = useCallback(() => {
     audioRef.current?.stop()
     stopNarration()
+    imageAbortRef.current?.abort()
+    sceneImagesRef.current.forEach(url => { if (url) URL.revokeObjectURL(url) })
     setTimeout(() => {
       audioRef.current?.destroy()
       onClose()
@@ -564,6 +667,10 @@ export default function SajuMoviePlayer({
     }
     setNarrationEnabled((prev) => !prev)
   }, [narrationEnabled, stopNarration])
+
+  const handleSkipImages = useCallback(() => {
+    imageAbortRef.current?.abort()
+  }, [])
 
   /* ---------- Video export ---------- */
   const handleSaveVideo = useCallback(async () => {
@@ -600,7 +707,7 @@ export default function SajuMoviePlayer({
           let start = 0
           const frame = (time: number) => {
             if (!start) start = time
-            drawSceneForCanvas(ctx, canvas.width, canvas.height, i, scene, fullResult, formData)
+            drawSceneForCanvas(ctx, canvas.width, canvas.height, i, scene, fullResult, formData, imageElsRef.current[i])
             if (time - start < dur) requestAnimationFrame(frame)
             else resolve()
           }
@@ -616,11 +723,11 @@ export default function SajuMoviePlayer({
             const frame = () => {
               const t = frameIdx / (totalFrames - 1)
               if (t < 0.5) {
-                drawSceneForCanvas(ctx, canvas.width, canvas.height, i, scenes[i], fullResult, formData)
+                drawSceneForCanvas(ctx, canvas.width, canvas.height, i, scenes[i], fullResult, formData, imageElsRef.current[i])
                 ctx.fillStyle = `rgba(0,0,0,${t * 2})`
                 ctx.fillRect(0, 0, canvas.width, canvas.height)
               } else {
-                drawSceneForCanvas(ctx, canvas.width, canvas.height, i + 1, scenes[i + 1], fullResult, formData)
+                drawSceneForCanvas(ctx, canvas.width, canvas.height, i + 1, scenes[i + 1], fullResult, formData, imageElsRef.current[i + 1])
                 ctx.fillStyle = `rgba(0,0,0,${(1 - t) * 2})`
                 ctx.fillRect(0, 0, canvas.width, canvas.height)
               }
@@ -1077,6 +1184,7 @@ export default function SajuMoviePlayer({
   }
 
   if (loading) {
+    const totalSceneCount = scenario?.scenes.length ?? 8
     return (
       <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#0a0e1a]">
         <motion.div
@@ -1084,14 +1192,45 @@ export default function SajuMoviePlayer({
           animate={{ rotate: 360 }}
           transition={{ duration: 1.2, repeat: Infinity, ease: 'linear' }}
         />
-        <motion.p
-          className="mt-6 text-lg text-amber-300"
-          animate={{ opacity: [0.5, 1, 0.5] }}
-          transition={{ duration: 2, repeat: Infinity }}
-        >
-          시나리오를 집필하고 있습니다...
-        </motion.p>
-        <p className="mt-2 text-sm text-slate-500">AI가 당신만의 영화를 준비 중입니다</p>
+        {loadingPhase === 'images' ? (
+          <>
+            <motion.p
+              className="mt-6 text-lg text-amber-300"
+              animate={{ opacity: [0.5, 1, 0.5] }}
+              transition={{ duration: 2, repeat: Infinity }}
+            >
+              영화 장면을 그리고 있습니다...
+            </motion.p>
+            <p className="mt-2 text-sm text-slate-400">
+              {imageProgress} / {totalSceneCount} 장면 완성
+            </p>
+            <div className="mt-3 h-1.5 w-48 overflow-hidden rounded-full bg-slate-700">
+              <motion.div
+                className="h-full rounded-full bg-amber-400"
+                animate={{ width: `${(imageProgress / totalSceneCount) * 100}%` }}
+                transition={{ duration: 0.3 }}
+              />
+            </div>
+            <button
+              type="button"
+              className="mt-5 rounded-lg border border-slate-600 bg-slate-800/60 px-4 py-2 text-xs text-slate-400 transition hover:border-slate-400 hover:text-slate-200"
+              onClick={handleSkipImages}
+            >
+              건너뛰기
+            </button>
+          </>
+        ) : (
+          <>
+            <motion.p
+              className="mt-6 text-lg text-amber-300"
+              animate={{ opacity: [0.5, 1, 0.5] }}
+              transition={{ duration: 2, repeat: Infinity }}
+            >
+              시나리오를 집필하고 있습니다...
+            </motion.p>
+            <p className="mt-2 text-sm text-slate-500">AI가 당신만의 영화를 준비 중입니다</p>
+          </>
+        )}
       </div>
     )
   }
@@ -1151,13 +1290,32 @@ export default function SajuMoviePlayer({
           {!isLastScene && (
             <motion.div
               key={currentScene}
-              className="h-full w-full"
+              className="relative h-full w-full overflow-hidden"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 1.2, ease: 'circInOut' }}
             >
-              {renderScene()}
+              {/* AI-generated scene background image */}
+              {sceneImages[currentScene] && (
+                <motion.div
+                  className="absolute inset-0 z-0"
+                  initial={{ opacity: 0, scale: 1.1 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 2, ease: 'easeOut' }}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={sceneImages[currentScene]!}
+                    alt=""
+                    className="h-full w-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/60" />
+                </motion.div>
+              )}
+              <div className="relative z-10 h-full">
+                {renderScene()}
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
