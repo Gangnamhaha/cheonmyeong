@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useSpeechSynthesis } from '@/hooks/useSpeechSynthesis'
 import { OHENG_COLORS } from '@/lib/oheng'
 import { MovieAudioEngine } from '@/lib/movie-audio'
 import type { FullSajuResult } from '@/lib/saju'
@@ -382,6 +383,9 @@ export default function SajuMoviePlayer({
   const [isRecording, setIsRecording] = useState(false)
   const [recordProgress, setRecordProgress] = useState(0)
   const [isMuted, setIsMuted] = useState(false)
+  const [narrationEnabled, setNarrationEnabled] = useState(true)
+
+  const { isSupported: ttsSupported, isSpeaking, speak, stop: stopNarration } = useSpeechSynthesis()
 
   const audioRef = useRef<MovieAudioEngine | null>(null)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -504,12 +508,33 @@ export default function SajuMoviePlayer({
   useEffect(() => {
     return () => {
       audioRef.current?.destroy()
+      stopNarration()
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  /* ---------- Auto-narration (TTS) ---------- */
+  useEffect(() => {
+    if (!narrationEnabled || !ttsSupported || !scenario) return
+
+    const scene = scenario.scenes[currentScene]
+    if (!scene?.narration) return
+
+    const timer = setTimeout(() => {
+      speak(scene.narration)
+    }, 500)
+
+    return () => {
+      clearTimeout(timer)
+      stopNarration()
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentScene, narrationEnabled, ttsSupported, scenario])
 
   /* ---------- Handlers ---------- */
   const handleReplay = useCallback(() => {
     audioRef.current?.stop()
+    stopNarration()
     setCurrentScene(0)
     setScenario(null)
     setLoading(true)
@@ -517,7 +542,7 @@ export default function SajuMoviePlayer({
     setSelectedGenre(null)
     setIsPlaying(false)
     setShowControls(false)
-  }, [])
+  }, [stopNarration])
 
   const handleToggleMute = useCallback(() => {
     const muted = audioRef.current?.toggleMute() ?? false
@@ -526,11 +551,19 @@ export default function SajuMoviePlayer({
 
   const handleClose = useCallback(() => {
     audioRef.current?.stop()
+    stopNarration()
     setTimeout(() => {
       audioRef.current?.destroy()
       onClose()
     }, 300)
-  }, [onClose])
+  }, [onClose, stopNarration])
+
+  const handleToggleNarration = useCallback(() => {
+    if (narrationEnabled) {
+      stopNarration()
+    }
+    setNarrationEnabled((prev) => !prev)
+  }, [narrationEnabled, stopNarration])
 
   /* ---------- Video export ---------- */
   const handleSaveVideo = useCallback(async () => {
@@ -1129,6 +1162,21 @@ export default function SajuMoviePlayer({
           )}
         </AnimatePresence>
       </div>
+
+      {/* Narration button */}
+      {ttsSupported && (
+        <button
+          type="button"
+          className="absolute right-14 top-3 z-30 rounded-full bg-black/40 p-2 text-slate-400 backdrop-blur hover:text-white"
+          onClick={(e) => { e.stopPropagation(); handleToggleNarration() }}
+          aria-label={narrationEnabled ? '나레이션 끄기' : '나레이션 켜기'}
+          title={narrationEnabled ? '나레이션 끄기' : '나레이션 켜기'}
+        >
+          <span className="flex h-5 w-5 items-center justify-center text-sm">
+            {narrationEnabled ? (isSpeaking ? '🔊' : '🔈') : '🔇'}
+          </span>
+        </button>
+      )}
 
       {/* Mute button (always visible) */}
       <button
