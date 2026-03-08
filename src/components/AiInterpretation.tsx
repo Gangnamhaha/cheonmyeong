@@ -23,6 +23,11 @@ export default function AiInterpretation({
       return
     }
 
+    if (!isSupported) {
+      alert('이 브라우저에서는 음성 읽기를 지원하지 않습니다. Chrome 또는 Safari를 이용해주세요.')
+      return
+    }
+
     if (isSpeaking) {
       stop()
       return
@@ -37,11 +42,11 @@ export default function AiInterpretation({
         <h2 className="text-lg font-bold tracking-wide" style={{ color: 'var(--text-accent)' }}>
           AI 사주 해석 <span className="text-sm font-normal" style={{ color: 'var(--text-muted)' }}>(命理 解釋)</span>
         </h2>
-        {isSupported && canReadAloud && (
+        {canReadAloud && (
           <button
             type="button"
             onClick={handleReadToggle}
-            className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all hover-scale theme-transition"
+            className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all hover-scale theme-transition shrink-0"
             style={{
               color: isSpeaking ? '#ef4444' : 'var(--text-muted)',
               background: 'var(--bg-secondary)',
