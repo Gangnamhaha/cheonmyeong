@@ -57,21 +57,21 @@ function buildPrompt(
 
   const sceneActions: Record<string, string> = {
     prologue:
-      'standing at the threshold of cosmic destiny, gazing up at a vast sky swirling with constellations and celestial energy',
+      'in a cinematic character introduction moment, standing in their everyday world — a busy street, café, or workplace — looking thoughtful and charismatic, caught in a moment of quiet contemplation',
     birth:
-      'emerging into the world in a burst of celestial light, surrounded by floating celestial symbols',
+      'as a child in their hometown, surrounded by elements of a warm childhood — a family home with warm light, a neighborhood street, gentle everyday scenery with nostalgic atmosphere',
     pillars:
-      'standing among four magnificent glowing stone pillars, each radiating a different elemental color (green, red, gold, blue)',
+      'at a dramatic crossroads moment in life, standing at a literal or metaphorical fork in the road, inner conflict visible in their expression, surrounded by contrasting paths and atmospheric tension',
     elements:
-      'at the center of five swirling elemental forces — wood (green vines), fire (crimson flames), earth (golden stones), metal (silver streams), water (deep blue waves)',
+      'facing a dramatic life challenge with emotional intensity — caught in a storm, confronting a difficult situation, or in a moment of crisis with dramatic weather and lighting reflecting inner turmoil',
     guardian:
-      'face to face with a majestic guardian spirit made of pure luminous energy, in a moment of profound connection',
+      'in a fateful encounter moment, meeting someone important for the first time or experiencing a life-changing event — warm emotional atmosphere, two figures in a meaningful connection',
     fortune:
-      'walking along a mystical golden path through shifting dreamlike seasons',
+      'navigating their current life situation with determination — in a contemporary setting, facing modern challenges, showing resilience and focus amid uncertainty',
     message:
-      'seated in a serene cosmic meditation space, surrounded by floating golden light particles carrying wisdom',
+      'having a powerful moment of realization and growth, emerging from difficulty into understanding — light breaking through darkness, a transformative emotional climax',
     epilogue:
-      'standing on a mountaintop at dawn, looking toward a vast radiant horizon with peaceful determination',
+      'looking toward a bright future with peaceful determination, standing at a new beginning — dawn light, open landscape, a sense of hope and possibility stretching ahead',
   }
 
   const genreStyle: Record<string, string> = {
@@ -89,7 +89,7 @@ function buildPrompt(
       'historical Joseon dynasty Korea setting, traditional Korean architecture, elegant period aesthetics',
   }
 
-  return `Cinematic illustration for a fortune-destiny movie scene. ${character}. The protagonist is ${sceneActions[sceneType] || narration}. Atmosphere: ${moodStyles[mood] || 'cinematic atmospheric lighting'}. Art style: ${genreStyle[genre] || genreStyle.classic}. Painterly digital art, concept art quality, rich atmospheric depth, cinematic framing. Absolutely no text, no letters, no words, no watermarks, no UI elements.`
+  return `Cinematic illustration for a life drama scene. ${character}. The protagonist is ${sceneActions[sceneType] || narration}. Atmosphere: ${moodStyles[mood] || 'cinematic atmospheric lighting'}. Art style: ${genreStyle[genre] || genreStyle.classic}. Painterly digital art, concept art quality, rich atmospheric depth, cinematic framing. Absolutely no text, no letters, no words, no watermarks, no UI elements.`
 }
 
 /* ------------------------------------------------------------------ */
