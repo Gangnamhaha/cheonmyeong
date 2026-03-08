@@ -414,7 +414,7 @@ export default function SajuMoviePlayer({
   const [imageProgress, setImageProgress] = useState(0)
   const [loadingPhase, setLoadingPhase] = useState<'scenario' | 'images' | null>(null)
 
-  const { isSupported: ttsSupported, isSpeaking, speak, stop: stopNarration } = useSpeechSynthesis()
+  const { isSupported: ttsSupported, isSpeaking, speak, stop: stopNarration, unlock: unlockTts } = useSpeechSynthesis()
 
   const audioRef = useRef<MovieAudioEngine | null>(null)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -664,9 +664,15 @@ export default function SajuMoviePlayer({
   const handleToggleNarration = useCallback(() => {
     if (narrationEnabled) {
       stopNarration()
+      setNarrationEnabled(false)
+    } else {
+      unlockTts()
+      setNarrationEnabled(true)
+      // Speak current scene immediately within gesture context
+      const scene = scenario?.scenes[currentScene]
+      if (scene?.narration) speak(scene.narration)
     }
-    setNarrationEnabled((prev) => !prev)
-  }, [narrationEnabled, stopNarration])
+  }, [narrationEnabled, stopNarration, unlockTts, speak, scenario, currentScene])
 
   const handleSkipImages = useCallback(() => {
     imageAbortRef.current?.abort()
@@ -1146,7 +1152,7 @@ export default function SajuMoviePlayer({
                 type="button"
                 className="group relative overflow-hidden rounded-2xl border bg-slate-900/45 px-4 py-5 text-left backdrop-blur transition-colors"
                 style={{ borderColor: `${genre.color}44` }}
-                onClick={() => setSelectedGenre(genre.id)}
+                onClick={() => { unlockTts(); setSelectedGenre(genre.id) }}
                 variants={{ hidden: { opacity: 0, y: 24 }, visible: { opacity: 1, y: 0 } }}
                 whileHover={{ scale: 1.03, borderColor: `${genre.color}cc`, boxShadow: `0 0 24px ${genre.color}44` }}
                 whileTap={{ scale: 0.98 }}

@@ -7,6 +7,8 @@ export function useSpeechSynthesis() {
   const [isPaused, setIsPaused] = useState(false)
   const [voice, setVoice] = useState<SpeechSynthesisVoice | null>(null)
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null)
+  const keepAliveRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const unlockedRef = useRef(false)
 
   const isSupported = useMemo(() => {
     if (typeof window === 'undefined') {
@@ -14,6 +16,11 @@ export function useSpeechSynthesis() {
     }
 
     return Boolean(window.speechSynthesis && window.SpeechSynthesisUtterance)
+  }, [])
+
+  const isIOS = useMemo(() => {
+    if (typeof navigator === 'undefined') return false
+    return /iPhone|iPad|iPod/.test(navigator.userAgent)
   }, [])
 
   useEffect(() => {
@@ -44,9 +51,38 @@ export function useSpeechSynthesis() {
       synth.removeEventListener('voiceschanged', selectKoreanVoice)
       synth.cancel()
       utteranceRef.current = null
+      if (keepAliveRef.current) clearInterval(keepAliveRef.current)
       setIsSpeaking(false)
       setIsPaused(false)
     }
+  }, [isSupported])
+
+  const clearKeepAlive = useCallback(() => {
+    if (keepAliveRef.current) {
+      clearInterval(keepAliveRef.current)
+      keepAliveRef.current = null
+    }
+  }, [])
+
+  /**
+   * Unlock TTS for mobile browsers.
+   * Must be called inside a user gesture handler (click/tap).
+   * Speaks a nearly-silent utterance to satisfy the browser's
+   * autoplay policy so subsequent programmatic speak() calls work.
+   */
+  const unlock = useCallback(() => {
+    if (!isSupported || typeof window === 'undefined' || unlockedRef.current) {
+      return
+    }
+
+    const synth = window.speechSynthesis
+    const utterance = new SpeechSynthesisUtterance(' ')
+    utterance.lang = 'ko-KR'
+    utterance.volume = 0.01
+    utterance.rate = 10
+    utterance.onend = () => { unlockedRef.current = true }
+    utterance.onerror = () => { unlockedRef.current = true }
+    synth.speak(utterance)
   }, [isSupported])
 
   const stop = useCallback(() => {
@@ -56,9 +92,10 @@ export function useSpeechSynthesis() {
 
     window.speechSynthesis.cancel()
     utteranceRef.current = null
+    clearKeepAlive()
     setIsSpeaking(false)
     setIsPaused(false)
-  }, [isSupported])
+  }, [isSupported, clearKeepAlive])
 
   const speak = useCallback((text: string) => {
     if (!isSupported || typeof window === 'undefined') {
@@ -72,6 +109,7 @@ export function useSpeechSynthesis() {
 
     const synth = window.speechSynthesis
     synth.cancel()
+    clearKeepAlive()
 
     const utterance = new SpeechSynthesisUtterance(normalized)
     utterance.lang = 'ko-KR'
@@ -91,17 +129,30 @@ export function useSpeechSynthesis() {
       setIsSpeaking(false)
       setIsPaused(false)
       utteranceRef.current = null
+      clearKeepAlive()
     }
 
     utterance.onerror = () => {
       setIsSpeaking(false)
       setIsPaused(false)
       utteranceRef.current = null
+      clearKeepAlive()
     }
 
     utteranceRef.current = utterance
     synth.speak(utterance)
-  }, [isSupported, voice])
+
+    // iOS workaround: OS pauses long utterances after ~15s.
+    // Periodically pause+resume to keep the speech alive.
+    if (isIOS) {
+      keepAliveRef.current = setInterval(() => {
+        if (synth.speaking && !synth.paused) {
+          synth.pause()
+          synth.resume()
+        }
+      }, 10000)
+    }
+  }, [isSupported, voice, isIOS, clearKeepAlive])
 
   const pause = useCallback(() => {
     if (!isSupported || typeof window === 'undefined') {
@@ -139,5 +190,6 @@ export function useSpeechSynthesis() {
     stop,
     pause,
     resume,
+    unlock,
   }
 }

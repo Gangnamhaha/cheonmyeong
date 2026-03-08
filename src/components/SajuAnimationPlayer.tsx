@@ -349,7 +349,7 @@ export default function SajuAnimationPlayer({
   const [recordProgress, setRecordProgress] = useState(0)
   const [narrationEnabled, setNarrationEnabled] = useState(true)
 
-  const { isSupported: ttsSupported, isSpeaking, speak, stop: stopNarration } = useSpeechSynthesis()
+  const { isSupported: ttsSupported, isSpeaking, speak, stop: stopNarration, unlock: unlockTts } = useSpeechSynthesis()
 
   const sceneStartRef = useRef<number>(Date.now())
   const hideControlsTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -476,9 +476,15 @@ export default function SajuAnimationPlayer({
   const handleToggleNarration = useCallback(() => {
     if (narrationEnabled) {
       stopNarration()
+      setNarrationEnabled(false)
+    } else {
+      unlockTts()
+      setNarrationEnabled(true)
+      // Speak current scene immediately within gesture context
+      const text = getNarrationText(currentScene as SceneIndex)
+      if (text) speak(text)
     }
-    setNarrationEnabled((prev) => !prev)
-  }, [narrationEnabled, stopNarration])
+  }, [narrationEnabled, stopNarration, unlockTts, speak, getNarrationText, currentScene])
 
   const handleToggleControls = () => {
     if (!(isPlaying || currentScene < 6)) return
