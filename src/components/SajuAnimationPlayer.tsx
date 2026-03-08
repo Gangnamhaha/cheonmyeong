@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useSpeechSynthesis } from '@/hooks/useSpeechSynthesis'
 import { OHENG_COLORS } from '@/lib/oheng'
 import type { FullSajuResult } from '@/lib/saju'
 import type { TraditionalInterpretation } from '@/lib/traditional-interpret'
@@ -346,6 +347,9 @@ export default function SajuAnimationPlayer({
   const [sceneElapsed, setSceneElapsed] = useState(0)
   const [isRecording, setIsRecording] = useState(false)
   const [recordProgress, setRecordProgress] = useState(0)
+  const [narrationEnabled, setNarrationEnabled] = useState(true)
+
+  const { isSupported: ttsSupported, isSpeaking, speak, stop: stopNarration } = useSpeechSynthesis()
 
   const sceneStartRef = useRef<number>(Date.now())
   const hideControlsTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -407,6 +411,74 @@ export default function SajuAnimationPlayer({
       }
     }
   }, [showControls, isPlaying, currentScene, resetAutoHide])
+
+  const getNarrationText = useCallback((scene: SceneIndex): string => {
+    switch (scene) {
+      case 0:
+        return `천명 사주분석. ${formData.name}, ${formData.gender === 'male' ? '남성' : '여성'}, ${formData.year}년 ${formData.month}월 ${formData.day}일의 사주를 분석합니다.`
+      case 1: {
+        const p = fullResult.saju
+        return `사주팔자. 시주 ${p.hourPillar.heavenlyStem} ${p.hourPillar.earthlyBranch}, 일주 ${p.dayPillar.heavenlyStem} ${p.dayPillar.earthlyBranch}, 월주 ${p.monthPillar.heavenlyStem} ${p.monthPillar.earthlyBranch}, 년주 ${p.yearPillar.heavenlyStem} ${p.yearPillar.earthlyBranch}.`
+      }
+      case 2: {
+        const counts = fullResult.oheng.counts
+        const parts = OHENG_ORDER.map((el) => `${el} ${counts[el]}`)
+        return `오행의 조화. ${parts.join(', ')}. 오행 밸런스는 ${fullResult.oheng.balance}입니다.`
+      }
+      case 3:
+        return `일간 강약은 ${fullResult.ilganStrength.strength}입니다. 용신은 ${fullResult.yongsin.yongsin}, 희신은 ${fullResult.yongsin.huisin}입니다.`
+      case 4: {
+        const desc = fullResult.yearlyFortune.description || '의미 있는 변화를 맞이하는 시기입니다.'
+        return `${new Date().getFullYear()}년 운세. 등급은 ${fullResult.yearlyFortune.rating}. ${desc.slice(0, 100)}`
+      }
+      case 5: {
+        if (traditionalResult) {
+          const personality = traditionalResult.personality[0]?.plain ?? ''
+          const career = traditionalResult.career[0]?.plain ?? ''
+          return `운명의 메시지. 성격, ${personality}. 직업, ${career}.`
+        }
+        const snippet = (aiInterpretation || fullResult.yearlyFortune.description || '당신의 흐름은 꾸준히 확장됩니다.').slice(0, 120)
+        return `운명의 메시지. ${snippet}`
+      }
+      case 6:
+        return '당신의 운명이 펼쳐집니다. 천명.'
+      default:
+        return ''
+    }
+  }, [formData, fullResult, traditionalResult, aiInterpretation])
+
+  // Auto-narrate on scene change
+  useEffect(() => {
+    if (!narrationEnabled || !ttsSupported) return
+
+    const text = getNarrationText(currentScene)
+    if (!text) return
+
+    const timer = setTimeout(() => {
+      speak(text)
+    }, 300)
+
+    return () => {
+      clearTimeout(timer)
+      stopNarration()
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentScene, narrationEnabled, ttsSupported])
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      stopNarration()
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  const handleToggleNarration = useCallback(() => {
+    if (narrationEnabled) {
+      stopNarration()
+    }
+    setNarrationEnabled((prev) => !prev)
+  }, [narrationEnabled, stopNarration])
 
   const handleToggleControls = () => {
     if (!(isPlaying || currentScene < 6)) return
@@ -937,6 +1009,21 @@ export default function SajuAnimationPlayer({
       style={{ fontFamily: KOREAN_FONT }}
       onClick={handleToggleControls}
     >
+      {ttsSupported && (
+        <button
+          type="button"
+          className="absolute right-4 top-4 z-[60] flex h-10 w-10 items-center justify-center rounded-full border border-slate-600/60 bg-slate-900/80 text-lg shadow-lg backdrop-blur transition-colors hover:bg-slate-800"
+          onClick={(e) => {
+            e.stopPropagation()
+            handleToggleNarration()
+          }}
+          aria-label={narrationEnabled ? '나레이션 끄기' : '나레이션 켜기'}
+          title={narrationEnabled ? '나레이션 끄기' : '나레이션 켜기'}
+        >
+          {narrationEnabled ? (isSpeaking ? '🔊' : '🔈') : '🔇'}
+        </button>
+      )}
+
       <div className="mx-auto h-full w-full max-w-md border-x border-slate-800/70 bg-[#0f172a]">
         <AnimatePresence mode="wait">
           <motion.div
