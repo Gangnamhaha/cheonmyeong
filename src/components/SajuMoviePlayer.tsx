@@ -53,7 +53,7 @@ const MOOD_COLORS: Record<MoodType, { bg: string; accent: string; glow: string }
 }
 
 const MOVIE_GENRES: { id: MovieGenre; label: string; icon: string; description: string; color: string }[] = [
-  { id: 'classic', label: '클래식 운명극', icon: '🎭', description: '전통적인 사주 해석을 서정적 영화로', color: '#c4b5fd' },
+  { id: 'classic', label: '클래식 운명극', icon: '🎭', description: '전통적인 사주 해석을 서정적 애니메이션으로', color: '#c4b5fd' },
   { id: 'romance', label: '로맨스', icon: '💕', description: '사랑과 인연의 이야기로 풀어낸 운명', color: '#fb7185' },
   { id: 'growth', label: '성장 서사', icon: '🌱', description: '시련과 극복, 성장의 여정', color: '#34d399' },
   { id: 'adventure', label: '모험', icon: '⚔️', description: '운명에 맞서는 영웅의 대서사시', color: '#f59e0b' },
@@ -761,7 +761,7 @@ export default function SajuMoviePlayer({
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `천명_운명영화_${formData.name}_${new Date().toISOString().slice(0, 10)}.webm`
+      a.download = `천명_운명애니메이션_${formData.name}_${new Date().toISOString().slice(0, 10)}.webm`
       document.body.appendChild(a)
       a.click()
       document.body.removeChild(a)
@@ -1213,7 +1213,7 @@ export default function SajuMoviePlayer({
               animate={{ opacity: [0.5, 1, 0.5] }}
               transition={{ duration: 2, repeat: Infinity }}
             >
-              영화 장면을 그리고 있습니다...
+              애니메이션 장면을 그리고 있습니다...
             </motion.p>
             <p className="mt-2 text-sm text-slate-400">
               {imageProgress} / {totalSceneCount} 장면 완성
@@ -1242,7 +1242,7 @@ export default function SajuMoviePlayer({
             >
               시나리오를 집필하고 있습니다...
             </motion.p>
-            <p className="mt-2 text-sm text-slate-500">AI가 당신만의 영화를 준비 중입니다</p>
+            <p className="mt-2 text-sm text-slate-500">AI가 당신만의 애니메이션을 준비 중입니다</p>
           </>
         )}
       </div>
@@ -1450,7 +1450,7 @@ export default function SajuMoviePlayer({
             exit={{ opacity: 0 }}
           >
             <div className="w-72 rounded-xl border border-amber-300/40 bg-slate-900/90 px-5 py-4 text-center">
-              <p className="text-lg font-semibold text-amber-300">영화 녹화 중...</p>
+              <p className="text-lg font-semibold text-amber-300">애니메이션 녹화 중...</p>
               <p className="mt-1 text-sm text-slate-300">{recordProgress}%</p>
               <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-700">
                 <motion.div

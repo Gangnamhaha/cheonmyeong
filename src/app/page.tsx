@@ -910,7 +910,7 @@ export default function Home() {
               ✨ 운명 스토리 보기
             </button>
 
-            {/* 운명 영화 보기 버튼 */}
+            {/* 운명 애니메이션 보기 버튼 */}
             <button
               onClick={() => setShowMovie(true)}
               className="w-full mt-2 font-bold py-3.5 px-4 rounded-xl text-sm transition-all hover:scale-[1.02] active:scale-[0.98]"
@@ -920,7 +920,7 @@ export default function Home() {
                 boxShadow: '0 4px 14px rgba(168, 85, 247, 0.3)',
               }}
             >
-              🎬 운명 영화 보기
+              🎬 운명 애니메이션 보기
             </button>
 
             {/* 다운로드 + 공유 + 다시보기 버튼 */}
@@ -1201,7 +1201,7 @@ export default function Home() {
       />
     )}
 
-    {/* === 운명 영화 플레이어 === */}
+    {/* === 운명 애니메이션 플레이어 === */}
     {showMovie && fullResult && formData && (
       <SajuMoviePlayer
         fullResult={fullResult}
