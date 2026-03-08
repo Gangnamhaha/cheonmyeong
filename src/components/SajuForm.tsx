@@ -43,6 +43,61 @@ function getDaysInMonth(year: number, month: number): number {
   return new Date(year, month, 0).getDate()
 }
 
+// ─── Speech date parser ───
+function parseBirthDateTime(text: string) {
+  const result: {
+    year?: number; month?: number; day?: number
+    hour?: number; minute?: number
+    gender?: 'male' | 'female'
+    calendarType?: 'solar' | 'lunar'
+  } = {}
+  const s = text.replace(/\s+/g, ' ').trim()
+
+  // Year (4-digit or 2-digit)
+  const y4 = s.match(/(\d{4})\s*년/)
+  if (y4) {
+    const y = parseInt(y4[1])
+    if (y >= 1900 && y <= 2050) result.year = y
+  } else {
+    const y2 = s.match(/(\d{2})\s*년/)
+    if (y2) {
+      let y = parseInt(y2[1])
+      y += y < 50 ? 2000 : 1900
+      if (y >= 1900 && y <= 2050) result.year = y
+    }
+  }
+
+  // Month
+  const mm = s.match(/(\d{1,2})\s*월/)
+  if (mm) { const m = parseInt(mm[1]); if (m >= 1 && m <= 12) result.month = m }
+
+  // Day
+  const dd = s.match(/(\d{1,2})\s*일/)
+  if (dd) { const d = parseInt(dd[1]); if (d >= 1 && d <= 31) result.day = d }
+
+  // Hour
+  const hh = s.match(/(\d{1,2})\s*시/)
+  if (hh) { const h = parseInt(hh[1]); if (h >= 0 && h <= 23) result.hour = h }
+
+  // Minute (round to nearest 15 — form only accepts 0, 15, 30, 45)
+  const mi = s.match(/(\d{1,2})\s*분/)
+  if (mi) {
+    const m = parseInt(mi[1])
+    const rounded = Math.round(m / 15) * 15
+    result.minute = rounded >= 60 ? 0 : rounded
+  }
+
+  // Gender
+  if (/남자|남성/.test(s)) result.gender = 'male'
+  else if (/여자|여성/.test(s)) result.gender = 'female'
+
+  // Calendar type
+  if (/음력/.test(s)) result.calendarType = 'lunar'
+  else if (/양력/.test(s)) result.calendarType = 'solar'
+
+  return result
+}
+
 // ─── Starfield ───
 function generateStars(count: number) {
   const stars = []
@@ -172,6 +227,15 @@ export default function SajuForm({ onSubmit, loading = false }: SajuFormProps) {
     stopListening: stopNameListening,
     resetTranscript: resetNameTranscript,
   } = useSpeechRecognition()
+  const {
+    isListening: isDateListening,
+    transcript: dateTranscript,
+    interimTranscript: dateInterimTranscript,
+    isSupported: isDateSpeechSupported,
+    startListening: startDateListening,
+    stopListening: stopDateListening,
+    resetTranscript: resetDateTranscript,
+  } = useSpeechRecognition()
 
   const daysInMonth = getDaysInMonth(year, month)
   const days = useMemo(() => Array.from({ length: daysInMonth }, (_, i) => i + 1), [daysInMonth])
@@ -198,6 +262,31 @@ export default function SajuForm({ onSubmit, loading = false }: SajuFormProps) {
     }
   }, [nameInterimTranscript, nameTranscript])
 
+  // Parse date/time from speech
+  useEffect(() => {
+    const text = `${dateTranscript} ${dateInterimTranscript}`.trim()
+    if (!text) return
+
+    const parsed = parseBirthDateTime(text)
+    if (parsed.year !== undefined) setYear(parsed.year)
+    if (parsed.month !== undefined) setMonth(parsed.month)
+    if (parsed.day !== undefined) setDay(parsed.day)
+    if (parsed.hour !== undefined) { setHour(parsed.hour); setUnknownTime(false) }
+    if (parsed.minute !== undefined) setMinute(parsed.minute)
+    if (parsed.gender) setGender(parsed.gender)
+    if (parsed.calendarType) {
+      setCalendarType(parsed.calendarType)
+      if (parsed.calendarType === 'solar') setIsLeapMonth(false)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dateTranscript, dateInterimTranscript])
+
+  // Clamp day when year/month change
+  useEffect(() => {
+    const maxDay = getDaysInMonth(year, month)
+    if (day > maxDay) setDay(maxDay)
+  }, [year, month, day])
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     const h = unknownTime ? 0 : hour
@@ -223,9 +312,20 @@ export default function SajuForm({ onSubmit, loading = false }: SajuFormProps) {
       stopNameListening()
       return
     }
-
+    // Browser allows only one recognition session at a time
+    if (isDateListening) stopDateListening()
     resetNameTranscript()
     startNameListening()
+  }
+
+  function handleDateMicToggle() {
+    if (isDateListening) {
+      stopDateListening()
+      return
+    }
+    if (isNameListening) stopNameListening()
+    resetDateTranscript()
+    startDateListening()
   }
 
   const selectClass =
@@ -396,9 +496,37 @@ export default function SajuForm({ onSubmit, loading = false }: SajuFormProps) {
             className="rounded-2xl p-6 shadow-2xl form-section theme-transition"
             style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)' }}
           >
-            <p className="text-sm mb-5 text-center font-medium" style={{ color: 'var(--text-secondary)' }}>
-              생년월일시를 입력해 주세요
-            </p>
+            <div className="flex items-center justify-center gap-2 mb-4">
+              <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>
+                생년월일시를 입력해 주세요
+              </p>
+              {isDateSpeechSupported && (
+                <button
+                  type="button"
+                  onClick={handleDateMicToggle}
+                  disabled={loading}
+                  className={`h-7 px-2.5 rounded-lg text-xs transition-all theme-transition flex items-center gap-1 ${isDateListening ? 'animate-pulse' : 'hover-scale'} disabled:opacity-40 disabled:cursor-not-allowed`}
+                  style={{
+                    background: isDateListening ? 'rgba(239, 68, 68, 0.18)' : 'var(--bg-secondary)',
+                    border: `1px solid ${isDateListening ? 'rgba(239, 68, 68, 0.4)' : 'var(--border-color)'}`,
+                    color: isDateListening ? '#ef4444' : 'var(--text-muted)',
+                  }}
+                  aria-label={isDateListening ? '생년월일 음성 입력 중지' : '생년월일 음성 입력'}
+                  title={isDateListening ? '음성 입력 중지' : '음성으로 입력 (예: 1990년 3월 15일 14시)'}
+                >
+                  🎤 {isDateListening ? '듣는 중...' : '음성'}
+                </button>
+              )}
+            </div>
+            {/* Speech recognition feedback */}
+            {(dateTranscript || dateInterimTranscript) && (
+              <div
+                className="text-xs text-center mb-4 px-3 py-2 rounded-lg"
+                style={{ background: 'var(--bg-secondary)', color: 'var(--text-muted)' }}
+              >
+                🎤 {dateTranscript}{dateInterimTranscript ? ` ${dateInterimTranscript}` : ''}
+              </div>
+            )}
 
             {/* 양력/음력 토글 */}
             <div className="flex rounded-lg overflow-hidden border border-[var(--border-color)] mb-4 form-section">

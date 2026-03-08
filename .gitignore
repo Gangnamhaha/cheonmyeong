@@ -57,3 +57,8 @@ setup.bat
 test-output.txt
 .vercel
 .env*.local
+
+# Helper scripts (contain tokens)
+_*.js
+_*.txt
+scripts/_*.js
