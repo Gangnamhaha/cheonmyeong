@@ -36,10 +36,13 @@ export function useSpeechSynthesis() {
   const [isMobile, setIsMobile] = useState(false)
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null)
   // Chrome GC bug: utterances get garbage-collected while speaking if not referenced,
-  // causing onend to never fire. Keep ALL active utterances in a persistent ref.
-  const activeUtterancesRef = useRef<SpeechSynthesisUtterance[]>([])
+  // causing onend to never fire. Keep the active utterance in a persistent ref.
+  const activeUtteranceRef = useRef<SpeechSynthesisUtterance | null>(null)
   const keepAliveRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const unlockedRef = useRef(false)
+  // Monotonic session counter — each speak()/stop() increments it.
+  // Sequential chunk playback checks this to abort stale chains.
+  const speakSessionRef = useRef(0)
   // Reactive unlock state — drives re-renders so auto-narration useEffects
   // can gate on mobile TTS readiness.
   const [isUnlocked, setIsUnlocked] = useState(false)
@@ -88,10 +91,11 @@ export function useSpeechSynthesis() {
 
     return () => {
       synth.removeEventListener('voiceschanged', selectKoreanVoice)
+      speakSessionRef.current++
       if (synth.speaking) synth.pause()
       synth.cancel()
       utteranceRef.current = null
-      activeUtterancesRef.current = []
+      activeUtteranceRef.current = null
       if (keepAliveRef.current) clearInterval(keepAliveRef.current)
       setIsSpeaking(false)
       setIsPaused(false)
@@ -133,12 +137,14 @@ export function useSpeechSynthesis() {
       return
     }
 
+    // Invalidate any ongoing sequential chunk chain
+    speakSessionRef.current++
     const synth = window.speechSynthesis
     // Pause before cancel prevents Chrome from hanging the TTS engine
     if (synth.speaking) synth.pause()
     synth.cancel()
     utteranceRef.current = null
-    activeUtterancesRef.current = []
+    activeUtteranceRef.current = null
     clearKeepAlive()
     setIsSpeaking(false)
     setIsPaused(false)
@@ -163,16 +169,30 @@ export function useSpeechSynthesis() {
     clearKeepAlive()
 
     // Mobile TTS engines silently fail on long text (~200-300 char limit).
-    // Split into sentence-boundary chunks and queue all synchronously
-    // so every synth.speak() call stays within the user gesture context.
+    // Split into sentence-boundary chunks.
     const chunks = splitIntoChunks(normalized, 200)
 
-    // Chrome GC bug: store ALL utterances in a persistent ref to prevent
-    // garbage collection while speaking (which kills onend callbacks).
-    const utterances: SpeechSynthesisUtterance[] = []
+    // New session — invalidates any previous sequential chain.
+    const session = ++speakSessionRef.current
 
-    chunks.forEach((chunk, index) => {
-      const utterance = new SpeechSynthesisUtterance(chunk)
+    // Sequential chunk playback: speak ONE chunk at a time, advance in onend.
+    // Mobile browsers have limited speechSynthesis queue capacity —
+    // queuing many utterances at once causes silent failure on Android/iOS.
+    const speakChunk = (index: number) => {
+      // Abort if session changed (stop() or new speak() was called)
+      if (speakSessionRef.current !== session) return
+
+      // All chunks finished — natural end
+      if (index >= chunks.length) {
+        setIsSpeaking(false)
+        setIsPaused(false)
+        utteranceRef.current = null
+        activeUtteranceRef.current = null
+        clearKeepAlive()
+        return
+      }
+
+      const utterance = new SpeechSynthesisUtterance(chunks[index])
       utterance.lang = 'ko-KR'
       utterance.rate = 1.0
       utterance.pitch = 1.0
@@ -194,16 +214,9 @@ export function useSpeechSynthesis() {
         }
       }
 
-      // Last chunk — mark speaking finished and release refs
-      if (index === chunks.length - 1) {
-        utterance.onend = () => {
-          setIsSpeaking(false)
-          setIsPaused(false)
-          utteranceRef.current = null
-          activeUtterancesRef.current = []
-          clearKeepAlive()
-        }
-        utteranceRef.current = utterance
+      // Advance to next chunk on completion
+      utterance.onend = () => {
+        speakChunk(index + 1)
       }
 
       utterance.onerror = (e) => {
@@ -212,16 +225,19 @@ export function useSpeechSynthesis() {
         setIsSpeaking(false)
         setIsPaused(false)
         utteranceRef.current = null
-        activeUtterancesRef.current = []
+        activeUtteranceRef.current = null
         clearKeepAlive()
       }
 
-      utterances.push(utterance)
+      // Chrome GC bug: keep active utterance referenced to prevent
+      // garbage collection (which kills onend callbacks).
+      activeUtteranceRef.current = utterance
+      utteranceRef.current = utterance
       synth.speak(utterance)
-    })
+    }
 
-    // Prevent GC of queued utterances
-    activeUtterancesRef.current = utterances
+    // Start the first chunk (within user gesture context if applicable)
+    speakChunk(0)
 
     // iOS workaround: OS pauses long utterances after ~15s.
     // Periodically pause+resume to keep the speech alive.
