@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { useTheme } from './ThemeProvider'
 import UserMenu from './UserMenu'
 import SajuChat from './SajuChat'
+import { useSpeechRecognition } from '@/hooks/useSpeechRecognition'
 
 interface SajuFormData {
   name: string
@@ -162,6 +163,15 @@ export default function SajuForm({ onSubmit, loading = false }: SajuFormProps) {
   const [totalCount, setTotalCount] = useState(0)
   const [showForm, setShowForm] = useState(false)
   const [name, setName] = useState('')
+  const {
+    isListening: isNameListening,
+    transcript: nameTranscript,
+    interimTranscript: nameInterimTranscript,
+    isSupported: isNameSpeechSupported,
+    startListening: startNameListening,
+    stopListening: stopNameListening,
+    resetTranscript: resetNameTranscript,
+  } = useSpeechRecognition()
 
   const daysInMonth = getDaysInMonth(year, month)
   const days = useMemo(() => Array.from({ length: daysInMonth }, (_, i) => i + 1), [daysInMonth])
@@ -181,6 +191,13 @@ export default function SajuForm({ onSubmit, loading = false }: SajuFormProps) {
     return () => clearTimeout(timer)
   }, [])
 
+  useEffect(() => {
+    const recognizedName = `${nameTranscript} ${nameInterimTranscript}`.trim()
+    if (recognizedName) {
+      setName(recognizedName.slice(0, 20))
+    }
+  }, [nameInterimTranscript, nameTranscript])
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     const h = unknownTime ? 0 : hour
@@ -199,6 +216,16 @@ export default function SajuForm({ onSubmit, loading = false }: SajuFormProps) {
     setShowForm(true)
     // Scroll to form
     document.getElementById('saju-form-card')?.scrollIntoView({ behavior: 'smooth' })
+  }
+
+  function handleNameMicToggle() {
+    if (isNameListening) {
+      stopNameListening()
+      return
+    }
+
+    resetNameTranscript()
+    startNameListening()
   }
 
   const selectClass =
@@ -404,15 +431,34 @@ export default function SajuForm({ onSubmit, loading = false }: SajuFormProps) {
             {/* 이름 입력 */}
             <div className="mb-4 form-section">
               <label className="block text-xs mb-1 font-medium" style={{ color: 'var(--text-secondary)' }}>이름</label>
-              <input
-                type="text"
-                value={name}
-                onChange={e => setName(e.target.value)}
-                placeholder="이름을 입력해 주세요 (선택)"
-                className={selectClass}
-                disabled={loading}
-                maxLength={20}
-              />
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={name}
+                  onChange={e => setName(e.target.value)}
+                  placeholder="이름을 입력해 주세요 (선택)"
+                  className={selectClass}
+                  disabled={loading}
+                  maxLength={20}
+                />
+                {isNameSpeechSupported && (
+                  <button
+                    type="button"
+                    onClick={handleNameMicToggle}
+                    disabled={loading}
+                    className={`h-10 w-10 rounded-lg text-sm transition-all theme-transition ${isNameListening ? 'animate-pulse' : 'hover-scale'} disabled:opacity-40 disabled:cursor-not-allowed`}
+                    style={{
+                      background: isNameListening ? 'rgba(239, 68, 68, 0.18)' : 'var(--bg-secondary)',
+                      border: `1px solid ${isNameListening ? 'rgba(239, 68, 68, 0.4)' : 'var(--border-color)'}`,
+                      color: isNameListening ? '#ef4444' : 'var(--text-muted)',
+                    }}
+                    aria-label={isNameListening ? '이름 음성 입력 중지' : '이름 음성 입력'}
+                    title={isNameListening ? '음성 입력 중지' : '음성으로 이름 입력'}
+                  >
+                    🎤
+                  </button>
+                )}
+              </div>
             </div>
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* 연도 */}

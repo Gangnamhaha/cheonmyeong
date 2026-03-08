@@ -1,5 +1,7 @@
 'use client'
 
+import { useSpeechSynthesis } from '@/hooks/useSpeechSynthesis'
+
 interface AiInterpretationProps {
   interpretation: string | null
   loading: boolean
@@ -13,11 +15,43 @@ export default function AiInterpretation({
   error,
   onRetry,
 }: AiInterpretationProps) {
+  const { isSpeaking, isSupported, speak, stop } = useSpeechSynthesis()
+  const canReadAloud = !loading && Boolean(interpretation)
+
+  function handleReadToggle() {
+    if (!interpretation) {
+      return
+    }
+
+    if (isSpeaking) {
+      stop()
+      return
+    }
+
+    speak(interpretation)
+  }
+
   return (
     <div className="w-full">
-      <h2 className="text-center text-lg font-bold text-amber-400 mb-4 tracking-wide">
-        AI 사주 해석 <span className="text-slate-400 text-sm font-normal">(命理 解釋)</span>
-      </h2>
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <h2 className="text-lg font-bold tracking-wide" style={{ color: 'var(--text-accent)' }}>
+          AI 사주 해석 <span className="text-sm font-normal" style={{ color: 'var(--text-muted)' }}>(命理 解釋)</span>
+        </h2>
+        {isSupported && canReadAloud && (
+          <button
+            type="button"
+            onClick={handleReadToggle}
+            className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all hover-scale theme-transition"
+            style={{
+              color: isSpeaking ? '#ef4444' : 'var(--text-muted)',
+              background: 'var(--bg-secondary)',
+              border: '1px solid var(--border-color)',
+            }}
+          >
+            {isSpeaking ? '🔇 멈추기' : '🔊 읽어주기'}
+          </button>
+        )}
+      </div>
 
       <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-5 min-h-[120px] flex items-center justify-center">
         {loading && (
