@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 /**
  * Split long text into speakable chunks at sentence boundaries.
@@ -47,21 +47,14 @@ export function useSpeechSynthesis() {
   // can gate on mobile TTS readiness.
   const [isUnlocked, setIsUnlocked] = useState(false)
 
-  const isSupported = useMemo(() => {
-    if (typeof window === 'undefined') {
-      return false
-    }
+  // Detect browser capabilities via useEffect to avoid SSR hydration mismatch.
+  // SSR renders with false → client useEffect sets true → clean re-render.
+  const [isSupported, setIsSupported] = useState(false)
+  const [isIOS, setIsIOS] = useState(false)
 
-    return Boolean(window.speechSynthesis && window.SpeechSynthesisUtterance)
-  }, [])
-
-  const isIOS = useMemo(() => {
-    if (typeof navigator === 'undefined') return false
-    return /iPhone|iPad|iPod/.test(navigator.userAgent)
-  }, [])
-
-  // Detect mobile device (set via useEffect to avoid SSR hydration mismatch)
   useEffect(() => {
+    setIsSupported(Boolean(window.speechSynthesis && window.SpeechSynthesisUtterance))
+    setIsIOS(/iPhone|iPad|iPod/.test(navigator.userAgent))
     setIsMobile(/iPhone|iPad|iPod|Android/i.test(navigator.userAgent))
   }, [])
 
