@@ -9,7 +9,7 @@ import AiInterpretation from '@/components/AiInterpretation'
 import SipsinChart from '@/components/SipsinChart'
 import IlganStrengthBadge from '@/components/IlganStrengthBadge'
 import YongsinCard from '@/components/YongsinCard'
-import TraditionalInterpretation from '@/components/TraditionalInterpretation'
+
 import DaeunTimeline from '@/components/DaeunTimeline'
 import FortuneCard from '@/components/FortuneCard'
 import DailyFortuneCard from '@/components/DailyFortuneCard'
@@ -29,13 +29,12 @@ import {
 type AppState = 'form' | 'result'
 type ResultTab = '사주' | '분석' | '운세' | '해석'
 type ViewMode = 'summary' | 'detail'
-type InterpretMode = '태을' | 'AI'
 
 const RESULT_TABS: { key: ResultTab; label: string; icon: string }[] = [
   { key: '사주', label: '사주', icon: '🏛️' },
   { key: '분석', label: '분석', icon: '🔍' },
   { key: '운세', label: '운세', icon: '🌟' },
-  { key: '해석', label: '해석', icon: '📜' },
+  { key: '해석', label: 'AI해석', icon: '🤖' },
 ]
 
 type AiCategory = '종합' | '성격' | '연애' | '직업' | '건강' | '재물'
@@ -98,7 +97,7 @@ export default function Home() {
   // New state for tabs and view mode
   const [activeTab, setActiveTab] = useState<ResultTab>('사주')
   const [viewMode, setViewMode] = useState<ViewMode>('detail')
-  const [interpretMode, setInterpretMode] = useState<InterpretMode>('태을')
+
 
   const fetchInterpretation = useCallback(async (
     result: FullSajuResult,
@@ -187,13 +186,6 @@ export default function Home() {
     }
   }, [categoryCache, traditionalContext, traditionalResult, formData])
 
-  function handleInterpretModeChange(mode: InterpretMode) {
-    setInterpretMode(mode)
-    if (mode === 'AI' && fullResult && !categoryCache[activeCategory]) {
-      fetchInterpretation(fullResult, activeCategory)
-    }
-  }
-
   function handleCategoryChange(category: AiCategory) {
     setActiveCategory(category)
     if (fullResult) {
@@ -210,7 +202,6 @@ export default function Home() {
     setCategoryCache({})
     setActiveTab('사주')
     setViewMode('detail')
-    setInterpretMode('태을')
     setTraditionalResult(null)
     setTraditionalContext('')
     setFormData(data)
@@ -486,44 +477,6 @@ export default function Home() {
         )
       }
 
-      // 태을해석
-      if (traditionalResult) {
-        const tCategories: { key: keyof TraditionalInterpretationResult; label: string }[] = [
-          { key: 'personality', label: '[성격/십신]' },
-          { key: 'dayPillar', label: '[일주 해석]' },
-          { key: 'career', label: '[직업 추천]' },
-          { key: 'health', label: '[건강 주의]' },
-          { key: 'fortune', label: '[운세 참고]' },
-          { key: 'yongsinAdvice', label: '[용신 조언]' },
-          { key: 'children', label: '[자손운]' },
-          { key: 'relationship', label: '[부부/연인]' },
-          { key: 'general', label: '[종합 참고]' },
-        ]
-        sections.push(
-          new Paragraph({ spacing: { before: 200, after: 100 }, children: [] }),
-          new Paragraph({ heading: HeadingLevel.HEADING_1, children: [
-            new TextRun({ text: '태을 해석 (전통 사주 해석)', bold: true, font: 'Malgun Gothic' }),
-          ] }),
-        )
-        for (const cat of tCategories) {
-          const entries = traditionalResult[cat.key]
-          if (entries && entries.length > 0) {
-            sections.push(
-              new Paragraph({ heading: HeadingLevel.HEADING_2, spacing: { before: 120 }, children: [
-                new TextRun({ text: cat.label, bold: true, size: 24, font: 'Malgun Gothic' }),
-              ] }),
-            )
-            for (const entry of entries) {
-              sections.push(
-                new Paragraph({ spacing: { after: 60 }, children: [
-                  new TextRun({ text: `- ${entry.plain}`, size: 20, color: '333333' }),
-                ] }),
-              )
-            }
-          }
-        }
-      }
-
       // 푸터
       sections.push(
         new Paragraph({ spacing: { before: 300 }, children: [] }),
@@ -576,7 +529,6 @@ export default function Home() {
     setFollowUpQuestion('')
     setActiveTab('사주')
     setViewMode('detail')
-    setInterpretMode('태을')
   }
 
   // Summary view helper
@@ -752,36 +704,6 @@ export default function Home() {
 
                   {activeTab === '해석' && (
                     <>
-                      {/* 해석 모드 토글 */}
-                      <div className="flex gap-1 p-1 rounded-xl mb-6" style={{ background: 'var(--bg-secondary)' }}>
-                        {([
-                          { key: '태을' as InterpretMode, label: '태을해석', icon: '📜' },
-                          { key: 'AI' as InterpretMode, label: 'AI해석', icon: '🤖' },
-                        ]).map(mode => (
-                          <button
-                            key={mode.key}
-                            onClick={() => handleInterpretModeChange(mode.key)}
-                            className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all hover-scale ${
-                              interpretMode === mode.key ? 'tab-active-pulse' : ''
-                            }`}
-                            style={{
-                              background: interpretMode === mode.key ? 'var(--accent)' : 'transparent',
-                              color: interpretMode === mode.key ? 'var(--accent-text)' : 'var(--text-secondary)',
-                            }}
-                          >
-                            {mode.icon} {mode.label}
-                          </button>
-                        ))}
-                      </div>
-
-                      {/* 태을해석 모드 */}
-                      {interpretMode === '태을' && traditionalResult && (
-                        <TraditionalInterpretation result={traditionalResult} />
-                      )}
-
-                      {/* AI해석 모드 */}
-                      {interpretMode === 'AI' && (
-                        <>
                           {/* 카테고리 탭 */}
                           <div className="flex gap-1 overflow-x-auto pb-1 scrollbar-hide">
                             {AI_CATEGORIES.map(cat => (
@@ -876,8 +798,6 @@ export default function Home() {
                               {followUpLoading ? '...' : '물어보기'}
                             </button>
                           </div>
-                        </>
-                      )}
                     </>
                   )}
                 </div>
@@ -1108,39 +1028,6 @@ export default function Home() {
             </div>
           </div>
         )}
-
-        {/* 태을해석 요약 */}
-        {traditionalResult && (() => {
-          const imgCategories: { key: keyof TraditionalInterpretationResult; label: string }[] = [
-            { key: 'personality', label: '성격' },
-            { key: 'career', label: '직업' },
-            { key: 'health', label: '건강' },
-            { key: 'fortune', label: '운세' },
-            { key: 'children', label: '자손' },
-            { key: 'relationship', label: '부부' },
-          ]
-          const hasEntries = imgCategories.some(c => traditionalResult[c.key]?.length > 0)
-          if (!hasEntries) return null
-          return (
-            <div style={{ background: '#1e293b', borderRadius: '12px', padding: '16px', border: '1px solid #334155', marginBottom: '16px' }}>
-              <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#fbbf24', marginBottom: '10px' }}>
-                태을 해석 요약
-              </div>
-              {imgCategories.map(cat => {
-                const entries = traditionalResult[cat.key]
-                if (!entries || entries.length === 0) return null
-                return (
-                  <div key={cat.key} style={{ marginBottom: '8px' }}>
-                    <div style={{ fontSize: '11px', color: '#94a3b8', marginBottom: '3px' }}>{cat.label}</div>
-                    <div style={{ fontSize: '11px', color: '#cbd5e1', lineHeight: '1.5' }}>
-                      • {entries[0].plain}
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          )
-        })()}
 
         {/* 카카오톡 공유 */}
         <button
