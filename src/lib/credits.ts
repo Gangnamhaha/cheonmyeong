@@ -126,24 +126,28 @@ const CREDIT_KEY = (userId: string) => `credits:user:${userId}`
 const USED_COUNTER_KEY = (userId: string) => `credits:used:${userId}`
 const FREE_KEY = (ip: string, date: string) => `credits:free:${ip}:${date}`
 
-// ─── Supabase sync helper ──────────────────────────────────────────
-
-async function syncCreditsToSupabase(userId: string, credits: UserCredits): Promise<void> {
-  const supabase = getSupabase()
-  if (!supabase) return
-  try {
-    await supabase.from('credits').upsert({
-      user_id: userId, total: credits.total, used: credits.used,
-      plan: credits.plan, last_refill: credits.lastRefill,
-    }, { onConflict: 'user_id' })
-  } catch {
-    // Non-critical: Redis is source of truth for credits
-  }
-}
-
 // ─── User credit functions ─────────────────────────────────────────
 
 export async function getUserCredits(userId: string): Promise<UserCredits> {
+  // Try Supabase first
+  const supabase = getSupabase()
+  if (supabase) {
+    const { data } = await supabase
+      .from('credits')
+      .select('*')
+      .eq('user_id', userId)
+      .single()
+    if (data) {
+      return {
+        total: data.total,
+        used: data.used,
+        plan: data.plan as PlanKey,
+        lastRefill: data.last_refill,
+      }
+    }
+  }
+
+  // Fallback to Redis
   if (redis) {
     const data = await redis.get<UserCredits>(CREDIT_KEY(userId))
     if (data) return data
@@ -159,9 +163,19 @@ export async function getUserCredits(userId: string): Promise<UserCredits> {
     lastRefill: new Date().toISOString().slice(0, 10),
   }
 
+  if (supabase) {
+    await supabase.from('credits').upsert({
+      user_id: userId,
+      total: defaultCredits.total,
+      used: defaultCredits.used,
+      plan: defaultCredits.plan,
+      last_refill: defaultCredits.lastRefill,
+    }, { onConflict: 'user_id' })
+  }
+
   if (redis) {
     await redis.set(CREDIT_KEY(userId), defaultCredits)
-  } else {
+  } else if (!supabase) {
     memCreditStore.set(userId, defaultCredits)
   }
 
@@ -170,6 +184,7 @@ export async function getUserCredits(userId: string): Promise<UserCredits> {
 
 export async function addCredits(userId: string, plan: PlanKey): Promise<UserCredits> {
   const current = await getUserCredits(userId)
+  const supabase = getSupabase()
   const planInfo = PLANS[plan]
   const updated: UserCredits = {
     total: current.total + planInfo.credits - current.used, // remaining + new
@@ -178,11 +193,21 @@ export async function addCredits(userId: string, plan: PlanKey): Promise<UserCre
     lastRefill: new Date().toISOString().slice(0, 10),
   }
 
+  if (supabase) {
+    await supabase.from('credits').upsert({
+      user_id: userId,
+      total: updated.total,
+      used: updated.used,
+      plan: updated.plan,
+      last_refill: updated.lastRefill,
+    }, { onConflict: 'user_id' })
+  }
+
   if (redis) {
     await redis.set(CREDIT_KEY(userId), updated)
     // Reset the atomic counter to match used=0
     await redis.set(USED_COUNTER_KEY(userId), 0)
-  } else {
+  } else if (!supabase) {
     memCreditStore.set(userId, updated)
   }
 
@@ -190,6 +215,7 @@ export async function addCredits(userId: string, plan: PlanKey): Promise<UserCre
 }
 
 export async function refillSubscriptionCredits(userId: string, plan: SubscriptionPlanKey): Promise<UserCredits> {
+  const supabase = getSupabase()
   const planInfo = PLANS[plan]
   const updated: UserCredits = {
     total: planInfo.credits,
@@ -198,11 +224,21 @@ export async function refillSubscriptionCredits(userId: string, plan: Subscripti
     lastRefill: new Date().toISOString().slice(0, 10),
   }
 
+  if (supabase) {
+    await supabase.from('credits').upsert({
+      user_id: userId,
+      total: updated.total,
+      used: updated.used,
+      plan: updated.plan,
+      last_refill: updated.lastRefill,
+    }, { onConflict: 'user_id' })
+  }
+
   if (redis) {
     await redis.set(CREDIT_KEY(userId), updated)
     // Reset the atomic counter to match used=0
     await redis.set(USED_COUNTER_KEY(userId), 0)
-  } else {
+  } else if (!supabase) {
     memCreditStore.set(userId, updated)
   }
 
@@ -222,24 +258,12 @@ export async function refillSubscriptionCredits(userId: string, plan: Subscripti
 export async function useCredit(userId: string): Promise<{ success: boolean; remaining: number }> {
   if (redis) {
     const key = CREDIT_KEY(userId)
-    const data = await redis.get<UserCredits>(key)
+    const cached = await redis.get<UserCredits>(key)
+    const credits = cached ?? await getUserCredits(userId)
 
-    if (!data) {
-      // First-time user: initialize defaults
-      const defaultCredits: UserCredits = {
-        total: PLANS.free.credits,
-        used: 0,
-        plan: 'free',
-        lastRefill: new Date().toISOString().slice(0, 10),
-      }
-      await redis.set(key, defaultCredits)
-    }
-
-    const credits = data ?? {
-      total: PLANS.free.credits,
-      used: 0,
-      plan: 'free' as PlanKey,
-      lastRefill: new Date().toISOString().slice(0, 10),
+    const currentCounter = await redis.get<number>(USED_COUNTER_KEY(userId))
+    if (typeof currentCounter !== 'number') {
+      await redis.set(USED_COUNTER_KEY(userId), credits.used)
     }
 
     // Atomic increment — returns the value AFTER incrementing
@@ -255,12 +279,62 @@ export async function useCredit(userId: string): Promise<{ success: boolean; rem
     try {
       const updatedCredits = { ...credits, used: newUsed }
       await redis.set(key, updatedCredits)
-      syncCreditsToSupabase(userId, updatedCredits).catch(() => {})
+
+      const supabase = getSupabase()
+      if (supabase) {
+        void (async () => {
+          try {
+            await supabase.from('credits').upsert({
+              user_id: userId,
+              total: updatedCredits.total,
+              used: updatedCredits.used,
+              plan: updatedCredits.plan,
+              last_refill: updatedCredits.lastRefill,
+            }, { onConflict: 'user_id' })
+          } catch {
+            // Non-critical async sync
+          }
+        })()
+      }
     } catch {
       // Counter is the source of truth; object sync failure is non-fatal
     }
 
     return { success: true, remaining: credits.total - newUsed }
+  }
+
+  const supabase = getSupabase()
+  if (supabase) {
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      const { data } = await supabase
+        .from('credits')
+        .select('*')
+        .eq('user_id', userId)
+        .single()
+
+      if (!data) {
+        await getUserCredits(userId)
+        continue
+      }
+
+      if (data.used >= data.total) {
+        return { success: false, remaining: 0 }
+      }
+
+      const nextUsed = data.used + 1
+      const { data: updated } = await supabase
+        .from('credits')
+        .update({ used: nextUsed })
+        .eq('user_id', userId)
+        .eq('used', data.used)
+        .select('total, used')
+        .single()
+
+      if (updated) {
+        return { success: true, remaining: updated.total - updated.used }
+      }
+    }
+    return { success: false, remaining: 0 }
   }
 
   // In-memory fallback (dev only — single process, no race condition)

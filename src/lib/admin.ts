@@ -1,6 +1,7 @@
 import { createHmac } from 'crypto'
 import { Redis } from '@upstash/redis'
 import { getUserCredits, type UserCredits } from '@/lib/credits'
+import { getSupabase } from '@/lib/db'
 import { getSubscription } from '@/lib/subscription'
 
 export interface AdminUserProfile {
@@ -109,6 +110,17 @@ export function getRedis(): Redis | null {
 }
 
 async function getAllUserIds(): Promise<string[]> {
+  const supabase = getSupabase()
+  if (supabase) {
+    const { data } = await supabase
+      .from('admin_profiles')
+      .select('user_id')
+      .order('created_at', { ascending: false })
+    if (data) {
+      return data.map((row) => row.user_id)
+    }
+  }
+
   if (redis) {
     const ids = await redis.smembers<string[]>(ADMIN_USERS_KEY)
     return ids ?? []
@@ -118,6 +130,24 @@ async function getAllUserIds(): Promise<string[]> {
 }
 
 async function getProfile(userId: string): Promise<AdminUserProfile> {
+  const supabase = getSupabase()
+  if (supabase) {
+    const { data } = await supabase
+      .from('admin_profiles')
+      .select('*')
+      .eq('user_id', userId)
+      .single()
+    if (data) {
+      return {
+        userId: data.user_id,
+        email: data.email,
+        name: data.name,
+        createdAt: data.created_at,
+        lastLoginAt: data.last_login_at,
+      }
+    }
+  }
+
   if (redis) {
     const profile = await redis.get<AdminUserProfile>(ADMIN_USER_PROFILE_KEY(userId))
     if (profile) return profile
@@ -137,40 +167,91 @@ async function getProfile(userId: string): Promise<AdminUserProfile> {
 
 export async function registerUser(userId: string, email: string, name?: string): Promise<void> {
   const now = new Date().toISOString()
+  const supabase = getSupabase()
+
+  let existingName = ''
+  let existingCreatedAt = now
+
+  if (supabase) {
+    const { data } = await supabase
+      .from('admin_profiles')
+      .select('name, created_at')
+      .eq('user_id', userId)
+      .single()
+    if (data) {
+      existingName = data.name ?? ''
+      existingCreatedAt = data.created_at
+    }
+  }
+
+  if (redis) {
+    const existing = await redis.get<AdminUserProfile>(ADMIN_USER_PROFILE_KEY(userId))
+    if (existing) {
+      existingName = existing.name
+      existingCreatedAt = existing.createdAt
+    }
+  } else {
+    const existing = memProfiles.get(userId)
+    if (existing) {
+      existingName = existing.name
+      existingCreatedAt = existing.createdAt
+    }
+  }
+
+  const profile: AdminUserProfile = {
+    userId,
+    email,
+    name: name ?? existingName,
+    createdAt: existingCreatedAt,
+    lastLoginAt: now,
+  }
+
+  if (supabase) {
+    await supabase.from('admin_profiles').upsert({
+      user_id: profile.userId,
+      email: profile.email,
+      name: profile.name,
+      created_at: profile.createdAt,
+      last_login_at: profile.lastLoginAt,
+    }, { onConflict: 'user_id' })
+  }
 
   if (redis) {
     await redis.sadd(ADMIN_USERS_KEY, userId)
-    const existing = await redis.get<AdminUserProfile>(ADMIN_USER_PROFILE_KEY(userId))
-    const profile: AdminUserProfile = {
-      userId,
-      email,
-      name: name ?? existing?.name ?? '',
-      createdAt: existing?.createdAt ?? now,
-      lastLoginAt: now,
-    }
     await redis.set(ADMIN_USER_PROFILE_KEY(userId), profile)
-    return
+  } else if (!supabase) {
+    memUsers.add(userId)
+    memProfiles.set(userId, profile)
   }
-
-  const existing = memProfiles.get(userId)
-  memUsers.add(userId)
-  memProfiles.set(userId, {
-    userId,
-    email,
-    name: name ?? existing?.name ?? '',
-    createdAt: existing?.createdAt ?? now,
-    lastLoginAt: now,
-  })
 }
 
 export async function getAdminStats(): Promise<AdminStats> {
   const userIds = await getAllUserIds()
   const today = new Date().toISOString().slice(0, 10)
+  const supabase = getSupabase()
 
   let totalAnalyses = memTotalAnalyses
   let todayAnalyses = memDailyAnalyses.get(today) ?? 0
 
-  if (redis) {
+  if (supabase) {
+    const { data: totalData } = await supabase
+      .from('analysis_stats')
+      .select('total_analyses')
+      .eq('id', 'global')
+      .single()
+    if (totalData) {
+      totalAnalyses = totalData.total_analyses
+    }
+
+    const { data: dailyData } = await supabase
+      .from('daily_analysis_stats')
+      .select('count')
+      .eq('stat_date', today)
+      .single()
+    if (dailyData) {
+      todayAnalyses = dailyData.count
+    }
+  } else if (redis) {
     totalAnalyses = (await redis.get<number>(ADMIN_TOTAL_ANALYSES_KEY)) ?? 0
     todayAnalyses = (await redis.get<number>(ADMIN_DAILY_ANALYSES_KEY(today))) ?? 0
   }
@@ -213,6 +294,7 @@ export async function getAllUsers(page = 1, limit = 20): Promise<AdminUsersPage>
 
 export async function adjustCredits(userId: string, amount: number, reason: string): Promise<UserCredits> {
   const current = await getUserCredits(userId)
+  const supabase = getSupabase()
   const currentRemaining = current.total - current.used
   const nextRemaining = Math.max(0, currentRemaining + amount)
 
@@ -223,9 +305,20 @@ export async function adjustCredits(userId: string, amount: number, reason: stri
     lastRefill: new Date().toISOString().slice(0, 10),
   }
 
+  if (supabase) {
+    await supabase.from('credits').upsert({
+      user_id: userId,
+      total: updated.total,
+      used: updated.used,
+      plan: updated.plan,
+      last_refill: updated.lastRefill,
+    }, { onConflict: 'user_id' })
+  }
+
   if (redis) {
     await redis.set(CREDIT_KEY(userId), updated)
-  } else {
+    await redis.set(`credits:used:${userId}`, 0)
+  } else if (!supabase) {
     current.total = updated.total
     current.used = updated.used
     current.plan = updated.plan
@@ -240,11 +333,21 @@ export async function adjustCredits(userId: string, amount: number, reason: stri
     createdAt: new Date().toISOString(),
   }
 
+  if (supabase) {
+    await supabase.from('credit_adjustments').insert({
+      id: adjustment.id,
+      user_id: adjustment.userId,
+      amount: adjustment.amount,
+      reason: adjustment.reason,
+      created_at: adjustment.createdAt,
+    })
+  }
+
   if (redis) {
     const history = await redis.get<CreditAdjustment[]>(ADMIN_CREDIT_HISTORY_KEY(userId)) ?? []
     history.unshift(adjustment)
     await redis.set(ADMIN_CREDIT_HISTORY_KEY(userId), history.slice(0, 100))
-  } else {
+  } else if (!supabase) {
     const history = memCreditHistory.get(userId) ?? []
     history.unshift(adjustment)
     memCreditHistory.set(userId, history.slice(0, 100))
@@ -254,6 +357,25 @@ export async function adjustCredits(userId: string, amount: number, reason: stri
 }
 
 export async function getCreditAdjustmentHistory(userId: string): Promise<CreditAdjustment[]> {
+  const supabase = getSupabase()
+  if (supabase) {
+    const { data } = await supabase
+      .from('credit_adjustments')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(100)
+    if (data) {
+      return data.map((row) => ({
+        id: row.id,
+        userId: row.user_id,
+        amount: row.amount,
+        reason: row.reason,
+        createdAt: row.created_at,
+      }))
+    }
+  }
+
   if (redis) {
     return (await redis.get<CreditAdjustment[]>(ADMIN_CREDIT_HISTORY_KEY(userId))) ?? []
   }
@@ -262,6 +384,23 @@ export async function getCreditAdjustmentHistory(userId: string): Promise<Credit
 }
 
 export async function getAnnouncements(): Promise<AdminAnnouncement[]> {
+  const supabase = getSupabase()
+  if (supabase) {
+    const { data } = await supabase
+      .from('announcements')
+      .select('*')
+      .order('created_at', { ascending: false })
+    if (data) {
+      return data.map((row) => ({
+        id: row.id,
+        title: row.title,
+        content: row.content,
+        active: row.active,
+        createdAt: row.created_at,
+      }))
+    }
+  }
+
   if (redis) {
     const raw = await redis.get<string | AdminAnnouncement[]>(ADMIN_ANNOUNCEMENTS_KEY)
     if (!raw) return []
@@ -281,24 +420,64 @@ export async function getAnnouncements(): Promise<AdminAnnouncement[]> {
 }
 
 export async function saveAnnouncements(list: AdminAnnouncement[]): Promise<void> {
-  if (redis) {
-    await redis.set(ADMIN_ANNOUNCEMENTS_KEY, JSON.stringify(list))
-    return
+  const supabase = getSupabase()
+  if (supabase) {
+    for (const announcement of list) {
+      await supabase.from('announcements').upsert({
+        id: announcement.id,
+        title: announcement.title,
+        content: announcement.content,
+        active: announcement.active,
+        created_at: announcement.createdAt,
+      }, { onConflict: 'id' })
+    }
   }
 
-  memAnnouncements.length = 0
-  memAnnouncements.push(...list)
+  if (redis) {
+    await redis.set(ADMIN_ANNOUNCEMENTS_KEY, JSON.stringify(list))
+  } else if (!supabase) {
+    memAnnouncements.length = 0
+    memAnnouncements.push(...list)
+  }
 }
 
 export async function recordAnalysisEvent(date = new Date().toISOString().slice(0, 10)): Promise<void> {
+  const supabase = getSupabase()
+
+  if (supabase) {
+    const { data: totalData } = await supabase
+      .from('analysis_stats')
+      .select('total_analyses')
+      .eq('id', 'global')
+      .single()
+    const total = (totalData?.total_analyses ?? 0) + 1
+
+    await supabase.from('analysis_stats').upsert({
+      id: 'global',
+      total_analyses: total,
+      updated_at: new Date().toISOString(),
+    }, { onConflict: 'id' })
+
+    const { data: dailyData } = await supabase
+      .from('daily_analysis_stats')
+      .select('count')
+      .eq('stat_date', date)
+      .single()
+    const daily = (dailyData?.count ?? 0) + 1
+
+    await supabase.from('daily_analysis_stats').upsert({
+      stat_date: date,
+      count: daily,
+    }, { onConflict: 'stat_date' })
+  }
+
   if (redis) {
     const total = (await redis.get<number>(ADMIN_TOTAL_ANALYSES_KEY)) ?? 0
     const daily = (await redis.get<number>(ADMIN_DAILY_ANALYSES_KEY(date))) ?? 0
     await redis.set(ADMIN_TOTAL_ANALYSES_KEY, total + 1)
     await redis.set(ADMIN_DAILY_ANALYSES_KEY(date), daily + 1)
-    return
+  } else if (!supabase) {
+    memTotalAnalyses += 1
+    memDailyAnalyses.set(date, (memDailyAnalyses.get(date) ?? 0) + 1)
   }
-
-  memTotalAnalyses += 1
-  memDailyAnalyses.set(date, (memDailyAnalyses.get(date) ?? 0) + 1)
 }

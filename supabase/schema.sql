@@ -100,3 +100,59 @@ CREATE TABLE IF NOT EXISTS credit_merges (
   credits_merged INTEGER NOT NULL,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Admin user profiles (tracking registered users for admin dashboard)
+CREATE TABLE IF NOT EXISTS admin_profiles (
+  user_id TEXT PRIMARY KEY,
+  email TEXT NOT NULL,
+  name TEXT DEFAULT '',
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  last_login_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_admin_profiles_email ON admin_profiles(email);
+
+-- Announcements
+CREATE TABLE IF NOT EXISTS announcements (
+  id TEXT PRIMARY KEY,
+  title TEXT NOT NULL,
+  content TEXT NOT NULL,
+  active BOOLEAN DEFAULT true,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Credit adjustment history (admin actions)
+CREATE TABLE IF NOT EXISTS credit_adjustments (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  amount INTEGER NOT NULL,
+  reason TEXT DEFAULT '',
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_credit_adjustments_user ON credit_adjustments(user_id);
+
+-- Customer inquiries
+CREATE TABLE IF NOT EXISTS inquiries (
+  id TEXT PRIMARY KEY,
+  email TEXT NOT NULL,
+  name TEXT DEFAULT '',
+  subject TEXT DEFAULT '',
+  content TEXT NOT NULL,
+  status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'replied')),
+  reply TEXT,
+  replied_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_inquiries_email ON inquiries(email);
+CREATE INDEX IF NOT EXISTS idx_inquiries_status ON inquiries(status);
+
+-- Analysis stats counters
+CREATE TABLE IF NOT EXISTS analysis_stats (
+  id TEXT PRIMARY KEY DEFAULT 'global',
+  total_analyses INTEGER DEFAULT 0,
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS daily_analysis_stats (
+  stat_date DATE PRIMARY KEY,
+  count INTEGER DEFAULT 0
+);
