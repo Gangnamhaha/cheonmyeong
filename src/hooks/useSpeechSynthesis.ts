@@ -40,6 +40,9 @@ export function useSpeechSynthesis() {
   const activeUtterancesRef = useRef<SpeechSynthesisUtterance[]>([])
   const keepAliveRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const unlockedRef = useRef(false)
+  // Reactive unlock state — drives re-renders so auto-narration useEffects
+  // can gate on mobile TTS readiness.
+  const [isUnlocked, setIsUnlocked] = useState(false)
 
   const isSupported = useMemo(() => {
     if (typeof window === 'undefined') {
@@ -120,8 +123,8 @@ export function useSpeechSynthesis() {
     utterance.volume = 0.01
     utterance.rate = 5
     if (voice) utterance.voice = voice
-    utterance.onend = () => { unlockedRef.current = true }
-    utterance.onerror = () => { unlockedRef.current = true }
+    utterance.onend = () => { unlockedRef.current = true; setIsUnlocked(true) }
+    utterance.onerror = () => { unlockedRef.current = true; setIsUnlocked(true) }
     synth.speak(utterance)
   }, [isSupported, voice])
 
@@ -178,11 +181,16 @@ export function useSpeechSynthesis() {
         utterance.voice = voice
       }
 
-      // First chunk — mark speaking started
+      // First chunk — mark speaking started + TTS unlocked
       if (index === 0) {
         utterance.onstart = () => {
           setIsSpeaking(true)
           setIsPaused(false)
+          // If speak() succeeds, TTS is unlocked for this session
+          if (!unlockedRef.current) {
+            unlockedRef.current = true
+            setIsUnlocked(true)
+          }
         }
       }
 
@@ -260,6 +268,7 @@ export function useSpeechSynthesis() {
     isPaused,
     isSupported,
     isMobile,
+    isUnlocked,
     speak,
     stop,
     pause,

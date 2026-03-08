@@ -414,13 +414,12 @@ export default function SajuMoviePlayer({
   const [imageProgress, setImageProgress] = useState(0)
   const [loadingPhase, setLoadingPhase] = useState<'scenario' | 'images' | null>(null)
 
-  const { isSupported: ttsSupported, isSpeaking, speak, stop: stopNarration, unlock: unlockTts, isMobile } = useSpeechSynthesis()
+  const { isSupported: ttsSupported, isSpeaking, speak, stop: stopNarration, unlock: unlockTts, isMobile, isUnlocked } = useSpeechSynthesis()
 
-  // On mobile, disable auto-narration by default — user must tap 🔈 to enable
-  // (mobile browsers block programmatic speak() without user gesture)
-  useEffect(() => {
-    if (isMobile) setNarrationEnabled(false)
-  }, [isMobile])
+  // Mobile TTS strategy:
+  // - narrationEnabled stays TRUE (same as desktop)
+  // - Genre click calls unlockTts() within user gesture → unlocks TTS for session
+  // - Auto-narration useEffect gates on isUnlocked for mobile → waits until TTS is ready
 
   const audioRef = useRef<MovieAudioEngine | null>(null)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -618,6 +617,8 @@ export default function SajuMoviePlayer({
   /* ---------- Auto-narration (TTS) ---------- */
   useEffect(() => {
     if (!narrationEnabled || !ttsSupported || !scenario) return
+    // On mobile, wait until TTS is unlocked via user gesture (genre click)
+    if (isMobile && !isUnlocked) return
 
     const scene = scenario.scenes[currentScene]
     if (!scene?.narration) return
@@ -631,7 +632,7 @@ export default function SajuMoviePlayer({
       stopNarration()
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentScene, narrationEnabled, ttsSupported, scenario])
+  }, [currentScene, narrationEnabled, ttsSupported, scenario, isMobile, isUnlocked])
 
   /* ---------- Handlers ---------- */
   const handleReplay = useCallback(() => {
@@ -672,13 +673,14 @@ export default function SajuMoviePlayer({
       stopNarration()
       setNarrationEnabled(false)
     } else {
-      unlockTts()
       setNarrationEnabled(true)
-      // Speak current scene immediately within gesture context
+      // Speak current scene directly within user gesture — this IS the unlock.
+      // Don't call unlockTts() separately: its '.' utterance gets cancelled by
+      // speak() immediately after, breaking TTS on some mobile browsers.
       const scene = scenario?.scenes[currentScene]
       if (scene?.narration) speak(scene.narration)
     }
-  }, [narrationEnabled, stopNarration, unlockTts, speak, scenario, currentScene])
+  }, [narrationEnabled, stopNarration, speak, scenario, currentScene])
 
   const handleSkipImages = useCallback(() => {
     imageAbortRef.current?.abort()

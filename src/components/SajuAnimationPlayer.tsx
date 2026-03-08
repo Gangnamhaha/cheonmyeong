@@ -349,7 +349,7 @@ export default function SajuAnimationPlayer({
   const [recordProgress, setRecordProgress] = useState(0)
   const [narrationEnabled, setNarrationEnabled] = useState(true)
 
-  const { isSupported: ttsSupported, isSpeaking, speak, stop: stopNarration, unlock: unlockTts, isMobile } = useSpeechSynthesis()
+  const { isSupported: ttsSupported, isSpeaking, speak, stop: stopNarration, isMobile, isUnlocked } = useSpeechSynthesis()
 
   // On mobile, disable auto-narration by default — user must tap 🔈 to enable
   // (mobile browsers block programmatic speak() without user gesture)
@@ -456,6 +456,8 @@ export default function SajuAnimationPlayer({
   // Auto-narrate on scene change
   useEffect(() => {
     if (!narrationEnabled || !ttsSupported) return
+    // On mobile, wait until TTS is unlocked via user gesture (narration toggle tap)
+    if (isMobile && !isUnlocked) return
 
     const text = getNarrationText(currentScene)
     if (!text) return
@@ -469,7 +471,7 @@ export default function SajuAnimationPlayer({
       stopNarration()
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentScene, narrationEnabled, ttsSupported])
+  }, [currentScene, narrationEnabled, ttsSupported, isMobile, isUnlocked])
 
   // Cleanup on unmount
   useEffect(() => {
@@ -484,13 +486,14 @@ export default function SajuAnimationPlayer({
       stopNarration()
       setNarrationEnabled(false)
     } else {
-      unlockTts()
       setNarrationEnabled(true)
-      // Speak current scene immediately within gesture context
+      // Speak current scene directly within user gesture — this IS the unlock.
+      // Don't call unlockTts() separately: its '.' utterance gets cancelled by
+      // speak() immediately after, breaking TTS on some mobile browsers.
       const text = getNarrationText(currentScene as SceneIndex)
       if (text) speak(text)
     }
-  }, [narrationEnabled, stopNarration, unlockTts, speak, getNarrationText, currentScene])
+  }, [narrationEnabled, stopNarration, speak, getNarrationText, currentScene])
 
   const handleToggleControls = () => {
     if (!(isPlaying || currentScene < 6)) return
