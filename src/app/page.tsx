@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useCallback, useRef, useEffect } from 'react'
+import { useSession } from 'next-auth/react'
 import SajuForm from '@/components/SajuForm'
 import SajuResultCard from '@/components/SajuResult'
 import OhengChart from '@/components/OhengChart'
@@ -14,7 +15,7 @@ import DaeunTimeline from '@/components/DaeunTimeline'
 import FortuneCard from '@/components/FortuneCard'
 import DailyFortuneCard from '@/components/DailyFortuneCard'
 import { useTheme } from '@/components/ThemeProvider'
-import { trackAnalysis, trackShare } from '@/lib/analytics'
+import { trackAnalysis, trackPurchase, trackShare } from '@/lib/analytics'
 import { shareSajuResult } from '@/lib/kakao'
 import { calculateFullSaju, FullSajuResult } from '@/lib/saju'
 import SajuAnimationPlayer from '@/components/SajuAnimationPlayer'
@@ -61,6 +62,7 @@ interface FormData {
 }
 
 export default function Home() {
+  const { data: session } = useSession()
   const { theme, toggleTheme, cycleFontSize, fontSizeLabel } = useTheme()
   const [appState, setAppState] = useState<AppState>('form')
   const [loading, setLoading] = useState(false)
@@ -92,6 +94,9 @@ export default function Home() {
   const [saveDocxLoading, setSaveDocxLoading] = useState(false)
   const [showAnimation, setShowAnimation] = useState(false)
   const [showMovie, setShowMovie] = useState(false)
+  const [premiumLoading, setPremiumLoading] = useState(false)
+  const [premiumDownloadUrl, setPremiumDownloadUrl] = useState<string | null>(null)
+  const [premiumError, setPremiumError] = useState<string | null>(null)
   const [resultId, setResultId] = useState<string | null>(null)
   const resultRef = useRef<HTMLDivElement>(null)
   const downloadRef = useRef<HTMLDivElement>(null)
@@ -207,6 +212,8 @@ export default function Home() {
     setViewMode('detail')
     setTraditionalResult(null)
     setTraditionalContext('')
+    setPremiumDownloadUrl(null)
+    setPremiumError(null)
     setFormData(data)
     setResultId(null)
 
@@ -301,6 +308,17 @@ export default function Home() {
       setFollowUpQuestion(recognized)
     }
   }, [transcript, interimTranscript])
+
+  useEffect(() => {
+    if (document.querySelector('script[src*="portone"]')) return
+    const script = document.createElement('script')
+    script.src = 'https://cdn.portone.io/v2/browser-sdk.js'
+    script.async = true
+    document.head.appendChild(script)
+    return () => {
+      if (script.parentNode) script.parentNode.removeChild(script)
+    }
+  }, [])
 
   function handleMicToggle() {
     if (isListening) {
@@ -540,6 +558,118 @@ export default function Home() {
     }
   }
 
+  async function handlePremiumReport() {
+    if (!fullResult || !formData || premiumLoading) return
+
+    setPremiumLoading(true)
+    setPremiumDownloadUrl(null)
+    setPremiumError(null)
+
+    try {
+      const isGuest = !session
+      let guestEmail = ''
+
+      if (isGuest) {
+        const input = window.prompt('프리미엄 리포트 결제를 위해 이메일 주소를 입력해 주세요.')
+        if (!input) {
+          setPremiumError('이메일 입력이 필요합니다.')
+          return
+        }
+        const trimmed = input.trim().toLowerCase()
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
+          setPremiumError('올바른 이메일 형식을 입력해 주세요.')
+          return
+        }
+        guestEmail = trimmed
+      }
+
+      const prepRes = await fetch('/api/portone', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          plan: 'premium_report',
+          ...(isGuest ? { guestEmail } : {}),
+        }),
+      })
+
+      if (!prepRes.ok) {
+        const prepData = await prepRes.json()
+        setPremiumError(prepData.error ?? '결제 준비에 실패했습니다.')
+        return
+      }
+
+      const paymentData = await prepRes.json()
+      if (!window.PortOne) {
+        setPremiumError('결제 모듈을 불러오는 중입니다. 잠시 후 다시 시도해 주세요.')
+        return
+      }
+
+      const response = await window.PortOne.requestPayment({
+        storeId: paymentData.storeId,
+        channelKey: paymentData.channelKey,
+        paymentId: paymentData.paymentId,
+        orderName: paymentData.orderName,
+        totalAmount: paymentData.totalAmount,
+        currency: paymentData.currency,
+        payMethod: 'CARD',
+        redirectUrl: window.location.href,
+        customer: {
+          email: session?.user?.email || guestEmail || undefined,
+          fullName: session?.user?.name || undefined,
+        },
+        customData: JSON.stringify({ userId: paymentData.userId, plan: 'premium_report' }),
+      })
+
+      if (response?.code) {
+        const isCanceled = response.code === 'PAY_PROCESS_CANCELED' || response.code === 'PAY_PROCESS_ABORTED'
+        setPremiumError(isCanceled ? '결제가 취소되었습니다.' : (response.message ?? '결제 처리 중 오류가 발생했습니다.'))
+        return
+      }
+
+      const verifyRes = await fetch('/api/portone/webhook', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ paymentId: paymentData.paymentId, isGuest }),
+      })
+
+      if (!verifyRes.ok) {
+        setPremiumError('결제 검증에 실패했습니다. 다시 시도해 주세요.')
+        return
+      }
+
+      trackPurchase({
+        paymentId: paymentData.paymentId,
+        planName: '프리미엄 종합 리포트',
+        amount: 9900,
+      })
+
+      const generateRes = await fetch('/api/report/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sajuData: fullResult,
+          formData,
+          traditionalContext: traditionalContext || undefined,
+          paymentId: paymentData.paymentId,
+        }),
+      })
+
+      const generateData = await generateRes.json()
+      if (!generateRes.ok) {
+        setPremiumError(generateData.error ?? '리포트 생성에 실패했습니다.')
+        return
+      }
+
+      if (typeof generateData.downloadUrl === 'string') {
+        setPremiumDownloadUrl(generateData.downloadUrl)
+      }
+    } catch {
+      setPremiumError('프리미엄 리포트 처리 중 네트워크 오류가 발생했습니다.')
+    } finally {
+      setPremiumLoading(false)
+    }
+  }
+
   function handleReset() {
     abortRef.current?.abort()
     setAppState('form')
@@ -557,6 +687,9 @@ export default function Home() {
     setActiveTab('사주')
     setViewMode('detail')
     setResultId(null)
+    setPremiumLoading(false)
+    setPremiumDownloadUrl(null)
+    setPremiumError(null)
   }
 
   // Summary view helper
@@ -751,6 +884,55 @@ export default function Home() {
                           </div>
 
                           {/* AI 해석 */}
+                          <div
+                            className="rounded-2xl p-4"
+                            style={{
+                              background: 'linear-gradient(135deg, rgba(251,191,36,0.18) 0%, rgba(217,119,6,0.2) 100%)',
+                              border: '1px solid rgba(251,191,36,0.35)',
+                            }}
+                          >
+                            <div className="text-sm font-bold mb-1" style={{ color: '#f59e0b' }}>
+                              프리미엄 리포트
+                            </div>
+                            <p className="text-xs mb-3" style={{ color: 'var(--text-secondary)' }}>
+                              gpt-4o로 7개 카테고리 심층 분석 (종합/성격/연애/직업/건강/재물/인생성장)
+                            </p>
+                            <button
+                              onClick={handlePremiumReport}
+                              disabled={premiumLoading}
+                              className="w-full font-bold py-3.5 px-4 rounded-xl text-sm transition-all hover:scale-[1.01] disabled:cursor-not-allowed"
+                              style={{
+                                background: 'linear-gradient(135deg, #fbbf24 0%, #d97706 100%)',
+                                color: '#1f2937',
+                                boxShadow: '0 6px 18px rgba(245, 158, 11, 0.28)',
+                              }}
+                            >
+                              {premiumLoading
+                                ? '리포트 생성 중...'
+                                : '📄 프리미엄 종합 리포트 받기 - ₩9,900'}
+                            </button>
+
+                            {premiumDownloadUrl && (
+                              <a
+                                href={premiumDownloadUrl}
+                                className="mt-2 block w-full text-center font-bold py-3 rounded-xl text-sm"
+                                style={{
+                                  background: 'rgba(255,255,255,0.85)',
+                                  color: '#92400e',
+                                  border: '1px solid rgba(217,119,6,0.35)',
+                                }}
+                              >
+                                ⬇️ 프리미엄 리포트 다운로드
+                              </a>
+                            )}
+
+                            {premiumError && (
+                              <div className="mt-2 text-xs" style={{ color: '#ef4444' }}>
+                                {premiumError}
+                              </div>
+                            )}
+                          </div>
+
                           <AiInterpretation
                             interpretation={aiInterpretation}
                             loading={aiLoading}

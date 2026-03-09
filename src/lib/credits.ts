@@ -56,6 +56,17 @@ export const PLANS = {
     type: 'onetime' as const,
     stripePriceId: process.env.STRIPE_PRICE_PRO || null,
   },
+  premium_report: {
+    name: '프리미엄 종합 리포트',
+    nameEn: 'Premium Report',
+    credits: 0,
+    price: 9900,
+    priceLabel: '₩9,900',
+    features: ['gpt-4o 7개 카테고리 심층 분석', '프리미엄 DOCX 리포트 다운로드'],
+    popular: false,
+    type: 'onetime' as const,
+    stripePriceId: null,
+  },
   unlimited: {
     name: '언리미티드',
     nameEn: 'Unlimited',
