@@ -140,6 +140,37 @@ export async function deleteBillingKey(billingKey: string): Promise<void> {
  * Get billingKey info.
  * GET https://api.portone.io/billing-keys/{billingKey}
  */
+/**
+ * Cancel (refund) a payment via PortOne V2 API.
+ * POST https://api.portone.io/payments/{paymentId}/cancel
+ *
+ * Full refund only (no partial). Admin-initiated.
+ */
+export async function cancelPayment(paymentId: string, reason: string): Promise<{
+  cancellationId: string
+  cancelledAt: string
+  totalAmount: number
+}> {
+  const response = await fetch(
+    `${PORTONE_API_BASE}/payments/${encodeURIComponent(paymentId)}/cancel`,
+    {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({
+        reason,
+      }),
+    }
+  )
+
+  if (!response.ok) {
+    const errorText = await response.text()
+    throw new Error(`PortOne cancel error (${response.status}): ${errorText}`)
+  }
+
+  const data = await response.json()
+  return data.cancellation ?? data
+}
+
 export async function getBillingKeyInfo(billingKey: string): Promise<{ billingKey: string; status: string; card?: { name?: string; number?: string } } | null> {
   const response = await fetch(
     `${PORTONE_API_BASE}/billing-keys/${encodeURIComponent(billingKey)}`,
