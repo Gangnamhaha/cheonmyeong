@@ -87,7 +87,8 @@ CREATE TABLE IF NOT EXISTS push_tokens (
   user_id TEXT NOT NULL,
   token TEXT UNIQUE NOT NULL,
   platform TEXT DEFAULT 'web',
-  created_at TIMESTAMPTZ DEFAULT NOW()
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 CREATE INDEX IF NOT EXISTS idx_push_tokens_user ON push_tokens(user_id);

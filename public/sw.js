@@ -2,7 +2,7 @@
 const CACHE_NAME = 'cheonmyeong-v1';
 const STATIC_ASSETS = [
   '/',
-  '/offline',
+  '/offline.html',
   '/icon.png',
   '/apple-icon.png',
   '/manifest.json',
@@ -46,7 +46,7 @@ self.addEventListener('fetch', (event) => {
   if (event.request.headers.get('accept')?.includes('text/html')) {
     event.respondWith(
       fetch(event.request)
-        .catch(() => caches.match('/offline') || caches.match('/'))
+        .catch(() => caches.match('/offline.html') || caches.match('/'))
     );
     return;
   }
