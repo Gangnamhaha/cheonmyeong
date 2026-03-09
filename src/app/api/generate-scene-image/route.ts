@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import OpenAI from 'openai'
+import { logTokenUsage, calculateCost } from '@/lib/ai-cost'
 
 export const maxDuration = 60
 
@@ -146,6 +147,16 @@ export async function POST(req: NextRequest) {
     if (!b64) {
       return NextResponse.json({ error: 'No image data returned' }, { status: 500 })
     }
+
+    // Log token usage for DALL-E (1 image = 1 unit)
+    const cost = calculateCost('dall-e-3', 0, 1)
+    logTokenUsage({
+      model: 'dall-e-3',
+      inputTokens: 0,
+      outputTokens: 1,
+      feature: 'scene_image',
+      estimatedCost: cost,
+    }).catch(() => {})
 
     return NextResponse.json({ image: b64 })
   } catch (err: unknown) {

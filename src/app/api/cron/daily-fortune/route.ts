@@ -3,6 +3,7 @@ import OpenAI from 'openai'
 import { getSupabase } from '@/lib/db'
 import { Redis } from '@upstash/redis'
 import { broadcastPush } from '@/lib/push'
+import { logTokenUsage, calculateCost } from '@/lib/ai-cost'
 
 const redisUrl = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL
 const redisToken = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN
@@ -74,6 +75,18 @@ export async function GET(req: NextRequest) {
         if (redis && content) {
           const cacheKey = `daily-fortune:${today}:${item.index}`
           await redis.set(cacheKey, content, { ex: 86400 })
+        }
+
+        // Log token usage
+        if (response.usage) {
+          const cost = calculateCost('gpt-4o-mini', response.usage.prompt_tokens, response.usage.completion_tokens)
+          logTokenUsage({
+            model: 'gpt-4o-mini',
+            inputTokens: response.usage.prompt_tokens,
+            outputTokens: response.usage.completion_tokens,
+            feature: 'fortune',
+            estimatedCost: cost,
+          }).catch(() => {})
         }
 
         generated++

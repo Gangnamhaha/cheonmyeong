@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import OpenAI from 'openai'
 import { recordAnalysisEvent } from '@/lib/admin'
+import { logTokenUsage, calculateCost } from '@/lib/ai-cost'
 
 export interface MovieScene {
   type: 'prologue' | 'birth' | 'pillars' | 'elements' | 'guardian' | 'fortune' | 'message' | 'epilogue'
@@ -194,6 +195,18 @@ ${JSON.stringify(yongsin)}
 
     // Track credit consumption (fire-and-forget)
     recordAnalysisEvent().catch(() => {})
+
+    // Log token usage
+    if (completion.usage) {
+      const cost = calculateCost('gpt-4o-mini', completion.usage.prompt_tokens, completion.usage.completion_tokens)
+      logTokenUsage({
+        model: 'gpt-4o-mini',
+        inputTokens: completion.usage.prompt_tokens,
+        outputTokens: completion.usage.completion_tokens,
+        feature: 'movie',
+        estimatedCost: cost,
+      }).catch(() => {})
+    }
 
     return NextResponse.json({ scenario })
   } catch (err) {

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import OpenAI from 'openai'
 import { recordAnalysisEvent } from '@/lib/admin'
 import { formatSajuForAI } from '@/lib/format-saju-ai'
+import { logTokenUsage, calculateCost } from '@/lib/ai-cost'
 import type { FullSajuResult } from '@/lib/saju'
 import type { TraditionalInterpretation } from '@/lib/traditional-interpret'
 
@@ -210,12 +211,33 @@ export async function POST(req: NextRequest) {
         new ReadableStream({
           async start(controller) {
             try {
+              let totalInputTokens = 0
+              let totalOutputTokens = 0
+              
               for await (const chunk of streamResponse) {
                 const text = chunk.choices[0]?.delta?.content ?? ''
                 if (text) {
                   controller.enqueue(new TextEncoder().encode(text))
                 }
+                // Accumulate token usage from stream
+                if (chunk.usage) {
+                  totalInputTokens = chunk.usage.prompt_tokens || 0
+                  totalOutputTokens = chunk.usage.completion_tokens || 0
+                }
               }
+              
+              // Log token usage after stream completes
+              if (totalInputTokens > 0 || totalOutputTokens > 0) {
+                const cost = calculateCost('gpt-4o-mini', totalInputTokens, totalOutputTokens)
+                logTokenUsage({
+                  model: 'gpt-4o-mini',
+                  inputTokens: totalInputTokens,
+                  outputTokens: totalOutputTokens,
+                  feature: 'interpret',
+                  estimatedCost: cost,
+                }).catch(() => {})
+              }
+              
               controller.close()
             } catch (err) {
               console.error('Streaming error:', err)
@@ -247,6 +269,18 @@ export async function POST(req: NextRequest) {
 
     // Record analysis event (fire-and-forget)
     recordAnalysisEvent().catch(() => {})
+
+    // Log token usage
+    if (completion.usage) {
+      const cost = calculateCost('gpt-4o-mini', completion.usage.prompt_tokens, completion.usage.completion_tokens)
+      logTokenUsage({
+        model: 'gpt-4o-mini',
+        inputTokens: completion.usage.prompt_tokens,
+        outputTokens: completion.usage.completion_tokens,
+        feature: 'interpret',
+        estimatedCost: cost,
+      }).catch(() => {})
+    }
 
     return NextResponse.json({ interpretation })
   } catch (err) {

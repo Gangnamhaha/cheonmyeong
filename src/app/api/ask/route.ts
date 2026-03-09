@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import OpenAI from 'openai'
+import { logTokenUsage, calculateCost } from '@/lib/ai-cost'
 
 // Rate limiting: IP -> timestamps
 const RATE_LIMIT = new Map<string, number[]>()
@@ -91,12 +92,33 @@ export async function POST(req: NextRequest) {
       new ReadableStream({
         async start(controller) {
           try {
+            let totalInputTokens = 0
+            let totalOutputTokens = 0
+            
             for await (const chunk of stream) {
               const text = chunk.choices[0]?.delta?.content ?? ''
               if (text) {
                 controller.enqueue(new TextEncoder().encode(text))
               }
+              // Accumulate token usage from stream
+              if (chunk.usage) {
+                totalInputTokens = chunk.usage.prompt_tokens || 0
+                totalOutputTokens = chunk.usage.completion_tokens || 0
+              }
             }
+            
+            // Log token usage after stream completes
+            if (totalInputTokens > 0 || totalOutputTokens > 0) {
+              const cost = calculateCost('gpt-4o-mini', totalInputTokens, totalOutputTokens)
+              logTokenUsage({
+                model: 'gpt-4o-mini',
+                inputTokens: totalInputTokens,
+                outputTokens: totalOutputTokens,
+                feature: 'ask',
+                estimatedCost: cost,
+              }).catch(() => {})
+            }
+            
             controller.close()
           } catch (err) {
             console.error('Ask streaming error:', err)
