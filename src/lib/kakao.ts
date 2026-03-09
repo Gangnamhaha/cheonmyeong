@@ -42,10 +42,19 @@ export function shareSajuResult(params: {
   dayPillar: string
   yongsin: string
   summary?: string
+  resultUrl?: string
+  resultId?: string
 }) {
+  const baseUrl = 'https://cheonmyeong.vercel.app'
+  const shareUrl = params.resultUrl || baseUrl
+  const extractedResultId = params.resultId || (shareUrl.includes('/result/') ? shareUrl.split('/result/')[1]?.split('?')[0] : undefined)
+  const imageUrl = extractedResultId
+    ? `${baseUrl}/api/og/${extractedResultId}`
+    : `${baseUrl}/opengraph-image.png`
+
   if (!initKakao()) {
     // Fallback: copy URL to clipboard
-    fallbackShare('사주 결과')
+    fallbackShare('사주 결과', shareUrl)
     return
   }
 
@@ -58,18 +67,18 @@ export function shareSajuResult(params: {
     content: {
       title: `${params.name}님의 사주팔자 결과`,
       description,
-      imageUrl: 'https://cheonmyeong.vercel.app/opengraph-image.png',
+      imageUrl,
       link: {
-        mobileWebUrl: 'https://cheonmyeong.vercel.app',
-        webUrl: 'https://cheonmyeong.vercel.app',
+        mobileWebUrl: shareUrl,
+        webUrl: shareUrl,
       },
     },
     buttons: [
       {
         title: '나도 사주 보기',
         link: {
-          mobileWebUrl: 'https://cheonmyeong.vercel.app',
-          webUrl: 'https://cheonmyeong.vercel.app',
+          mobileWebUrl: shareUrl,
+          webUrl: shareUrl,
         },
       },
     ],
@@ -116,9 +125,10 @@ export function shareGunghapResult(params: {
 }
 
 /** Fallback when Kakao SDK not available — copy link */
-function fallbackShare(label: string) {
+function fallbackShare(label: string, url?: string) {
+  const targetUrl = url || window.location.href
   if (typeof navigator !== 'undefined' && navigator.clipboard) {
-    navigator.clipboard.writeText(window.location.href).then(() => {
+    navigator.clipboard.writeText(targetUrl).then(() => {
       alert(`${label} 링크가 복사되었습니다!`)
     }).catch(() => {
       alert('링크 복사에 실패했습니다.')

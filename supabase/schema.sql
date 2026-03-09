@@ -157,3 +157,18 @@ CREATE TABLE IF NOT EXISTS daily_analysis_stats (
   stat_date DATE PRIMARY KEY,
   count INTEGER DEFAULT 0
 );
+
+-- Shareable saju analysis results
+CREATE TABLE IF NOT EXISTS saju_results (
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  user_id TEXT,
+  form_data JSONB NOT NULL,
+  saju_data JSONB NOT NULL,
+  traditional_data JSONB,
+  ai_interpretations JSONB DEFAULT '{}'::jsonb,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  view_count INT DEFAULT 0
+);
+
+CREATE INDEX IF NOT EXISTS idx_saju_results_user ON saju_results(user_id);
+CREATE INDEX IF NOT EXISTS idx_saju_results_created ON saju_results(created_at DESC);

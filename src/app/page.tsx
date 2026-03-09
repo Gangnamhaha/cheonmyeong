@@ -92,12 +92,14 @@ export default function Home() {
   const [saveDocxLoading, setSaveDocxLoading] = useState(false)
   const [showAnimation, setShowAnimation] = useState(false)
   const [showMovie, setShowMovie] = useState(false)
+  const [resultId, setResultId] = useState<string | null>(null)
   const resultRef = useRef<HTMLDivElement>(null)
   const downloadRef = useRef<HTMLDivElement>(null)
 
   // New state for tabs and view mode
   const [activeTab, setActiveTab] = useState<ResultTab>('사주')
   const [viewMode, setViewMode] = useState<ViewMode>('detail')
+  const resultUrl = resultId ? `https://cheonmyeong.vercel.app/result/${resultId}` : null
 
 
   const fetchInterpretation = useCallback(async (
@@ -206,6 +208,7 @@ export default function Home() {
     setTraditionalResult(null)
     setTraditionalContext('')
     setFormData(data)
+    setResultId(null)
 
     try {
       const result = calculateFullSaju(
@@ -221,6 +224,28 @@ export default function Home() {
       setTraditionalContext(context)
       setAppState('result')
       trackAnalysis('사주분석')
+
+      try {
+        const saveRes = await fetch('/api/result/save', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            formData: data,
+            sajuData: result,
+            traditionalData: traditional,
+            aiInterpretations: {},
+          }),
+        })
+
+        if (saveRes.ok) {
+          const saveData = await saveRes.json()
+          if (typeof saveData.id === 'string') {
+            setResultId(saveData.id)
+          }
+        }
+      } catch {
+        // 저장 실패 시에도 사용자 분석 흐름 유지
+      }
     } catch (err) {
       setCalcError(err instanceof Error ? err.message : '사주 계산 중 오류가 발생했습니다.')
     } finally {
@@ -287,7 +312,8 @@ export default function Home() {
   }
 
   function handleShare() {
-    navigator.clipboard.writeText(window.location.href).then(() => {
+    const targetUrl = resultUrl || window.location.href
+    navigator.clipboard.writeText(targetUrl).then(() => {
       setShareToast(true)
       setTimeout(() => setShareToast(false), 2000)
     })
@@ -530,6 +556,7 @@ export default function Home() {
     setFollowUpQuestion('')
     setActiveTab('사주')
     setViewMode('detail')
+    setResultId(null)
   }
 
   // Summary view helper
@@ -1039,6 +1066,8 @@ export default function Home() {
                 dayPillar: `${fullResult.saju.dayPillar.heavenlyStemHanja || fullResult.saju.dayPillar.heavenlyStem}${fullResult.saju.dayPillar.earthlyBranchHanja || fullResult.saju.dayPillar.earthlyBranch}`,
                 yongsin: fullResult.yongsin.yongsin,
                 summary: aiInterpretation?.slice(0, 100),
+                resultUrl: resultUrl ?? undefined,
+                resultId: resultId ?? undefined,
               })
               trackShare('kakao', 'saju')
             }
