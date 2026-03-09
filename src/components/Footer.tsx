@@ -7,7 +7,7 @@ export default function Footer() {
     <footer className="mt-auto border-t border-[var(--border-color)] bg-[var(--bg-secondary)]/60">
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-4 py-5 sm:px-6">
         <div className="flex flex-col gap-4">
-          <div className="grid gap-3 sm:grid-cols-3">
+          <div className="grid gap-3 sm:grid-cols-4">
             <div>
               <p className="mb-2 text-xs font-semibold text-[var(--text-primary)]">서비스</p>
               <nav className="flex flex-wrap items-center gap-x-3 gap-y-2 text-xs text-[var(--text-secondary)]">
@@ -43,6 +43,19 @@ export default function Footer() {
                 <Link href="/fortune/2026/winter" className="transition-colors hover:text-[var(--text-accent)]">
                   겨울 운세
                 </Link>
+                <span className="text-[10px] text-[var(--text-muted)]">월별 운세:</span>
+                <Link href="/fortune/2026/month/1" className="transition-colors hover:text-[var(--text-accent)]">
+                  1월 운세
+                </Link>
+                <Link href="/fortune/2026/month/3" className="transition-colors hover:text-[var(--text-accent)]">
+                  3월 운세
+                </Link>
+                <Link href="/fortune/2026/month/6" className="transition-colors hover:text-[var(--text-accent)]">
+                  6월 운세
+                </Link>
+                <Link href="/fortune/2026/month/9" className="transition-colors hover:text-[var(--text-accent)]">
+                  9월 운세
+                </Link>
                 <Link href="/fortune/ddi/rat" className="transition-colors hover:text-[var(--text-accent)]">
                   띠별 운세
                 </Link>
@@ -74,6 +87,17 @@ export default function Footer() {
                 </Link>
                 <Link href="/gunghap/free" className="transition-colors hover:text-[var(--text-accent)]">
                   무료 궁합
+                </Link>
+              </nav>
+            </div>
+            <div>
+              <p className="mb-2 text-xs font-semibold text-[var(--text-primary)]">무료 도구</p>
+              <nav className="flex flex-wrap items-center gap-x-3 gap-y-2 text-xs text-[var(--text-secondary)]">
+                <Link href="/tools/mbti" className="transition-colors hover:text-[var(--text-accent)]">
+                  MBTI 궁합
+                </Link>
+                <Link href="/tools/bloodtype" className="transition-colors hover:text-[var(--text-accent)]">
+                  혈액형 궁합
                 </Link>
               </nav>
             </div>

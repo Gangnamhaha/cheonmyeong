@@ -5,6 +5,7 @@ const BASE_URL = 'https://cheonmyeong.vercel.app'
 const ZODIAC_SLUGS = ['rat', 'ox', 'tiger', 'rabbit', 'dragon', 'snake', 'horse', 'sheep', 'monkey', 'rooster', 'dog', 'pig'] as const
 const PROGRAMMATIC_ZODIAC_SLUGS = ['rat', 'ox', 'tiger', 'rabbit', 'dragon', 'snake', 'horse', 'goat', 'monkey', 'rooster', 'dog', 'pig'] as const
 const FORTUNE_TOPIC_SLUGS = ['jaemulun', 'yeonaewun', 'chwieobun'] as const
+const MONTH_NUMBER_SLUGS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'] as const
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date()
@@ -72,6 +73,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: 'weekly',
       priority: 0.87,
     },
+    ...MONTH_NUMBER_SLUGS.map((month) => ({
+      url: `${BASE_URL}/fortune/2026/month/${month}`,
+      lastModified: now,
+      changeFrequency: 'monthly' as const,
+      priority: 0.85,
+    })),
     {
       url: `${BASE_URL}/fortune/2026/tojeongbigyeol`,
       lastModified: now,
@@ -92,6 +99,18 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
     {
       url: `${BASE_URL}/gunghap`,
+      lastModified: now,
+      changeFrequency: 'weekly',
+      priority: 0.88,
+    },
+    {
+      url: `${BASE_URL}/tools/mbti`,
+      lastModified: now,
+      changeFrequency: 'weekly',
+      priority: 0.88,
+    },
+    {
+      url: `${BASE_URL}/tools/bloodtype`,
       lastModified: now,
       changeFrequency: 'weekly',
       priority: 0.88,
