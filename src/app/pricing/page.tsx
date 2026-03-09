@@ -53,6 +53,7 @@ declare global {
 }
 
 type PlanMode = 'onetime' | 'subscription'
+type PaymentMethod = 'card' | 'kakao_pay'
 
 const ONETIME_PLANS: OnetimePlanKey[] = ['starter', 'pro', 'unlimited']
 const SUBSCRIPTION_PLANS: SubscriptionPlanKey[] = ['sub_basic', 'sub_pro', 'sub_premium']
@@ -71,6 +72,7 @@ function PricingContent() {
   const searchParams = useSearchParams()
 
   const [planMode, setPlanMode] = useState<PlanMode>('subscription')
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('card')
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null)
   const [toast, setToast] = useState<string | null>(null)
   const [credits, setCredits] = useState<{ remaining: number; plan: string } | null>(null)
@@ -205,22 +207,30 @@ function PricingContent() {
         return
       }
 
-      // 3. Call V2 SDK
-      const response = await window.PortOne.requestPayment({
+      // 3. Build payment params based on selected payment method
+      const paymentParams: Parameters<typeof window.PortOne.requestPayment>[0] = {
         storeId: data.storeId,
         channelKey: data.channelKey,
         paymentId: data.paymentId,
         orderName: data.orderName,
         totalAmount: data.totalAmount,
         currency: data.currency,
-        payMethod: 'CARD',
+        payMethod: paymentMethod === 'kakao_pay' ? 'EASY_PAY' : 'CARD',
         redirectUrl: `${window.location.origin}/pricing`,
         customer: {
           email: session?.user?.email || guestEmail.trim() || undefined,
           fullName: session?.user?.name || undefined,
         },
         customData: JSON.stringify({ userId: data.userId, plan: planKey }),
-      })
+      }
+
+      // Add easyPay provider for KakaoPay
+      if (paymentMethod === 'kakao_pay') {
+        ;(paymentParams as Record<string, unknown>).easyPay = { provider: 'KAKAO_PAY' }
+      }
+
+      // 3. Call V2 SDK
+      const response = await window.PortOne.requestPayment(paymentParams)
 
       // 4. Check result
       if (response?.code) {
@@ -452,30 +462,70 @@ function PricingContent() {
         )}
 
         {/* Plan Mode Toggle */}
-        <div className="flex justify-center mb-8">
-          <div className="inline-flex rounded-full p-1" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)' }}>
-            <button
-              onClick={() => setPlanMode('onetime')}
-              className="px-5 py-2 rounded-full text-sm font-bold transition-all"
-              style={{
-                background: planMode === 'onetime' ? 'var(--accent)' : 'transparent',
-                color: planMode === 'onetime' ? 'var(--accent-text)' : 'var(--text-muted)',
-              }}
-            >
-              일회성
-            </button>
-            <button
-              onClick={() => setPlanMode('subscription')}
-              className="px-5 py-2 rounded-full text-sm font-bold transition-all"
-              style={{
-                background: planMode === 'subscription' ? 'var(--accent)' : 'transparent',
-                color: planMode === 'subscription' ? 'var(--accent-text)' : 'var(--text-muted)',
-              }}
-            >
-              구독
-            </button>
-          </div>
-        </div>
+         <div className="flex justify-center mb-8">
+           <div className="inline-flex rounded-full p-1" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)' }}>
+             <button
+               onClick={() => setPlanMode('onetime')}
+               className="px-5 py-2 rounded-full text-sm font-bold transition-all"
+               style={{
+                 background: planMode === 'onetime' ? 'var(--accent)' : 'transparent',
+                 color: planMode === 'onetime' ? 'var(--accent-text)' : 'var(--text-muted)',
+               }}
+             >
+               일회성
+             </button>
+             <button
+               onClick={() => setPlanMode('subscription')}
+               className="px-5 py-2 rounded-full text-sm font-bold transition-all"
+               style={{
+                 background: planMode === 'subscription' ? 'var(--accent)' : 'transparent',
+                 color: planMode === 'subscription' ? 'var(--accent-text)' : 'var(--text-muted)',
+               }}
+             >
+               구독
+             </button>
+           </div>
+         </div>
+
+         {/* Payment Method Selection (일회성 only) */}
+         {planMode === 'onetime' && (
+           <div className="flex justify-center mb-8">
+             <div className="inline-flex rounded-full p-1" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)' }}>
+               <button
+                 onClick={() => setPaymentMethod('card')}
+                 className="px-5 py-2 rounded-full text-sm font-bold transition-all"
+                 style={{
+                   background: paymentMethod === 'card' ? 'var(--accent)' : 'transparent',
+                   color: paymentMethod === 'card' ? 'var(--accent-text)' : 'var(--text-muted)',
+                 }}
+               >
+                 💳 카드결제
+               </button>
+               <button
+                 onClick={() => setPaymentMethod('kakao_pay')}
+                 className="px-5 py-2 rounded-full text-sm font-bold transition-all"
+                 style={{
+                   background: paymentMethod === 'kakao_pay' ? 'var(--accent)' : 'transparent',
+                   color: paymentMethod === 'kakao_pay' ? 'var(--accent-text)' : 'var(--text-muted)',
+                 }}
+               >
+                 🟡 카카오페이
+               </button>
+             </div>
+           </div>
+         )}
+
+         {/* Subscription Card-Only Notice */}
+         {planMode === 'subscription' && (
+           <div
+             className="rounded-2xl p-4 mb-6 theme-transition"
+             style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)' }}
+           >
+             <p className="text-xs text-center" style={{ color: 'var(--text-secondary)' }}>
+               구독은 카드결제만 지원됩니다.
+             </p>
+           </div>
+         )}
 
         {/* Guest email input */}
         {!session && (
