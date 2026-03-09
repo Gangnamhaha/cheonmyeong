@@ -115,6 +115,9 @@ export default function Footer() {
                 <Link href="/tools/bloodtype" className="transition-colors hover:text-[var(--text-accent)]">
                   혈액형 궁합
                 </Link>
+                <Link href="/tools/name" className="transition-colors hover:text-[var(--text-accent)]">
+                  이름풀이
+                </Link>
               </nav>
             </div>
           </div>
