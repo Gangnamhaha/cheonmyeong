@@ -9,6 +9,10 @@ interface DashboardStats {
   totalAnalyses: number
   todayAnalyses: number
   activeSubscriptions: number
+  totalCheckins: number
+  todayCheckins: number
+  activeStreakUsers: number
+  rewardCreditsGiven: number
 }
 
 interface UserCredits {
@@ -136,6 +140,10 @@ const EMPTY_STATS: DashboardStats = {
   totalAnalyses: 0,
   todayAnalyses: 0,
   activeSubscriptions: 0,
+  totalCheckins: 0,
+  todayCheckins: 0,
+  activeStreakUsers: 0,
+  rewardCreditsGiven: 0,
 }
 
 export default function AdminDashboardClient() {
@@ -725,6 +733,10 @@ export default function AdminDashboardClient() {
                 { label: '오늘 분석 수', value: stats.todayAnalyses },
                 { label: '총 분석 수', value: stats.totalAnalyses },
                 { label: '활성 구독 수', value: stats.activeSubscriptions },
+                { label: '오늘 출석 수', value: stats.todayCheckins },
+                { label: '총 출석 수', value: stats.totalCheckins },
+                { label: '연속 사용자(어제)', value: stats.activeStreakUsers },
+                { label: '출석 보상 크레딧', value: stats.rewardCreditsGiven },
               ].map((card) => (
                 <div key={card.label} className="rounded-xl border border-slate-700 bg-slate-800 p-5">
                   <p className="text-xs text-slate-400">{card.label}</p>

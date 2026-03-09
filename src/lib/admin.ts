@@ -3,6 +3,7 @@ import { Redis } from '@upstash/redis'
 import { getUserCredits, type UserCredits } from '@/lib/credits'
 import { getSupabase } from '@/lib/db'
 import { getSubscription } from '@/lib/subscription'
+import { getCheckinAdminStats } from '@/lib/checkin'
 
 export interface AdminUserProfile {
   userId: string
@@ -17,6 +18,10 @@ export interface AdminStats {
   totalAnalyses: number
   todayAnalyses: number
   activeSubscriptions: number
+  totalCheckins: number
+  todayCheckins: number
+  activeStreakUsers: number
+  rewardCreditsGiven: number
 }
 
 export interface AdminAnnouncement {
@@ -262,11 +267,17 @@ export async function getAdminStats(): Promise<AdminStats> {
     if (sub?.status === 'active') activeSubscriptions += 1
   }
 
+  const checkinStats = await getCheckinAdminStats()
+
   return {
     totalUsers: userIds.length,
     totalAnalyses,
     todayAnalyses,
     activeSubscriptions,
+    totalCheckins: checkinStats.totalCheckins,
+    todayCheckins: checkinStats.todayCheckins,
+    activeStreakUsers: checkinStats.activeStreakUsers,
+    rewardCreditsGiven: checkinStats.rewardCreditsGiven,
   }
 }
 

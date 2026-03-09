@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server'
 import { getSupabase } from '@/lib/db'
-import { generatePremiumReport } from '@/lib/report-generator'
+import { generatePremiumReport, generateProReport } from '@/lib/report-generator'
 
 type Category = '종합' | '성격' | '연애' | '직업' | '건강' | '재물' | '인생성장'
+type ProCategory = Category | '대운 분석' | '세운 전망 (2025-2027)' | '인생 통합 조언'
 
 function buildContentDisposition(name: string): string {
   const safeName = name.replace(/[\\/:*?"<>|]/g, '').trim() || '사용자'
@@ -27,11 +28,18 @@ export async function GET(_: Request, { params }: { params: { id: string } }) {
     return NextResponse.json({ error: '리포트를 찾을 수 없습니다.' }, { status: 404 })
   }
 
-  const interpretations = (data.report_content ?? {}) as Partial<Record<Category, string>>
+  const interpretations = (data.report_content ?? {}) as Partial<Record<ProCategory, string>>
   const formData = (data.form_data ?? {}) as Record<string, unknown>
   const sajuData = data.saju_data
+  const reportTier = formData.reportTier === 'pro' ? 'pro' : 'basic'
 
-  const buffer = await generatePremiumReport(formData, sajuData, interpretations)
+  const buffer = reportTier === 'pro'
+    ? await generateProReport(formData, sajuData, interpretations, {
+      daeunInterpretation: interpretations['대운 분석'],
+      seunInterpretation: interpretations['세운 전망 (2025-2027)'],
+      lifeAdvice: interpretations['인생 통합 조언'],
+    })
+    : await generatePremiumReport(formData, sajuData, interpretations)
   const fileNameSource = typeof formData.name === 'string' ? formData.name : '사용자'
 
   return new NextResponse(new Uint8Array(buffer), {

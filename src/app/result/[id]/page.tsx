@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getSupabase } from '@/lib/db'
+import CardDownloadButtons from './CardDownloadButtons'
 
 type Params = { params: { id: string } }
 
@@ -136,6 +137,8 @@ export default async function ResultPage({ params }: Params) {
             일주: {getDayPillarText(sajuData)} · 용신: {getYongsinText(sajuData)}
           </p>
         </section>
+
+        <CardDownloadButtons id={params.id} name={asText(formData.name, '사용자')} />
 
         {firstAiCategory && (
           <section className="rounded-2xl border p-6" style={{ background: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>

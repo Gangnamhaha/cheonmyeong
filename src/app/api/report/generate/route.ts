@@ -5,9 +5,14 @@ import { authOptions } from '@/lib/auth'
 import { getSupabase } from '@/lib/db'
 import { formatSajuForAI } from '@/lib/format-saju-ai'
 import { verifyPortonePayment } from '@/lib/portone'
+import { calculateDaeun, type DaeunResult } from '@/lib/daeun'
+import { calculateYearlyFortune, type FortuneResult } from '@/lib/fortune'
 import type { FullSajuResult } from '@/lib/saju'
 
 type Category = '종합' | '성격' | '연애' | '직업' | '건강' | '재물' | '인생성장'
+type ProSection = '대운 분석' | '세운 전망 (2025-2027)' | '인생 통합 조언'
+type SectionKey = Category | ProSection
+type ReportTier = 'basic' | 'pro'
 
 const CATEGORIES: Category[] = ['종합', '성격', '연애', '직업', '건강', '재물', '인생성장']
 
@@ -36,28 +41,81 @@ const PREMIUM_SYSTEM_PROMPT = `당신은 20년 이상 임상 상담 경험을 �
 - 따뜻하고 공감적이되 구체적이고 실용적인 조언을 제공하세요`
 
 async function logAiUsage(params: {
-  category: Category
+  section: SectionKey
+  model: 'gpt-4o' | 'gpt-4o-mini'
+  tier: ReportTier
   inputTokens: number
   outputTokens: number
 }) {
   const supabase = getSupabase()
   if (!supabase) return
 
-  const inputCost = (params.inputTokens / 1_000_000) * 5
-  const outputCost = (params.outputTokens / 1_000_000) * 15
+  const inputRate = params.model === 'gpt-4o' ? 5 : 0.15
+  const outputRate = params.model === 'gpt-4o' ? 15 : 0.6
+  const inputCost = (params.inputTokens / 1_000_000) * inputRate
+  const outputCost = (params.outputTokens / 1_000_000) * outputRate
   const estimatedCost = Number((inputCost + outputCost).toFixed(6))
 
   await supabase.from('analytics_events').insert({
     event_type: 'ai_usage',
     metadata: {
-      model: 'gpt-4o',
+      model: params.model,
       input_tokens: params.inputTokens,
       output_tokens: params.outputTokens,
-      category: params.category,
+      category: params.section,
       feature: 'premium_report',
+      tier: params.tier,
       estimated_cost: estimatedCost,
     },
   })
+}
+
+function getGender(formData?: Record<string, unknown>): 'male' | 'female' {
+  return formData?.gender === 'female' ? 'female' : 'male'
+}
+
+function getBirthYear(formData?: Record<string, unknown>): number {
+  return typeof formData?.year === 'number' ? formData.year : new Date().getFullYear()
+}
+
+function formatDaeunPeriods(daeun: DaeunResult): string {
+  return daeun.periods
+    .map((period) => `${period.startAge}~${period.endAge}세: ${period.stem}${period.branch}(${period.stemHanja}${period.branchHanja}) / 오행 ${period.element}`)
+    .join('\n')
+}
+
+function formatYearlyFortunes(fortunes: Array<{ year: number; fortune: FortuneResult }>): string {
+  return fortunes
+    .map(({ year, fortune }) => `${year}년: ${fortune.pillar} | 오행 ${fortune.element} | 십신 ${fortune.sipsin} | 등급 ${fortune.rating} | ${fortune.description}`)
+    .join('\n')
+}
+
+async function createSection(params: {
+  openai: OpenAI
+  model: 'gpt-4o' | 'gpt-4o-mini'
+  section: SectionKey
+  prompt: string
+  tier: ReportTier
+}): Promise<string> {
+  const completion = await params.openai.chat.completions.create({
+    model: params.model,
+    temperature: 0.5,
+    max_tokens: 3000,
+    messages: [
+      { role: 'system', content: PREMIUM_SYSTEM_PROMPT },
+      { role: 'user', content: params.prompt },
+    ],
+  })
+
+  await logAiUsage({
+    section: params.section,
+    model: params.model,
+    tier: params.tier,
+    inputTokens: completion.usage?.prompt_tokens ?? 0,
+    outputTokens: completion.usage?.completion_tokens ?? 0,
+  })
+
+  return completion.choices[0]?.message?.content ?? ''
 }
 
 export async function POST(req: NextRequest) {
@@ -79,6 +137,7 @@ export async function POST(req: NextRequest) {
     formData?: Record<string, unknown>
     traditionalContext?: string
     paymentId?: string
+    tier?: ReportTier
   }
 
   try {
@@ -91,11 +150,18 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'sajuData, formData, paymentId는 필수입니다.' }, { status: 400 })
   }
 
-  const payment = await verifyPortonePayment(body.paymentId)
+  const sajuData = body.sajuData
+  const formData = body.formData
+  const paymentId = body.paymentId
+
+  const tier: ReportTier = body.tier === 'pro' ? 'pro' : 'basic'
+  const expectedAmount = tier === 'pro' ? 25000 : 9900
+
+  const payment = await verifyPortonePayment(paymentId)
   if (payment.status !== 'PAID') {
     return NextResponse.json({ error: '결제가 완료되지 않았습니다.' }, { status: 400 })
   }
-  if (payment.amount.total !== 9900) {
+  if (payment.amount.total !== expectedAmount) {
     return NextResponse.json({ error: '결제 금액 검증에 실패했습니다.' }, { status: 400 })
   }
 
@@ -114,43 +180,128 @@ export async function POST(req: NextRequest) {
 
   try {
     const openai = new OpenAI({ apiKey })
-    const interpretations: Partial<Record<Category, string>> = {}
+    const interpretations: Partial<Record<SectionKey, string>> = {}
+    const baseModel: 'gpt-4o' | 'gpt-4o-mini' = tier === 'pro' ? 'gpt-4o-mini' : 'gpt-4o'
 
     for (const category of CATEGORIES) {
-      let prompt = formatSajuForAI(body.sajuData, category, body.formData)
+      let prompt = formatSajuForAI(sajuData, category, formData)
       if (body.traditionalContext?.trim()) {
         prompt += `\n\n[TRADITIONAL CONTEXT]\n${body.traditionalContext.trim()}`
       }
+      interpretations[category] = await createSection({
+        openai,
+        model: baseModel,
+        section: category,
+        prompt,
+        tier,
+      })
+    }
 
-      const completion = await openai.chat.completions.create({
+    if (tier === 'pro') {
+      const daeun = calculateDaeun(sajuData.saju, getGender(formData), getBirthYear(formData))
+      const yearlyFortunes = [2025, 2026, 2027].map((year) => ({
+        year,
+        fortune: calculateYearlyFortune(sajuData.saju, year),
+      }))
+
+      const daeunPrompt = [
+        '[REQUEST]',
+        '카테고리: 대운 분석',
+        '분량: 1800자 내외',
+        '요구: 각 10년 대운 구간의 핵심 기회/주의점/실천전략을 구체적으로 제시',
+        '',
+        '[계산된 대운 결과]',
+        `방향: ${daeun.direction}, 시작나이: ${daeun.startAge}세`,
+        formatDaeunPeriods(daeun),
+        '',
+        '[참고 사주 데이터]',
+        formatSajuForAI(sajuData, '종합', formData),
+      ].join('\n')
+
+      const seunPrompt = [
+        '[REQUEST]',
+        '카테고리: 세운 전망 (2025-2027)',
+        '분량: 1200~1600자',
+        '요구: 각 연도별 핵심 운세, 주의할 결정, 추천 행동을 연도별로 제시',
+        '',
+        '[계산된 세운 결과]',
+        formatYearlyFortunes(yearlyFortunes),
+        '',
+        '[참고 사주 데이터]',
+        formatSajuForAI(sajuData, '종합', formData),
+      ].join('\n')
+
+      const lifeAdvicePrompt = [
+        '[REQUEST]',
+        '카테고리: 인생 통합 조언',
+        '분량: 1200~1600자',
+        '요구: 성격/직업/관계/건강/재물/대운/세운 전체를 통합한 장기 로드맵 제시',
+        '',
+        '[기존 7개 카테고리 요약]',
+        CATEGORIES.map((category) => `${category}:\n${interpretations[category] ?? ''}`).join('\n\n'),
+        '',
+        '[대운 분석 초안 참고]',
+        interpretations['대운 분석'] ?? '아직 없음',
+        '',
+        '[세운 전망 초안 참고]',
+        interpretations['세운 전망 (2025-2027)'] ?? '아직 없음',
+      ].join('\n')
+
+      interpretations['대운 분석'] = await createSection({
+        openai,
         model: 'gpt-4o',
-        temperature: 0.5,
-        max_tokens: 3000,
-        messages: [
-          { role: 'system', content: PREMIUM_SYSTEM_PROMPT },
-          { role: 'user', content: prompt },
-        ],
+        section: '대운 분석',
+        prompt: daeunPrompt,
+        tier,
       })
 
-      interpretations[category] = completion.choices[0]?.message?.content ?? ''
-
-      await logAiUsage({
-        category,
-        inputTokens: completion.usage?.prompt_tokens ?? 0,
-        outputTokens: completion.usage?.completion_tokens ?? 0,
+      interpretations['세운 전망 (2025-2027)'] = await createSection({
+        openai,
+        model: 'gpt-4o',
+        section: '세운 전망 (2025-2027)',
+        prompt: seunPrompt,
+        tier,
       })
+
+      const combinedLifeAdvicePrompt = [
+        lifeAdvicePrompt,
+        '',
+        '[확정 대운 분석]',
+        interpretations['대운 분석'] ?? '',
+        '',
+        '[확정 세운 전망]',
+        interpretations['세운 전망 (2025-2027)'] ?? '',
+      ].join('\n')
+
+      interpretations['인생 통합 조언'] = await createSection({
+        openai,
+        model: 'gpt-4o',
+        section: '인생 통합 조언',
+        prompt: combinedLifeAdvicePrompt,
+        tier,
+      })
+
+      interpretations['대운 분석'] = [
+        `대운 흐름: ${daeun.direction} / 시작 나이 ${daeun.startAge}세`,
+        '',
+        '[대운 타임라인]',
+        formatDaeunPeriods(daeun),
+        '',
+        '[해석]',
+        interpretations['대운 분석'] ?? '',
+      ].join('\n')
     }
 
     const { data, error } = await supabase
       .from('premium_reports')
       .insert({
         user_id: userId,
-        payment_id: body.paymentId,
-        saju_data: body.sajuData,
-        form_data: body.formData,
+        payment_id: paymentId,
+        saju_data: sajuData,
+        form_data: { ...formData, reportTier: tier },
         report_content: interpretations,
         status: 'completed',
-        amount: 9900,
+        amount: expectedAmount,
       })
       .select('id')
       .single()

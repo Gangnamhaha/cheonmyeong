@@ -7,6 +7,8 @@
 import type { FullSajuResult, SajuPillar } from './saju'
 import type { SipsinName } from './sipsin'
 import type { TraditionalInterpretation, TraditionalEntry } from './traditional-interpret'
+import type { DaeunPeriod, DaeunResult } from './daeun'
+import type { FortuneResult } from './fortune'
 
 type AiCategory = '종합' | '성격' | '연애' | '직업' | '건강' | '재물' | '인생성장'
 
@@ -17,6 +19,39 @@ interface FormDataForAI {
   day?: number
   gender?: string
 }
+
+type PeriodScope = 'daeun' | 'seun' | 'wolun'
+
+interface PeriodFormatBase {
+  saju: FullSajuResult['saju']
+  oheng: FullSajuResult['oheng']
+  yongsin: FullSajuResult['yongsin']
+}
+
+interface DaeunFormatInput {
+  scope: 'daeun'
+  base: PeriodFormatBase
+  daeun: DaeunResult
+  periodIndex: number
+  period: DaeunPeriod
+}
+
+interface SeunFormatInput {
+  scope: 'seun'
+  base: PeriodFormatBase
+  targetYear: number
+  fortune: FortuneResult
+}
+
+interface WolunFormatInput {
+  scope: 'wolun'
+  base: PeriodFormatBase
+  targetYear: number
+  targetMonth: number
+  fortune: FortuneResult
+}
+
+type PeriodFormatInput = DaeunFormatInput | SeunFormatInput | WolunFormatInput
 
 // 천간 오행 해석 키워드
 const ELEMENT_TRAITS: Record<string, string> = {
@@ -135,6 +170,69 @@ export function formatSajuForAI(
   }
 
   return sections.join('\n\n')
+}
+
+/**
+ * 기간별(대운/세운/월운) 해석용 프롬프트 생성
+ */
+export function formatPeriodForAI(input: PeriodFormatInput): string {
+  const { saju, oheng, yongsin } = input.base
+  const day = saju.dayPillar
+  const dayHanja = `${day.heavenlyStemHanja ?? ''}${day.earthlyBranchHanja ?? ''}`
+
+  const baseLines = [
+    `일주: ${day.heavenlyStem}${day.earthlyBranch}(${dayHanja}) / 일간 오행: ${day.element}`,
+    `오행 밸런스: 목${oheng.counts.목} 화${oheng.counts.화} 토${oheng.counts.토} 금${oheng.counts.금} 수${oheng.counts.수} (강: ${oheng.dominant}, 약: ${oheng.weak}, ${oheng.balance})`,
+    `용신: ${yongsin.yongsin} / 희신: ${yongsin.huisin} / 유리: ${yongsin.favorable.join(',')} / 기피: ${yongsin.unfavorable.join(',')}`,
+  ]
+
+  const requestLines: string[] = []
+  const periodLines: string[] = []
+
+  if (input.scope === 'daeun') {
+    requestLines.push('해당 대운 10년만 집중 해석하세요.')
+    requestLines.push('이 대운의 오행이 일간/용신과 어떻게 상호작용하는지 핵심 근거를 포함하세요.')
+    requestLines.push('직업, 관계, 건강, 재물의 10년 전략을 균형 있게 제시하세요.')
+    requestLines.push('분량: 400~600자')
+
+    periodLines.push(`대운 인덱스: ${input.periodIndex}`)
+    periodLines.push(`대운: ${input.period.stem}${input.period.branch}(${input.period.stemHanja}${input.period.branchHanja}) / 오행: ${input.period.element}`)
+    periodLines.push(`나이 구간: ${input.period.startAge}~${input.period.endAge}세 / 진행방향: ${input.daeun.direction}`)
+  }
+
+  if (input.scope === 'seun') {
+    requestLines.push('해당 연도(세운)만 집중 해석하세요.')
+    requestLines.push('연운의 기회 요인과 주의 요인을 구체적으로 제시하세요.')
+    requestLines.push('분량: 300~500자')
+
+    periodLines.push(`대상 연도: ${input.targetYear}년`)
+    periodLines.push(`세운: ${input.fortune.pillar} / 오행: ${input.fortune.element}`)
+    periodLines.push(`일간과의 십신: ${input.fortune.sipsin} / 평점: ${input.fortune.rating}`)
+    periodLines.push(`기본 설명: ${input.fortune.description}`)
+  }
+
+  if (input.scope === 'wolun') {
+    requestLines.push('해당 월(月運)만 집중 해석하세요.')
+    requestLines.push('이번 달의 실행 포인트와 경계 포인트를 현실적으로 제시하세요.')
+    requestLines.push('분량: 200~400자')
+
+    periodLines.push(`대상 시점: ${input.targetYear}년 ${input.targetMonth}월`)
+    periodLines.push(`월운: ${input.fortune.pillar} / 오행: ${input.fortune.element}`)
+    periodLines.push(`일간과의 십신: ${input.fortune.sipsin} / 평점: ${input.fortune.rating}`)
+    periodLines.push(`기본 설명: ${input.fortune.description}`)
+  }
+
+  const scopeLabel: Record<PeriodScope, string> = {
+    daeun: '대운',
+    seun: '세운',
+    wolun: '월운',
+  }
+
+  return [
+    `[REQUEST]\n범위: ${scopeLabel[input.scope]}\n${requestLines.map((line) => `- ${line}`).join('\n')}`,
+    `[BASE SAJU]\n${baseLines.map((line) => `- ${line}`).join('\n')}`,
+    `[PERIOD DATA]\n${periodLines.map((line) => `- ${line}`).join('\n')}`,
+  ].join('\n\n')
 }
 
 /**

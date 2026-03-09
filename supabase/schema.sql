@@ -203,3 +203,16 @@ CREATE TABLE IF NOT EXISTS referrals (
 
 CREATE INDEX IF NOT EXISTS idx_referrals_referrer ON referrals(referrer_id);
 CREATE INDEX IF NOT EXISTS idx_referrals_code ON referrals(referral_code);
+
+-- Daily user check-ins and streak rewards
+CREATE TABLE IF NOT EXISTS user_checkins (
+  id SERIAL PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  checkin_date DATE NOT NULL DEFAULT CURRENT_DATE,
+  streak INT NOT NULL DEFAULT 1,
+  reward_credits INT NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(user_id, checkin_date)
+);
+
+CREATE INDEX IF NOT EXISTS idx_checkins_user ON user_checkins(user_id, checkin_date DESC);

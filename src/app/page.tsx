@@ -30,6 +30,7 @@ import {
 type AppState = 'form' | 'result'
 type ResultTab = '사주' | '분석' | '운세' | '해석'
 type ViewMode = 'summary' | 'detail'
+type ReportTier = 'basic' | 'pro'
 
 const RESULT_TABS: { key: ResultTab; label: string; icon: string }[] = [
   { key: '사주', label: '사주', icon: '🏛️' },
@@ -61,8 +62,20 @@ interface FormData {
   gender: 'male' | 'female'
 }
 
+interface CheckinStatus {
+  success: boolean
+  todayCheckin: boolean
+  streak: number
+  reward: number
+  history: Array<{
+    date: string
+    streak: number
+    reward: number
+  }>
+}
+
 export default function Home() {
-  const { data: session } = useSession()
+  const { data: session, status: sessionStatus } = useSession()
   const { theme, toggleTheme, cycleFontSize, fontSizeLabel } = useTheme()
   const [appState, setAppState] = useState<AppState>('form')
   const [loading, setLoading] = useState(false)
@@ -94,10 +107,17 @@ export default function Home() {
   const [saveDocxLoading, setSaveDocxLoading] = useState(false)
   const [showAnimation, setShowAnimation] = useState(false)
   const [showMovie, setShowMovie] = useState(false)
-  const [premiumLoading, setPremiumLoading] = useState(false)
-  const [premiumDownloadUrl, setPremiumDownloadUrl] = useState<string | null>(null)
+  const [premiumLoadingTier, setPremiumLoadingTier] = useState<ReportTier | null>(null)
+  const [premiumDownloadUrls, setPremiumDownloadUrls] = useState<Record<ReportTier, string | null>>({
+    basic: null,
+    pro: null,
+  })
   const [premiumError, setPremiumError] = useState<string | null>(null)
   const [resultId, setResultId] = useState<string | null>(null)
+  const [checkinStatus, setCheckinStatus] = useState<CheckinStatus | null>(null)
+  const [checkinLoading, setCheckinLoading] = useState(false)
+  const [checkinSubmitting, setCheckinSubmitting] = useState(false)
+  const [checkinToast, setCheckinToast] = useState<string | null>(null)
   const resultRef = useRef<HTMLDivElement>(null)
   const downloadRef = useRef<HTMLDivElement>(null)
 
@@ -105,6 +125,55 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<ResultTab>('사주')
   const [viewMode, setViewMode] = useState<ViewMode>('detail')
   const resultUrl = resultId ? `https://cheonmyeong.vercel.app/result/${resultId}` : null
+
+  const fetchCheckinStatus = useCallback(async () => {
+    if (!session?.user) {
+      setCheckinStatus(null)
+      return
+    }
+
+    setCheckinLoading(true)
+    try {
+      const res = await fetch('/api/checkin', { cache: 'no-store' })
+      const data = await res.json()
+      if (!res.ok) return
+      setCheckinStatus(data)
+    } catch {
+      // ignore check-in fetch failures on homepage
+    } finally {
+      setCheckinLoading(false)
+    }
+  }, [session?.user])
+
+  async function handleCheckin() {
+    if (checkinSubmitting) return
+
+    setCheckinSubmitting(true)
+    try {
+      const res = await fetch('/api/checkin', { method: 'POST' })
+      const data = await res.json()
+      if (!res.ok) return
+
+      setCheckinStatus((prev) => ({
+        success: true,
+        todayCheckin: true,
+        streak: data.streak ?? prev?.streak ?? 1,
+        reward: data.reward ?? 0,
+        history: prev?.history ?? [],
+      }))
+
+      await fetchCheckinStatus()
+
+      if ((data.reward ?? 0) > 0) {
+        setCheckinToast(`+${data.reward} 크레딧 보상!`)
+        setTimeout(() => setCheckinToast(null), 2000)
+      }
+    } catch {
+      // ignore
+    } finally {
+      setCheckinSubmitting(false)
+    }
+  }
 
 
   const fetchInterpretation = useCallback(async (
@@ -212,7 +281,7 @@ export default function Home() {
     setViewMode('detail')
     setTraditionalResult(null)
     setTraditionalContext('')
-    setPremiumDownloadUrl(null)
+    setPremiumDownloadUrls({ basic: null, pro: null })
     setPremiumError(null)
     setFormData(data)
     setResultId(null)
@@ -319,6 +388,14 @@ export default function Home() {
       if (script.parentNode) script.parentNode.removeChild(script)
     }
   }, [])
+
+  useEffect(() => {
+    if (sessionStatus !== 'authenticated') {
+      setCheckinStatus(null)
+      return
+    }
+    fetchCheckinStatus()
+  }, [fetchCheckinStatus, sessionStatus])
 
   function handleMicToggle() {
     if (isListening) {
@@ -558,11 +635,15 @@ export default function Home() {
     }
   }
 
-  async function handlePremiumReport() {
-    if (!fullResult || !formData || premiumLoading) return
+  async function handlePremiumReport(tier: ReportTier = 'basic') {
+    if (!fullResult || !formData || premiumLoadingTier) return
 
-    setPremiumLoading(true)
-    setPremiumDownloadUrl(null)
+    const plan = tier === 'pro' ? 'premium_report_pro' : 'premium_report'
+    const planName = tier === 'pro' ? '프로페셔널 종합 리포트' : '프리미엄 종합 리포트'
+    const amount = tier === 'pro' ? 25000 : 9900
+
+    setPremiumLoadingTier(tier)
+    setPremiumDownloadUrls((prev) => ({ ...prev, [tier]: null }))
     setPremiumError(null)
 
     try {
@@ -587,7 +668,7 @@ export default function Home() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          plan: 'premium_report',
+          plan,
           ...(isGuest ? { guestEmail } : {}),
         }),
       })
@@ -617,7 +698,7 @@ export default function Home() {
           email: session?.user?.email || guestEmail || undefined,
           fullName: session?.user?.name || undefined,
         },
-        customData: JSON.stringify({ userId: paymentData.userId, plan: 'premium_report' }),
+        customData: JSON.stringify({ userId: paymentData.userId, plan }),
       })
 
       if (response?.code) {
@@ -639,8 +720,8 @@ export default function Home() {
 
       trackPurchase({
         paymentId: paymentData.paymentId,
-        planName: '프리미엄 종합 리포트',
-        amount: 9900,
+        planName,
+        amount,
       })
 
       const generateRes = await fetch('/api/report/generate', {
@@ -651,6 +732,7 @@ export default function Home() {
           formData,
           traditionalContext: traditionalContext || undefined,
           paymentId: paymentData.paymentId,
+          tier,
         }),
       })
 
@@ -661,12 +743,12 @@ export default function Home() {
       }
 
       if (typeof generateData.downloadUrl === 'string') {
-        setPremiumDownloadUrl(generateData.downloadUrl)
+        setPremiumDownloadUrls((prev) => ({ ...prev, [tier]: generateData.downloadUrl }))
       }
     } catch {
       setPremiumError('프리미엄 리포트 처리 중 네트워크 오류가 발생했습니다.')
     } finally {
-      setPremiumLoading(false)
+      setPremiumLoadingTier(null)
     }
   }
 
@@ -687,8 +769,8 @@ export default function Home() {
     setActiveTab('사주')
     setViewMode('detail')
     setResultId(null)
-    setPremiumLoading(false)
-    setPremiumDownloadUrl(null)
+    setPremiumLoadingTier(null)
+    setPremiumDownloadUrls({ basic: null, pro: null })
     setPremiumError(null)
   }
 
@@ -769,6 +851,54 @@ export default function Home() {
         {appState === 'form' && (
           <>
             <SajuForm onSubmit={handleFormSubmit} loading={loading} />
+            {session && (
+              <div
+                className="mx-4 mb-4 rounded-2xl p-4 animate-fadeIn"
+                style={{
+                  background: 'var(--bg-card)',
+                  border: '1px solid var(--border-color)',
+                  boxShadow: '0 8px 24px rgba(15, 23, 42, 0.12)',
+                }}
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-xs" style={{ color: 'var(--text-muted)' }}>오늘의 출석 체크</p>
+                    <p className="text-sm font-semibold" style={{ color: 'var(--text-accent)' }}>
+                      {checkinStatus?.todayCheckin
+                        ? <>🔥 연속 {checkinStatus.streak}일</>
+                        : '출석 체크로 연속 보상을 받아보세요'}
+                    </p>
+                    <p className="text-[11px] mt-1" style={{ color: 'var(--text-secondary)' }}>
+                      7일 +2 · 30일 +5 · 100일 +10 크레딧
+                    </p>
+                  </div>
+                  {checkinStatus?.todayCheckin ? (
+                    <div
+                      className="px-3 py-2 rounded-xl text-xs font-bold animate-pulse"
+                      style={{
+                        background: 'rgba(245, 158, 11, 0.16)',
+                        color: 'var(--text-accent)',
+                        border: '1px solid rgba(245, 158, 11, 0.35)',
+                      }}
+                    >
+                      출석 완료
+                    </div>
+                  ) : (
+                    <button
+                      onClick={handleCheckin}
+                      disabled={checkinLoading || checkinSubmitting}
+                      className="px-4 py-2 rounded-xl text-sm font-bold hover-scale disabled:cursor-not-allowed"
+                      style={{
+                        background: 'var(--accent)',
+                        color: 'var(--accent-text)',
+                      }}
+                    >
+                      {checkinSubmitting ? '처리 중...' : '출석 체크하기'}
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
             {calcError && (
               <div className="mx-4 mb-8 bg-red-900/30 border border-red-700 rounded-lg p-4 text-red-300 text-sm text-center">
                 {calcError}
@@ -895,11 +1025,11 @@ export default function Home() {
                               프리미엄 리포트
                             </div>
                             <p className="text-xs mb-3" style={{ color: 'var(--text-secondary)' }}>
-                              gpt-4o로 7개 카테고리 심층 분석 (종합/성격/연애/직업/건강/재물/인생성장)
+                              기본(₩9,900): 7개 카테고리 심층 분석 / 프로(₩25,000): 대운 10년 + 세운 3년 + 인생 조언 포함
                             </p>
                             <button
-                              onClick={handlePremiumReport}
-                              disabled={premiumLoading}
+                              onClick={() => handlePremiumReport('basic')}
+                              disabled={premiumLoadingTier !== null}
                               className="w-full font-bold py-3.5 px-4 rounded-xl text-sm transition-all hover:scale-[1.01] disabled:cursor-not-allowed"
                               style={{
                                 background: 'linear-gradient(135deg, #fbbf24 0%, #d97706 100%)',
@@ -907,14 +1037,29 @@ export default function Home() {
                                 boxShadow: '0 6px 18px rgba(245, 158, 11, 0.28)',
                               }}
                             >
-                              {premiumLoading
-                                ? '리포트 생성 중...'
-                                : '📄 프리미엄 종합 리포트 받기 - ₩9,900'}
+                              {premiumLoadingTier === 'basic'
+                                ? '기본 리포트 생성 중...'
+                                : '📄 기본 리포트 ₩9,900'}
                             </button>
 
-                            {premiumDownloadUrl && (
+                            <button
+                              onClick={() => handlePremiumReport('pro')}
+                              disabled={premiumLoadingTier !== null}
+                              className="mt-2 w-full font-bold py-3.5 px-4 rounded-xl text-sm transition-all hover:scale-[1.01] disabled:cursor-not-allowed"
+                              style={{
+                                background: 'linear-gradient(135deg, #f59e0b 0%, #b45309 100%)',
+                                color: '#fff7ed',
+                                boxShadow: '0 6px 18px rgba(180, 83, 9, 0.35)',
+                              }}
+                            >
+                              {premiumLoadingTier === 'pro'
+                                ? '프로 리포트 생성 중...'
+                                : '📘 프로 리포트 ₩25,000'}
+                            </button>
+
+                            {premiumDownloadUrls.basic && (
                               <a
-                                href={premiumDownloadUrl}
+                                href={premiumDownloadUrls.basic}
                                 className="mt-2 block w-full text-center font-bold py-3 rounded-xl text-sm"
                                 style={{
                                   background: 'rgba(255,255,255,0.85)',
@@ -922,7 +1067,21 @@ export default function Home() {
                                   border: '1px solid rgba(217,119,6,0.35)',
                                 }}
                               >
-                                ⬇️ 프리미엄 리포트 다운로드
+                                ⬇️ 기본 리포트 다운로드
+                              </a>
+                            )}
+
+                            {premiumDownloadUrls.pro && (
+                              <a
+                                href={premiumDownloadUrls.pro}
+                                className="mt-2 block w-full text-center font-bold py-3 rounded-xl text-sm"
+                                style={{
+                                  background: 'rgba(120,53,15,0.85)',
+                                  color: '#ffedd5',
+                                  border: '1px solid rgba(251,191,36,0.35)',
+                                }}
+                              >
+                                ⬇️ 프로 리포트 다운로드
                               </a>
                             )}
 
@@ -1115,6 +1274,15 @@ export default function Home() {
         )}
       </div>
     </main>
+
+    {checkinToast && (
+      <div
+        className="fixed top-6 left-1/2 -translate-x-1/2 px-4 py-2 rounded-lg text-sm font-bold shadow-lg animate-fadeIn z-50"
+        style={{ background: 'var(--accent)', color: 'var(--accent-text)' }}
+      >
+        {checkinToast}
+      </div>
+    )}
 
     {/* === Hidden Download Card (off-screen, captured by html2canvas) === */}
     {fullResult && (
