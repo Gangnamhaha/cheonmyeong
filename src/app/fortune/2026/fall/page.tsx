@@ -1,5 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import Breadcrumb from '@/components/Breadcrumb'
+import RelatedContent from '@/components/RelatedContent'
 
 export const metadata: Metadata = {
   title: '2026년 가을 운세 - 병오년 가을철 사주 운세 | 천명',
@@ -82,10 +84,20 @@ const ANIMAL_FORTUNE = [
   },
 ]
 
+const RELATED_LINKS = [
+  { href: '/fortune/2026/spring', title: '2026 봄 운세', description: '가을 결과를 이해하려면 봄의 시작 흐름을 확인하세요.' },
+  { href: '/fortune/2026/summer', title: '2026 여름 운세', description: '가을 성과의 기반이 된 여름 구간을 점검해보세요.' },
+  { href: '/fortune/2026/winter', title: '2026 겨울 운세', description: '가을 이후 이어질 정리와 성찰 흐름을 미리 준비하세요.' },
+  { href: '/fortune/2026', title: '2026 연간 운세', description: '계절별 변화를 연간 관점으로 한눈에 비교하세요.' },
+  { href: '/fortune/2026/month/10', title: '10월 운세', description: '가을 핵심 월의 안정 구간을 세밀하게 확인하세요.' },
+]
+
 export default function FortuneFallPage() {
   return (
     <main className="min-h-screen bg-slate-950 px-4 py-12 text-slate-100">
       <div className="mx-auto max-w-5xl">
+        <Breadcrumb items={[{ label: '홈', href: '/' }, { label: '2026년 운세', href: '/fortune/2026' }, { label: '가을 운세' }]} />
+
         <header className="rounded-2xl border border-slate-800 bg-slate-900/75 p-6">
           <p className="text-xs text-slate-400">계절 특집</p>
           <h1 className="font-serif-kr mt-2 text-3xl font-black text-amber-400">🍂 2026년 가을 운세 (9월-11월)</h1>
@@ -106,6 +118,8 @@ export default function FortuneFallPage() {
             </article>
           ))}
         </section>
+
+        <RelatedContent links={RELATED_LINKS} />
 
         <section className="mt-10 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-6">
           <h2 className="font-serif-kr text-2xl font-bold text-amber-300">개인 사주로 가을 운세를 정밀 분석하세요</h2>

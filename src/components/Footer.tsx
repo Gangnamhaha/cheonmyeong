@@ -59,6 +59,22 @@ export default function Footer() {
                 <Link href="/fortune/ddi/rat" className="transition-colors hover:text-[var(--text-accent)]">
                   띠별 운세
                 </Link>
+                <span className="text-[10px] text-[var(--text-muted)]">별자리 운세:</span>
+                <Link href="/fortune/zodiac/aries" className="transition-colors hover:text-[var(--text-accent)]">
+                  양자리 운세
+                </Link>
+                <Link href="/fortune/zodiac/leo" className="transition-colors hover:text-[var(--text-accent)]">
+                  사자자리 운세
+                </Link>
+                <Link href="/fortune/zodiac/scorpio" className="transition-colors hover:text-[var(--text-accent)]">
+                  전갈자리 운세
+                </Link>
+                <Link href="/fortune/zodiac/aquarius" className="transition-colors hover:text-[var(--text-accent)]">
+                  물병자리 운세
+                </Link>
+                <Link href="/fortune/zodiac/pisces" className="transition-colors hover:text-[var(--text-accent)]">
+                  물고기자리 운세
+                </Link>
                 <Link href="/fortune/ddi/rat/jaemulun" className="transition-colors hover:text-[var(--text-accent)]">
                   재물운
                 </Link>

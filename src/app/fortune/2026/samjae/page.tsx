@@ -1,5 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import Breadcrumb from '@/components/Breadcrumb'
+import RelatedContent from '@/components/RelatedContent'
 
 export const metadata: Metadata = {
   title: '삼재띠 2026 - 병오년 삼재 해당 띠와 대비법 | 천명',
@@ -7,10 +9,19 @@ export const metadata: Metadata = {
   keywords: ['삼재', '삼재띠 2026', '삼재 뜻', '삼재 대비법', '들삼재', '눌삼재', '날삼재', '병오년 삼재'],
 }
 
+const RELATED_LINKS = [
+  { href: '/fortune/2026/tojeongbigyeol', title: '2026 토정비결', description: '삼재 시기의 월별 흐름을 토정비결 관점으로 보세요.' },
+  { href: '/fortune/2026/daebak', title: '2026 대박띠', description: '올해 상승 기운이 강한 띠와 비교해 전략을 세워보세요.' },
+  { href: '/fortune/2026', title: '2026 띠별 운세', description: '삼재 외에도 전체 띠 흐름을 함께 확인하면 더 정확합니다.' },
+  { href: '/fortune/2026/month/6', title: '6월 운세', description: '삼재 구간의 중반 흐름을 월별로 세밀하게 점검하세요.' },
+]
+
 export default function SamjaePage() {
   return (
     <main className="min-h-screen bg-slate-950 px-4 py-12 text-slate-100">
       <div className="mx-auto max-w-5xl">
+        <Breadcrumb items={[{ label: '홈', href: '/' }, { label: '2026년 운세', href: '/fortune/2026' }, { label: '삼재' }]} />
+
         <header className="rounded-2xl border border-slate-800 bg-slate-900/75 p-6">
           <p className="text-xs text-slate-400">운세 가이드</p>
           <h1 className="font-serif-kr mt-2 text-3xl font-black text-amber-400">2026년 삼재띠 총정리</h1>
@@ -182,6 +193,8 @@ export default function SamjaePage() {
             <p><span className="font-bold text-amber-300">10월-12월:</span> 한 해 정리, 내년 계획 수립, 감사의 마음 (삼재 극복 완성)</p>
           </div>
         </section>
+
+        <RelatedContent links={RELATED_LINKS} />
 
         <section className="mt-10 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-6">
           <h2 className="font-serif-kr text-2xl font-bold text-amber-300">내 사주로 삼재 영향을 분석하세요</h2>

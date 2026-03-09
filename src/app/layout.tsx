@@ -8,6 +8,7 @@ import AuthProvider from '@/components/AuthProvider'
 import Footer from '@/components/Footer'
 import Navbar from '@/components/Navbar'
 import PushNotificationBanner from '@/components/PushNotificationBanner'
+import StickyMobileCTA from '@/components/StickyMobileCTA'
 
 const GA_ID = process.env.NEXT_PUBLIC_GA4_ID
 
@@ -129,6 +130,7 @@ export default function RootLayout({
             <ErrorBoundary>{children}</ErrorBoundary>
             <Footer />
             <PushNotificationBanner />
+            <StickyMobileCTA />
           </ThemeProvider>
         </AuthProvider>
       </body>

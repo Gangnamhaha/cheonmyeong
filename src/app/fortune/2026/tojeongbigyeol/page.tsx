@@ -1,5 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import Breadcrumb from '@/components/Breadcrumb'
+import RelatedContent from '@/components/RelatedContent'
 
 export const metadata: Metadata = {
   title: '토정비결 2026 - 병오년 토정비결 운세 총정리 | 천명',
@@ -7,10 +9,19 @@ export const metadata: Metadata = {
   keywords: ['토정비결', '토정비결 2026', '병오년 토정비결', '무료 토정비결', '토정비결 운세'],
 }
 
+const RELATED_LINKS = [
+  { href: '/fortune/2026/samjae', title: '2026 삼재띠', description: '들삼재, 눌삼재, 날삼재 핵심만 빠르게 확인하세요.' },
+  { href: '/fortune/2026/daebak', title: '2026 대박띠', description: '병오년에서 기세를 타는 띠를 함께 비교해보세요.' },
+  { href: '/fortune/2026', title: '2026 띠별 운세', description: '12지 띠별 연간 운세를 한눈에 정리한 페이지입니다.' },
+  { href: '/fortune/2026/month/1', title: '1월 운세', description: '연초 월운을 먼저 확인해 토정비결을 실전에 연결하세요.' },
+]
+
 export default function TojeongbigyeolPage() {
   return (
     <main className="min-h-screen bg-slate-950 px-4 py-12 text-slate-100">
       <div className="mx-auto max-w-5xl">
+        <Breadcrumb items={[{ label: '홈', href: '/' }, { label: '2026년 운세', href: '/fortune/2026' }, { label: '토정비결' }]} />
+
         <header className="rounded-2xl border border-slate-800 bg-slate-900/75 p-6">
           <p className="text-xs text-slate-400">전통 운세</p>
           <h1 className="font-serif-kr mt-2 text-3xl font-black text-amber-400">2026년 병오년 토정비결</h1>
@@ -176,6 +187,8 @@ export default function TojeongbigyeolPage() {
             <p><span className="font-bold text-amber-300">12월(12월):</span> 휴식과 성찰의 시기. 한 해를 돌아보고 내년을 준비합니다.</p>
           </div>
         </section>
+
+        <RelatedContent links={RELATED_LINKS} />
 
         <section className="mt-10 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-6">
           <h2 className="font-serif-kr text-2xl font-bold text-amber-300">개인 사주로 더 정확한 운세를 보세요</h2>

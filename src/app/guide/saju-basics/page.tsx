@@ -1,5 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import Breadcrumb from '@/components/Breadcrumb'
+import RelatedContent from '@/components/RelatedContent'
 
 export const metadata: Metadata = {
   title: '사주팔자란? - 사주 입문 가이드 | 천명',
@@ -7,10 +9,19 @@ export const metadata: Metadata = {
   keywords: ['사주팔자란', '사주 기초', '천간 지지', '십신', '용신', '명리학 입문'],
 }
 
+const RELATED_LINKS = [
+  { href: '/guide/oheng', title: '오행 가이드', description: '사주 입문 다음 단계로 목화토금수 균형을 이해해보세요.' },
+  { href: '/blog/saju-boneunbeop', title: '사주 보는법 글', description: '사주를 읽는 실제 순서와 핵심 포인트를 정리했습니다.' },
+  { href: '/saju/free', title: '무료 사주풀이', description: '입문 내용을 바로 내 사주에 적용해 확인해보세요.' },
+  { href: '/blog/cheongan-jiji', title: '천간지지 기초', description: '사주 해석의 기본 언어를 초보자 관점으로 풀었습니다.' },
+]
+
 export default function SajuBasicsGuidePage() {
   return (
     <main className="min-h-screen bg-slate-950 px-4 py-12 text-slate-100">
       <div className="mx-auto max-w-4xl space-y-8">
+        <Breadcrumb items={[{ label: '홈', href: '/' }, { label: '가이드' }, { label: '사주 입문' }]} />
+
         <header className="rounded-2xl border border-slate-800 bg-slate-900/75 p-6">
           <h1 className="font-serif-kr text-3xl font-black text-amber-400">사주팔자란?</h1>
           <p className="mt-3 text-sm leading-relaxed text-slate-300">
@@ -77,6 +88,8 @@ export default function SajuBasicsGuidePage() {
             같은 상황에서도 용신 방향에 맞는 선택을 하면 시행착오를 줄일 수 있습니다.
           </p>
         </section>
+
+        <RelatedContent links={RELATED_LINKS} />
 
         <section className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-6 text-sm">
           <h2 className="font-serif-kr text-2xl font-bold text-amber-300">바로 실전으로 연결하기</h2>

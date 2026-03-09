@@ -6,6 +6,7 @@ const ZODIAC_SLUGS = ['rat', 'ox', 'tiger', 'rabbit', 'dragon', 'snake', 'horse'
 const PROGRAMMATIC_ZODIAC_SLUGS = ['rat', 'ox', 'tiger', 'rabbit', 'dragon', 'snake', 'horse', 'goat', 'monkey', 'rooster', 'dog', 'pig'] as const
 const FORTUNE_TOPIC_SLUGS = ['jaemulun', 'yeonaewun', 'chwieobun'] as const
 const MONTH_NUMBER_SLUGS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'] as const
+const WESTERN_ZODIAC_SLUGS = ['aries', 'taurus', 'gemini', 'cancer', 'leo', 'virgo', 'libra', 'scorpio', 'sagittarius', 'capricorn', 'aquarius', 'pisces'] as const
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date()
@@ -77,6 +78,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       url: `${BASE_URL}/fortune/2026/month/${month}`,
       lastModified: now,
       changeFrequency: 'monthly' as const,
+      priority: 0.85,
+    })),
+    ...WESTERN_ZODIAC_SLUGS.map((sign) => ({
+      url: `${BASE_URL}/fortune/zodiac/${sign}`,
+      lastModified: now,
+      changeFrequency: 'weekly' as const,
       priority: 0.85,
     })),
     {

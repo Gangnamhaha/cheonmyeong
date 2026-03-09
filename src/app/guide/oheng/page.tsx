@@ -1,5 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import Breadcrumb from '@/components/Breadcrumb'
+import RelatedContent from '@/components/RelatedContent'
 import { OHENG_COLORS } from '@/lib/oheng'
 
 export const metadata: Metadata = {
@@ -51,10 +53,19 @@ const ELEMENTS = [
   },
 ] as const
 
+const RELATED_LINKS = [
+  { href: '/guide/saju-basics', title: '사주 입문 가이드', description: '오행 이전에 사주 기본 구조를 먼저 이해해보세요.' },
+  { href: '/blog/oheng-meaning', title: '오행 의미 상세 글', description: '상생/상극과 실전 적용법을 깊이 있게 확인하세요.' },
+  { href: '/saju/free', title: '무료 사주풀이', description: '내 오행 분포와 균형을 실제 차트로 확인해보세요.' },
+  { href: '/blog/yongsin-guide', title: '용신 가이드', description: '오행 균형을 기반으로 용신 판단 흐름까지 연결해보세요.' },
+]
+
 export default function OhengGuidePage() {
   return (
     <main className="min-h-screen bg-slate-950 px-4 py-12 text-slate-100">
       <div className="mx-auto max-w-5xl space-y-8">
+        <Breadcrumb items={[{ label: '홈', href: '/' }, { label: '가이드' }, { label: '오행' }]} />
+
         <header className="rounded-2xl border border-slate-800 bg-slate-900/75 p-6">
           <h1 className="font-serif-kr text-3xl font-black text-amber-400">오행 완벽 가이드</h1>
           <p className="mt-3 text-sm leading-relaxed text-slate-300">
@@ -82,6 +93,8 @@ export default function OhengGuidePage() {
             </article>
           ))}
         </section>
+
+        <RelatedContent links={RELATED_LINKS} />
 
         <section className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-6 text-sm">
           <h2 className="font-serif-kr text-2xl font-bold text-amber-300">내 오행 밸런스 확인하기</h2>

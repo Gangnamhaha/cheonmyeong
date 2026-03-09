@@ -1,5 +1,8 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import Breadcrumb from '@/components/Breadcrumb'
+import RelatedContent from '@/components/RelatedContent'
+import UpsellBanner from '@/components/UpsellBanner'
 
 export const metadata: Metadata = {
   title: '2026년 운세 - 띠별 신년 운세 총정리 | 천명',
@@ -82,10 +85,21 @@ const ANIMAL_FORTUNE = [
   },
 ]
 
+const RELATED_LINKS = [
+  { href: '/fortune/2026/tojeongbigyeol', title: '2026 토정비결', description: '병오년 토정비결로 연간 흐름을 확인하세요.' },
+  { href: '/fortune/2026/samjae', title: '2026 삼재띠', description: '삼재 해당 띠와 실전 대비법을 정리했습니다.' },
+  { href: '/fortune/2026/daebak', title: '2026 대박띠', description: '올해 기운을 크게 타는 띠를 먼저 확인해보세요.' },
+  { href: '/fortune/2026/spring', title: '2026 봄 운세', description: '봄철 기회 구간과 띠별 포인트를 확인하세요.' },
+  { href: '/fortune/2026/summer', title: '2026 여름 운세', description: '여름 확장운과 성과 구간을 점검해보세요.' },
+  { href: '/fortune/2026/month/3', title: '3월 운세', description: '월별 운세로 이번 달의 리듬을 세밀하게 보세요.' },
+]
+
 export default function Fortune2026Page() {
   return (
     <main className="min-h-screen bg-slate-950 px-4 py-12 text-slate-100">
       <div className="mx-auto max-w-5xl">
+        <Breadcrumb items={[{ label: '홈', href: '/' }, { label: '2026년 운세' }]} />
+
         <header className="rounded-2xl border border-slate-800 bg-slate-900/75 p-6">
           <p className="text-xs text-slate-400">신년 특집</p>
           <h1 className="font-serif-kr mt-2 text-3xl font-black text-amber-400">2026년 운세 (丙午年)</h1>
@@ -107,15 +121,24 @@ export default function Fortune2026Page() {
           ))}
         </section>
 
+        <div className="mt-10">
+          <UpsellBanner variant="card" />
+        </div>
+
+        <RelatedContent links={RELATED_LINKS} />
+
         <section className="mt-10 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-6">
           <h2 className="font-serif-kr text-2xl font-bold text-amber-300">개인 사주로 2026년을 정밀 분석하세요</h2>
           <p className="mt-3 text-sm leading-relaxed text-slate-200">
             띠 운세는 공통 기운을 보여주고, 실제 결과는 원국과 대운의 조합에서 갈립니다. 같은 띠라도 직업, 연애,
             재물의 강약이 다르게 나타나므로 개인 맞춤 해석이 가장 정확합니다.
           </p>
+          <div className="mt-4">
+            <UpsellBanner variant="inline" />
+          </div>
           <div className="mt-5 flex flex-wrap gap-3 text-sm">
-            <Link href="/" className="rounded-lg bg-amber-500 px-4 py-2 font-bold text-slate-950 hover:bg-amber-400">
-              내 사주로 정확한 2026년 운세 보기 →
+            <Link href="/saju/free" className="rounded-lg bg-amber-500 px-4 py-2 font-bold text-slate-950 hover:bg-amber-400">
+              무료 사주 분석으로 2026년 운세 보기 →
             </Link>
             <Link href="/gunghap" className="rounded-lg border border-slate-700 px-4 py-2 text-slate-200 hover:border-amber-400 hover:text-amber-300">
               궁합 운세 함께 보기

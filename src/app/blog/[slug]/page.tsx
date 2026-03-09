@@ -1,6 +1,9 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import Breadcrumb from '@/components/Breadcrumb'
+import RelatedContent from '@/components/RelatedContent'
+import UpsellBanner from '@/components/UpsellBanner'
 import { BLOG_ARTICLES, BLOG_ARTICLE_SLUGS, getBlogArticleBySlug } from '@/data/blog-articles'
 
 type Params = { params: { slug: string } }
@@ -59,23 +62,25 @@ export default function BlogArticlePage({ params }: Params) {
   const relatedArticles = BLOG_ARTICLES.filter(item => item.slug !== article.slug).slice(0, 3)
   const faqSchema = buildFaqSchema(article.slug)
   const contentParagraphs = article.content.split('\n\n').filter(Boolean)
+  const relatedLinks = [
+    ...relatedArticles.map(item => ({
+      href: `/blog/${item.slug}`,
+      title: item.title,
+      description: item.description,
+    })),
+    { href: '/saju/free', title: '무료 사주풀이', description: '생년월일 기반으로 내 사주를 무료로 분석해보세요.' },
+    { href: '/tools/mbti', title: 'MBTI 궁합 도구', description: '성향 중심으로 관계 케미를 빠르게 확인할 수 있습니다.' },
+  ]
 
   return (
     <main className="min-h-screen bg-slate-950 px-4 py-12 text-slate-100">
+      <div className="mx-auto w-full max-w-4xl">
+        <Breadcrumb items={[{ label: '홈', href: '/' }, { label: '블로그', href: '/blog' }, { label: article.title }]} />
+      </div>
+
       {faqSchema ? <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} /> : null}
 
       <article className="mx-auto w-full max-w-4xl">
-        <nav className="mb-5 text-xs text-slate-400">
-          <Link href="/" className="hover:text-amber-300">
-            홈
-          </Link>{' '}
-          &gt;{' '}
-          <Link href="/blog" className="hover:text-amber-300">
-            블로그
-          </Link>{' '}
-          &gt; <span className="text-slate-300">{article.title}</span>
-        </nav>
-
         <header className="rounded-2xl border border-slate-800 bg-slate-900/75 p-6">
           <p className="text-xs text-slate-400">{article.date}</p>
           <h1 className="font-serif-kr mt-2 text-3xl font-black text-amber-400">{article.title}</h1>
@@ -104,6 +109,9 @@ export default function BlogArticlePage({ params }: Params) {
 
         <section className="mt-6 rounded-2xl border border-slate-800 bg-slate-900/65 p-6">
           <h2 className="font-serif-kr text-2xl font-bold text-amber-300">천명 서비스 바로가기</h2>
+          <div className="mt-3">
+            <UpsellBanner variant="inline" />
+          </div>
           <div className="mt-4 flex flex-wrap gap-3 text-sm">
             <Link href="/saju/free" className="rounded-lg border border-slate-700 px-4 py-2 hover:border-amber-400 hover:text-amber-300">
               무료 사주풀이
@@ -117,20 +125,14 @@ export default function BlogArticlePage({ params }: Params) {
           </div>
         </section>
 
-        <section className="mt-6 rounded-2xl border border-slate-800 bg-slate-900/65 p-6">
-          <h2 className="font-serif-kr text-2xl font-bold text-amber-300">관련 글</h2>
-          <div className="mt-4 grid gap-3 md:grid-cols-3">
-            {relatedArticles.map(item => (
-              <Link key={item.slug} href={`/blog/${item.slug}`} className="rounded-xl border border-slate-800 bg-slate-950/40 p-4 transition hover:border-amber-400/60">
-                <p className="text-xs text-slate-400">{item.date}</p>
-                <p className="mt-2 text-sm font-semibold text-slate-100">{item.title}</p>
-              </Link>
-            ))}
-          </div>
-        </section>
+        <div className="mt-6">
+          <UpsellBanner variant="card" />
+        </div>
+
+        <RelatedContent links={relatedLinks} />
 
         <section className="mt-6 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-6 text-sm">
-          <Link href="/" className="font-bold text-amber-300 hover:text-amber-200">
+          <Link href="/saju/free" className="font-bold text-amber-300 hover:text-amber-200">
             내 사주 무료로 분석하기 →
           </Link>
         </section>

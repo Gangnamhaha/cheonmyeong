@@ -1,5 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import Breadcrumb from '@/components/Breadcrumb'
+import RelatedContent from '@/components/RelatedContent'
 
 export const metadata: Metadata = {
   title: '대박띠 2026 - 병오년 가장 운이 좋은 띠 | 천명',
@@ -7,10 +9,19 @@ export const metadata: Metadata = {
   keywords: ['대박띠 2026', '올해 운 좋은 띠', '병오년 대박띠', '2026년 운세', '띠별 운세'],
 }
 
+const RELATED_LINKS = [
+  { href: '/fortune/2026/tojeongbigyeol', title: '2026 토정비결', description: '대박띠 흐름을 토정비결 해석과 함께 비교해보세요.' },
+  { href: '/fortune/2026/samjae', title: '2026 삼재띠', description: '상승운과 주의운을 함께 보면 판단이 더 정교해집니다.' },
+  { href: '/fortune/2026', title: '2026 띠별 운세', description: '대박띠 외 다른 띠 흐름도 한 번에 확인하세요.' },
+  { href: '/fortune/2026/month/9', title: '9월 운세', description: '성과 정리 구간에서 대박운을 유지하는 포인트를 보세요.' },
+]
+
 export default function DaebakPage() {
   return (
     <main className="min-h-screen bg-slate-950 px-4 py-12 text-slate-100">
       <div className="mx-auto max-w-5xl">
+        <Breadcrumb items={[{ label: '홈', href: '/' }, { label: '2026년 운세', href: '/fortune/2026' }, { label: '대박띠' }]} />
+
         <header className="rounded-2xl border border-slate-800 bg-slate-900/75 p-6">
           <p className="text-xs text-slate-400">운세 분석</p>
           <h1 className="font-serif-kr mt-2 text-3xl font-black text-amber-400">2026년 대박띠 - 가장 운이 좋은 띠는?</h1>
@@ -260,6 +271,8 @@ export default function DaebakPage() {
             </Link>
           </div>
         </section>
+
+        <RelatedContent links={RELATED_LINKS} />
 
         <section className="mt-10 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-6">
           <h2 className="font-serif-kr text-2xl font-bold text-amber-300">내 사주로 올해 운세를 상세 분석하세요</h2>

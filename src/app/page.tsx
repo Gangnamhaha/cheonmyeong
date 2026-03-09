@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import HomeClient from './HomeClient'
+import SocialProof from '@/components/SocialProof'
 
 const faqSchema = {
   '@context': 'https://schema.org',
@@ -98,9 +99,7 @@ export default function Home() {
             </Link>
           </div>
 
-          <p className="text-xs md:text-sm text-slate-400">
-            지금까지 <span className="font-semibold text-amber-300">12,700회</span> 사주 분석 완료
-          </p>
+          <SocialProof />
 
           <div className="rounded-xl border border-slate-800 bg-slate-900/50 p-3 md:p-4 space-y-2">
             <h2 className="text-base md:text-lg font-semibold text-amber-200">자주 묻는 질문</h2>

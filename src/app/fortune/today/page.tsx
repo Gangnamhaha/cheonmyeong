@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import UpsellBanner from '@/components/UpsellBanner'
 import { getSupabase } from '@/lib/db'
 
 export const revalidate = 3600
@@ -90,15 +91,22 @@ export default async function TodayFortunePage() {
           ))}
         </section>
 
+        <div className="mt-10">
+          <UpsellBanner variant="card" />
+        </div>
+
         <section className="mt-10 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-6">
           <h2 className="font-serif-kr text-2xl font-bold text-amber-300">오늘 운세를 더 정확하게 보는 방법</h2>
           <p className="mt-3 text-sm leading-relaxed text-slate-200">
             띠별 운세는 큰 흐름을 보는 데 유리하지만, 실제 운의 방향은 사주 원국과 대운, 세운의 상호작용으로
             달라집니다. 생년월일시를 입력해 개인 맞춤 해석을 받아보세요.
           </p>
+          <div className="mt-4">
+            <UpsellBanner variant="inline" />
+          </div>
           <div className="mt-5 flex flex-wrap gap-3 text-sm">
-            <Link href="/" className="rounded-lg bg-amber-500 px-4 py-2 font-bold text-slate-950 transition hover:bg-amber-400">
-              내 사주로 더 정확한 운세 보기 →
+            <Link href="/saju/free" className="rounded-lg bg-amber-500 px-4 py-2 font-bold text-slate-950 transition hover:bg-amber-400">
+              무료 사주 분석으로 더 정확한 운세 보기 →
             </Link>
             <Link href="/gunghap" className="rounded-lg border border-slate-700 px-4 py-2 text-slate-200 transition hover:border-amber-400 hover:text-amber-300">
               무료 궁합 보기

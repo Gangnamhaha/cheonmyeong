@@ -1,5 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import Breadcrumb from '@/components/Breadcrumb'
+import RelatedContent from '@/components/RelatedContent'
 import MbtiClient from './MbtiClient'
 
 export function generateMetadata(): Metadata {
@@ -77,9 +79,20 @@ const webApplicationSchema = {
   url: 'https://cheonmyeong.vercel.app/tools/mbti',
 }
 
+const RELATED_LINKS = [
+  { href: '/tools/bloodtype', title: '혈액형 궁합 테스트', description: 'A/B/O/AB 조합으로 관계 케미를 가볍게 확인해보세요.' },
+  { href: '/gunghap', title: '사주 궁합 정밀 분석', description: 'MBTI 이후 생년월일 기반 궁합으로 깊게 확장해보세요.' },
+  { href: '/saju/free', title: '무료 사주풀이', description: '내 기질과 운 흐름을 무료로 확인해보세요.' },
+  { href: '/blog', title: '궁합/운세 블로그', description: '관계와 운세 해석법을 실전 글로 읽어보세요.' },
+]
+
 export default function MbtiToolPage() {
   return (
     <main className="min-h-screen bg-slate-950 px-4 py-10 text-slate-100">
+      <div className="mx-auto max-w-5xl">
+        <Breadcrumb items={[{ label: '홈', href: '/' }, { label: '무료 도구' }, { label: 'MBTI 궁합' }]} />
+      </div>
+
       <div className="mx-auto max-w-5xl space-y-8">
         <header className="space-y-3">
           <p className="text-xs font-semibold tracking-[0.2em] text-amber-300">FREE VIRAL TOOL</p>
@@ -135,6 +148,8 @@ export default function MbtiToolPage() {
         </section>
 
         <MbtiClient />
+
+        <RelatedContent links={RELATED_LINKS} />
 
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(webApplicationSchema) }} />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
