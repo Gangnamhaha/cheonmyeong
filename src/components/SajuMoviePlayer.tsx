@@ -1275,7 +1275,11 @@ export default function SajuMoviePlayer({
       className="fixed inset-0 z-50 text-slate-100"
       style={{ backgroundColor: colors.bg, fontFamily: KOREAN_FONT }}
       onClick={() => {
-        if (isPlaying && !isLastScene) setShowControls((v) => !v)
+        if (isPlaying && !isLastScene) {
+          // Tap to advance to next scene
+          if (timerRef.current) clearTimeout(timerRef.current)
+          setCurrentScene((prev) => prev + 1)
+        }
       }}
     >
       {/* Particles */}

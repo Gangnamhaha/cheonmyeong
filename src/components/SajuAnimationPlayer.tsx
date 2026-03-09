@@ -496,8 +496,16 @@ export default function SajuAnimationPlayer({
   }, [narrationEnabled, stopNarration, speak, getNarrationText, currentScene])
 
   const handleToggleControls = () => {
-    if (!(isPlaying || currentScene < 6)) return
-    setShowControls((prev) => !prev)
+    if (!isPlaying || currentScene >= 6) return
+    // Tap to advance to next scene
+    setCurrentScene((prev) => {
+      if (prev >= 6) {
+        setIsPlaying(false)
+        setShowControls(true)
+        return 6
+      }
+      return (prev + 1) as SceneIndex
+    })
   }
 
   const handleReplay = () => {
