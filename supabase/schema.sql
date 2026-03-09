@@ -216,3 +216,18 @@ CREATE TABLE IF NOT EXISTS user_checkins (
 );
 
 CREATE INDEX IF NOT EXISTS idx_checkins_user ON user_checkins(user_id, checkin_date DESC);
+
+-- Push notification campaigns (admin targeted sends)
+CREATE TABLE IF NOT EXISTS push_campaigns (
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  title TEXT NOT NULL,
+  body TEXT NOT NULL,
+  url TEXT,
+  segment_filter JSONB DEFAULT '{}',
+  status TEXT DEFAULT 'draft',
+  sent_at TIMESTAMPTZ,
+  total_targets INT DEFAULT 0,
+  success_count INT DEFAULT 0,
+  failure_count INT DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);

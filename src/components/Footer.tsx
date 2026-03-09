@@ -31,6 +31,18 @@ export default function Footer() {
                 <Link href="/fortune/2026" className="transition-colors hover:text-[var(--text-accent)]">
                   2026년 운세
                 </Link>
+                <Link href="/fortune/2026/spring" className="transition-colors hover:text-[var(--text-accent)]">
+                  봄 운세
+                </Link>
+                <Link href="/fortune/2026/summer" className="transition-colors hover:text-[var(--text-accent)]">
+                  여름 운세
+                </Link>
+                <Link href="/fortune/2026/fall" className="transition-colors hover:text-[var(--text-accent)]">
+                  가을 운세
+                </Link>
+                <Link href="/fortune/2026/winter" className="transition-colors hover:text-[var(--text-accent)]">
+                  겨울 운세
+                </Link>
                 <Link href="/fortune/ddi/rat" className="transition-colors hover:text-[var(--text-accent)]">
                   띠별 운세
                 </Link>

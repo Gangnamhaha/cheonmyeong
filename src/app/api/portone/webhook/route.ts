@@ -10,6 +10,8 @@ import {
 import { createSubscription, getSubscription, updateSubscription } from '@/lib/subscription'
 import { verifyPortonePayment } from '@/lib/portone'
 import { getSupabase } from '@/lib/db'
+import { sendEmail } from '@/lib/email'
+import { ReceiptEmail } from '@/emails/ReceiptEmail'
 import { Redis } from '@upstash/redis'
 
 const _redisUrl = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL
@@ -111,6 +113,56 @@ export async function POST(req: NextRequest) {
       await idempotencyRedis.set(`payment:done:${paymentId}`, '1', { ex: 86400 * 30 })
     }
     const supabase = getSupabase()
+
+    const getReceiptTarget = async (): Promise<{ email: string | null; name: string }> => {
+      const customerEmail = payment.customer?.email?.trim() || null
+      const customerName = payment.customer?.name?.trim() || ''
+
+      if (!supabase) {
+        return { email: customerEmail, name: customerName || '고객' }
+      }
+
+      if (customerEmail) {
+        const { data } = await supabase
+          .from('users')
+          .select('name')
+          .eq('email', customerEmail)
+          .maybeSingle()
+        return { email: customerEmail, name: data?.name || customerName || '고객' }
+      }
+
+      const { data } = await supabase
+        .from('users')
+        .select('email, name')
+        .eq('id', parsedData.userId)
+        .maybeSingle()
+
+      return {
+        email: data?.email?.trim() || null,
+        name: data?.name || customerName || '고객',
+      }
+    }
+
+    const sendReceipt = async () => {
+      const target = await getReceiptTarget()
+      if (!target.email) {
+        return
+      }
+
+      const paidDate = payment.paidAt ? new Date(payment.paidAt) : new Date()
+      await sendEmail(
+        target.email,
+        '천명 AI 결제 영수증 안내',
+        ReceiptEmail({
+          name: target.name,
+          planName: planInfo.name,
+          amount: `${payment.amount.total.toLocaleString('ko-KR')}원`,
+          date: paidDate.toLocaleString('ko-KR'),
+          orderId: payment.id,
+        }),
+      )
+    }
+
     if (supabase) {
       try {
         await supabase.from('payments').upsert({
@@ -152,10 +204,23 @@ export async function POST(req: NextRequest) {
         })
       }
 
+      try {
+        await sendReceipt()
+      } catch (emailError) {
+        console.error('Receipt email send failed:', emailError)
+      }
+
       return buildResponse({ received: true, type: 'subscription' })
     }
 
     await addCredits(parsedData.userId, parsedData.plan as OnetimePlanKey)
+
+    try {
+      await sendReceipt()
+    } catch (emailError) {
+      console.error('Receipt email send failed:', emailError)
+    }
+
     return buildResponse({ received: true, type: 'onetime' })
   } catch (error) {
     console.error('PortOne webhook handling error:', error)

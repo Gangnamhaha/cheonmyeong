@@ -2,7 +2,7 @@
 
 import { type FormEvent, useCallback, useEffect, useMemo, useState } from 'react'
 
-type TabKey = 'dashboard' | 'users' | 'revenue' | 'credits' | 'referrals' | 'announcements' | 'inquiries' | 'settings' | 'ai-costs'
+type TabKey = 'dashboard' | 'users' | 'revenue' | 'credits' | 'push-campaigns' | 'referrals' | 'announcements' | 'inquiries' | 'settings' | 'ai-costs'
 
 interface DashboardStats {
   totalUsers: number
@@ -84,6 +84,25 @@ interface SettingsResponse {
   envStatus: Record<string, string>
 }
 
+interface AdminPushCampaign {
+  id: string
+  title: string
+  body: string
+  url: string | null
+  segment_filter: {
+    tiers?: string[]
+    minCredits?: number
+    maxCredits?: number
+    inactiveDays?: number
+  }
+  status: string
+  sent_at: string | null
+  total_targets: number
+  success_count: number
+  failure_count: number
+  created_at: string
+}
+
 interface AICostData {
   monthlyUsage: {
     totalCost: number
@@ -128,6 +147,7 @@ const TABS: { key: TabKey; label: string }[] = [
   { key: 'users', label: '사용자 관리' },
   { key: 'revenue', label: '매출/결제' },
   { key: 'credits', label: '크레딧 관리' },
+  { key: 'push-campaigns', label: '푸시 캠페인' },
   { key: 'referrals', label: '레퍼럴' },
   { key: 'ai-costs', label: 'AI 비용' },
   { key: 'announcements', label: '공지사항' },
@@ -145,6 +165,13 @@ const EMPTY_STATS: DashboardStats = {
   activeStreakUsers: 0,
   rewardCreditsGiven: 0,
 }
+
+const PUSH_TIER_OPTIONS = [
+  { value: 'free', label: 'free' },
+  { value: 'sub_basic', label: 'sub_basic' },
+  { value: 'sub_pro', label: 'sub_pro' },
+  { value: 'sub_premium', label: 'sub_premium' },
+]
 
 export default function AdminDashboardClient() {
   const [activeTab, setActiveTab] = useState<TabKey>('dashboard')
@@ -184,6 +211,17 @@ export default function AdminDashboardClient() {
   const [newTitle, setNewTitle] = useState('')
   const [newContent, setNewContent] = useState('')
   const [newActive, setNewActive] = useState(true)
+
+  const [pushCampaigns, setPushCampaigns] = useState<AdminPushCampaign[]>([])
+  const [pushCampaignsLoading, setPushCampaignsLoading] = useState(false)
+  const [pushCampaignsError, setPushCampaignsError] = useState<string | null>(null)
+  const [pushTitle, setPushTitle] = useState('')
+  const [pushBody, setPushBody] = useState('')
+  const [pushUrl, setPushUrl] = useState('')
+  const [pushSegmentTiers, setPushSegmentTiers] = useState<string[]>([])
+  const [pushMinCredits, setPushMinCredits] = useState('')
+  const [pushInactiveDays, setPushInactiveDays] = useState('')
+  const [pushSending, setPushSending] = useState(false)
 
   const [settings, setSettings] = useState<SettingsResponse | null>(null)
   const [settingsLoading, setSettingsLoading] = useState(false)
@@ -302,6 +340,24 @@ export default function AdminDashboardClient() {
     }
   }, [])
 
+  const fetchPushCampaigns = useCallback(async () => {
+    setPushCampaignsLoading(true)
+    setPushCampaignsError(null)
+    try {
+      const res = await fetch('/api/admin/push/campaigns')
+      const data = await res.json()
+      if (!res.ok) {
+        setPushCampaignsError(data.error ?? '푸시 캠페인 목록을 불러오지 못했습니다.')
+        return
+      }
+      setPushCampaigns(data.campaigns ?? [])
+    } catch {
+      setPushCampaignsError('푸시 캠페인 목록을 불러오지 못했습니다.')
+    } finally {
+      setPushCampaignsLoading(false)
+    }
+  }, [])
+
   const fetchAICosts = useCallback(async () => {
     setAICostsLoading(true)
     setAICostsError(null)
@@ -346,11 +402,12 @@ export default function AdminDashboardClient() {
           setIsAuthenticated(true)
           fetchStats()
           fetchUsers(1)
-          fetchAnnouncements()
-          fetchInquiries()
-          fetchSettings()
-          fetchAICosts()
-          fetchReferralStats()
+            fetchAnnouncements()
+            fetchPushCampaigns()
+            fetchInquiries()
+            fetchSettings()
+            fetchAICosts()
+            fetchReferralStats()
         }
       } catch {
         // not authenticated
@@ -359,7 +416,7 @@ export default function AdminDashboardClient() {
       }
     }
     checkAuth()
-  }, [fetchAnnouncements, fetchInquiries, fetchSettings, fetchStats, fetchUsers, fetchAICosts, fetchReferralStats])
+  }, [fetchAnnouncements, fetchPushCampaigns, fetchInquiries, fetchSettings, fetchStats, fetchUsers, fetchAICosts, fetchReferralStats])
 
   useEffect(() => {
     if (!isAuthenticated) return
@@ -395,6 +452,7 @@ export default function AdminDashboardClient() {
       fetchStats()
       fetchUsers(1)
       fetchAnnouncements()
+      fetchPushCampaigns()
       fetchInquiries()
       fetchSettings()
       fetchAICosts()
@@ -403,6 +461,76 @@ export default function AdminDashboardClient() {
       setLoginError('서버 연결에 실패했습니다.')
     } finally {
       setLoginLoading(false)
+    }
+  }
+
+  function handleTogglePushTier(tier: string) {
+    setPushSegmentTiers((prev) => (prev.includes(tier)
+      ? prev.filter((item) => item !== tier)
+      : [...prev, tier]))
+  }
+
+  async function handleCreatePushCampaign(e: FormEvent) {
+    e.preventDefault()
+    setPushCampaignsError(null)
+
+    if (!pushTitle.trim() || !pushBody.trim()) {
+      setPushCampaignsError('제목과 내용을 입력해 주세요.')
+      return
+    }
+
+    const confirmed = window.confirm('푸시 캠페인을 즉시 발송하시겠습니까?')
+    if (!confirmed) return
+
+    setPushSending(true)
+    try {
+      const segment: {
+        tiers?: string[]
+        minCredits?: number
+        inactiveDays?: number
+      } = {}
+
+      if (pushSegmentTiers.length > 0) {
+        segment.tiers = pushSegmentTiers
+      }
+
+      const parsedMinCredits = Number(pushMinCredits)
+      if (pushMinCredits.trim() !== '' && Number.isFinite(parsedMinCredits)) {
+        segment.minCredits = parsedMinCredits
+      }
+
+      const parsedInactiveDays = Number(pushInactiveDays)
+      if (pushInactiveDays.trim() !== '' && Number.isFinite(parsedInactiveDays) && parsedInactiveDays > 0) {
+        segment.inactiveDays = parsedInactiveDays
+      }
+
+      const res = await fetch('/api/admin/push/campaigns', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: pushTitle.trim(),
+          body: pushBody.trim(),
+          url: pushUrl.trim() || undefined,
+          segment,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setPushCampaignsError(data.error ?? '푸시 캠페인 발송에 실패했습니다.')
+        return
+      }
+
+      setPushTitle('')
+      setPushBody('')
+      setPushUrl('')
+      setPushSegmentTiers([])
+      setPushMinCredits('')
+      setPushInactiveDays('')
+      fetchPushCampaigns()
+    } catch {
+      setPushCampaignsError('푸시 캠페인 발송에 실패했습니다.')
+    } finally {
+      setPushSending(false)
     }
   }
 
@@ -975,6 +1103,137 @@ export default function AdminDashboardClient() {
                   </li>
                 ))}
               </ul>
+            </div>
+          </section>
+        )}
+
+        {activeTab === 'push-campaigns' && (
+          <section className="space-y-4">
+            <form onSubmit={handleCreatePushCampaign} className="rounded-xl border border-slate-700 bg-slate-800 p-4">
+              <h2 className="text-lg font-semibold text-amber-400">푸시 캠페인 발송</h2>
+              <div className="mt-3 space-y-2">
+                <input
+                  value={pushTitle}
+                  onChange={(e) => setPushTitle(e.target.value)}
+                  placeholder="푸시 제목"
+                  className="w-full rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-500"
+                />
+                <textarea
+                  value={pushBody}
+                  onChange={(e) => setPushBody(e.target.value)}
+                  placeholder="푸시 내용"
+                  rows={4}
+                  className="w-full rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-500"
+                />
+                <input
+                  value={pushUrl}
+                  onChange={(e) => setPushUrl(e.target.value)}
+                  placeholder="클릭 이동 URL (선택)"
+                  className="w-full rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-500"
+                />
+              </div>
+
+              <div className="mt-4 rounded-lg border border-slate-700 bg-slate-900 p-3">
+                <p className="text-sm font-medium text-slate-200">타겟 세그먼트</p>
+                <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <div>
+                    <p className="mb-2 text-xs text-slate-400">구독 티어</p>
+                    <div className="space-y-1">
+                      {PUSH_TIER_OPTIONS.map((tier) => (
+                        <label key={tier.value} className="inline-flex items-center gap-2 text-sm text-slate-300 mr-4">
+                          <input
+                            type="checkbox"
+                            checked={pushSegmentTiers.includes(tier.value)}
+                            onChange={() => handleTogglePushTier(tier.value)}
+                            className="h-4 w-4 accent-amber-500"
+                          />
+                          {tier.label}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <div>
+                      <label className="mb-1 block text-xs text-slate-400">최소 크레딧</label>
+                      <input
+                        type="number"
+                        value={pushMinCredits}
+                        onChange={(e) => setPushMinCredits(e.target.value)}
+                        placeholder="예: 10"
+                        className="w-full rounded-lg border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-xs text-slate-400">비활성 일수</label>
+                      <input
+                        type="number"
+                        value={pushInactiveDays}
+                        onChange={(e) => setPushInactiveDays(e.target.value)}
+                        placeholder="예: 7"
+                        className="w-full rounded-lg border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-500"
+                      />
+                    </div>
+                  </div>
+                </div>
+                <p className="mt-2 text-xs text-slate-500">필터를 비워두면 푸시 수신 토큰이 있는 전체 사용자에게 발송됩니다.</p>
+              </div>
+
+              <button
+                type="submit"
+                disabled={pushSending}
+                className="mt-3 rounded-lg bg-amber-500 px-4 py-2 text-sm font-semibold text-slate-950 disabled:opacity-50"
+              >
+                {pushSending ? '발송 중...' : '캠페인 발송'}
+              </button>
+              {pushCampaignsError && <p className="mt-3 text-sm text-red-300">{pushCampaignsError}</p>}
+            </form>
+
+            <div className="rounded-xl border border-slate-700 bg-slate-800 p-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-base font-semibold">캠페인 이력</h3>
+                <button
+                  onClick={fetchPushCampaigns}
+                  disabled={pushCampaignsLoading}
+                  className="rounded-lg border border-slate-600 px-3 py-1.5 text-xs text-slate-300 hover:bg-slate-700 disabled:opacity-50"
+                >
+                  새로고침
+                </button>
+              </div>
+
+              {pushCampaignsLoading && <p className="mt-2 text-sm text-slate-400">로딩 중...</p>}
+              {!pushCampaignsLoading && pushCampaigns.length === 0 && (
+                <p className="mt-2 text-sm text-slate-400">등록된 캠페인이 없습니다.</p>
+              )}
+
+              {!pushCampaignsLoading && pushCampaigns.length > 0 && (
+                <div className="mt-3 overflow-x-auto">
+                  <table className="min-w-full text-sm">
+                    <thead className="text-left text-xs uppercase tracking-wider text-slate-400">
+                      <tr>
+                        <th className="px-3 py-2">제목</th>
+                        <th className="px-3 py-2">발송 시각</th>
+                        <th className="px-3 py-2">타겟 수</th>
+                        <th className="px-3 py-2">성공 수</th>
+                        <th className="px-3 py-2">상태</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {pushCampaigns.map((campaign) => (
+                        <tr key={campaign.id} className="border-t border-slate-700/70">
+                          <td className="px-3 py-2 text-slate-100">{campaign.title}</td>
+                          <td className="px-3 py-2 text-slate-400">
+                            {campaign.sent_at ? new Date(campaign.sent_at).toLocaleString('ko-KR') : '-'}
+                          </td>
+                          <td className="px-3 py-2 text-slate-300">{campaign.total_targets.toLocaleString('ko-KR')}</td>
+                          <td className="px-3 py-2 text-amber-400">{campaign.success_count.toLocaleString('ko-KR')}</td>
+                          <td className="px-3 py-2 text-slate-300">{campaign.status}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
           </section>
         )}

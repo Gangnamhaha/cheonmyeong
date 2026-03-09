@@ -78,6 +78,17 @@ export const PLANS = {
     type: 'onetime' as const,
     stripePriceId: null,
   },
+  gunghap_premium: {
+    name: '궁합 프리미엄 리포트',
+    nameEn: 'Gunghap Premium Report',
+    credits: 0,
+    price: 15000,
+    priceLabel: '₩15,000',
+    features: ['AI 궁합 심층 분석', 'DOCX 리포트 다운로드'],
+    popular: false,
+    type: 'onetime' as const,
+    stripePriceId: null,
+  },
   unlimited: {
     name: '언리미티드',
     nameEn: 'Unlimited',

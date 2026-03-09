@@ -9,7 +9,7 @@ export interface TokenUsage {
   model: string
   inputTokens: number
   outputTokens: number
-  feature: 'interpret' | 'gunghap' | 'fortune' | 'movie' | 'ask' | 'premium_report' | 'scene_image'
+  feature: 'interpret' | 'gunghap' | 'fortune' | 'movie' | 'ask' | 'premium_report' | 'gunghap_premium_report' | 'scene_image'
   estimatedCost: number // in USD
 }
 

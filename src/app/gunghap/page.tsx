@@ -1,10 +1,12 @@
 'use client'
 
 import { useState, useRef } from 'react'
+import { useEffect } from 'react'
+import { useSession } from 'next-auth/react'
 import { calculateFullSaju, FullSajuResult } from '@/lib/saju'
 import { analyzeGunghap, GunghapResult } from '@/lib/gunghap'
 import { shareGunghapResult } from '@/lib/kakao'
-import { trackShare } from '@/lib/analytics'
+import { trackPurchase, trackShare } from '@/lib/analytics'
 
 const YEARS = Array.from({ length: 151 }, (_, i) => 1900 + i)
 const MONTHS = Array.from({ length: 12 }, (_, i) => i + 1)
@@ -157,6 +159,7 @@ function CategoryBar({ label, score }: { label: string; score: number }) {
 }
 
 export default function GunghapPage() {
+  const { data: session } = useSession()
   const [person1, setPerson1] = useState<PersonInput>(defaultPerson())
   const [person2, setPerson2] = useState<PersonInput>({ ...defaultPerson(), gender: 'female' })
   const [loading, setLoading] = useState(false)
@@ -164,7 +167,21 @@ export default function GunghapPage() {
   const [result, setResult] = useState<{ p1: FullSajuResult; p2: FullSajuResult; gunghap: GunghapResult } | null>(null)
   const [aiText, setAiText] = useState<string | null>(null)
   const [aiLoading, setAiLoading] = useState(false)
+  const [premiumLoading, setPremiumLoading] = useState(false)
+  const [premiumError, setPremiumError] = useState<string | null>(null)
+  const [premiumDownloadUrl, setPremiumDownloadUrl] = useState<string | null>(null)
   const abortRef = useRef<AbortController | null>(null)
+
+  useEffect(() => {
+    if (document.querySelector('script[src*="portone"]')) return
+    const script = document.createElement('script')
+    script.src = 'https://cdn.portone.io/v2/browser-sdk.js'
+    script.async = true
+    document.head.appendChild(script)
+    return () => {
+      if (script.parentNode) script.parentNode.removeChild(script)
+    }
+  }, [])
 
   async function fetchAiGunghap(p1: FullSajuResult, p2: FullSajuResult, g: GunghapResult, name1: string, name2: string) {
     abortRef.current?.abort()
@@ -210,6 +227,8 @@ export default function GunghapPage() {
     setError(null)
     setResult(null)
     setAiText(null)
+    setPremiumError(null)
+    setPremiumDownloadUrl(null)
 
     try {
       const p1 = calculateFullSaju(person1.year, person1.month, person1.day, person1.hour, person1.minute,
@@ -231,6 +250,122 @@ export default function GunghapPage() {
     setResult(null)
     setAiText(null)
     setError(null)
+    setPremiumError(null)
+    setPremiumDownloadUrl(null)
+  }
+
+  async function handleGunghapPremiumReport() {
+    if (!result || premiumLoading) return
+
+    setPremiumLoading(true)
+    setPremiumError(null)
+    setPremiumDownloadUrl(null)
+
+    try {
+      const isGuest = !session
+      let guestEmail = ''
+
+      if (isGuest) {
+        const input = window.prompt('프리미엄 리포트 결제를 위해 이메일 주소를 입력해 주세요.')
+        if (!input) {
+          setPremiumError('이메일 입력이 필요합니다.')
+          return
+        }
+        const trimmed = input.trim().toLowerCase()
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
+          setPremiumError('올바른 이메일 형식을 입력해 주세요.')
+          return
+        }
+        guestEmail = trimmed
+      }
+
+      const prepRes = await fetch('/api/portone', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          plan: 'gunghap_premium',
+          ...(isGuest ? { guestEmail } : {}),
+        }),
+      })
+
+      if (!prepRes.ok) {
+        const prepData = await prepRes.json()
+        setPremiumError(prepData.error ?? '결제 준비에 실패했습니다.')
+        return
+      }
+
+      const paymentData = await prepRes.json()
+      if (!window.PortOne) {
+        setPremiumError('결제 모듈을 불러오는 중입니다. 잠시 후 다시 시도해 주세요.')
+        return
+      }
+
+      const response = await window.PortOne.requestPayment({
+        storeId: paymentData.storeId,
+        channelKey: paymentData.channelKey,
+        paymentId: paymentData.paymentId,
+        orderName: paymentData.orderName,
+        totalAmount: paymentData.totalAmount,
+        currency: paymentData.currency,
+        payMethod: 'CARD',
+        redirectUrl: window.location.href,
+        customer: {
+          email: session?.user?.email || guestEmail || undefined,
+          fullName: session?.user?.name || undefined,
+        },
+        customData: JSON.stringify({ userId: paymentData.userId, plan: 'gunghap_premium' }),
+      })
+
+      if (response?.code) {
+        const isCanceled = response.code === 'PAY_PROCESS_CANCELED' || response.code === 'PAY_PROCESS_ABORTED'
+        setPremiumError(isCanceled ? '결제가 취소되었습니다.' : (response.message ?? '결제 처리 중 오류가 발생했습니다.'))
+        return
+      }
+
+      const verifyRes = await fetch('/api/portone/webhook', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ paymentId: paymentData.paymentId, isGuest }),
+      })
+
+      if (!verifyRes.ok) {
+        setPremiumError('결제 검증에 실패했습니다. 다시 시도해 주세요.')
+        return
+      }
+
+      trackPurchase({
+        paymentId: paymentData.paymentId,
+        planName: '궁합 프리미엄 리포트',
+        amount: 15000,
+      })
+
+      const generateRes = await fetch('/api/report/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sajuData: result.p1,
+          formData: person1,
+          person2Data: person2,
+          gunghapResult: result.gunghap,
+          paymentId: paymentData.paymentId,
+          tier: 'gunghap',
+        }),
+      })
+
+      const generateData = await generateRes.json()
+      if (!generateRes.ok) {
+        setPremiumError(generateData.error ?? '리포트 생성에 실패했습니다.')
+        return
+      }
+
+      if (typeof generateData.downloadUrl === 'string') {
+        setPremiumDownloadUrl(generateData.downloadUrl)
+      }
+    } catch {
+      setPremiumError('프리미엄 리포트 처리 중 네트워크 오류가 발생했습니다.')
+    } finally {
+      setPremiumLoading(false)
+    }
   }
 
   return (
@@ -342,6 +477,25 @@ export default function GunghapPage() {
               </svg>
               카카오톡으로 공유하기
             </button>
+
+            <div className="space-y-2">
+              <button
+                onClick={handleGunghapPremiumReport}
+                disabled={premiumLoading}
+                className="w-full py-3 rounded-lg font-bold text-sm bg-violet-500 hover:bg-violet-400 disabled:bg-slate-600 text-white transition-colors"
+              >
+                {premiumLoading ? '결제/생성 처리 중...' : '📄 궁합 프리미엄 리포트 구매 (₩15,000)'}
+              </button>
+              {premiumDownloadUrl && (
+                <a
+                  href={premiumDownloadUrl}
+                  className="block w-full py-3 rounded-lg font-bold text-sm text-center bg-emerald-500 hover:bg-emerald-400 text-slate-900 transition-colors"
+                >
+                  궁합 프리미엄 리포트 다운로드
+                </a>
+              )}
+              {premiumError && <p className="text-xs text-red-300 text-center">{premiumError}</p>}
+            </div>
 
             <div className="flex gap-3">
               <button onClick={handleReset}

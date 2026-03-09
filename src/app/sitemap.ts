@@ -38,6 +38,30 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.9,
     },
     {
+      url: `${BASE_URL}/fortune/2026/spring`,
+      lastModified: now,
+      changeFrequency: 'weekly',
+      priority: 0.87,
+    },
+    {
+      url: `${BASE_URL}/fortune/2026/summer`,
+      lastModified: now,
+      changeFrequency: 'weekly',
+      priority: 0.87,
+    },
+    {
+      url: `${BASE_URL}/fortune/2026/fall`,
+      lastModified: now,
+      changeFrequency: 'weekly',
+      priority: 0.87,
+    },
+    {
+      url: `${BASE_URL}/fortune/2026/winter`,
+      lastModified: now,
+      changeFrequency: 'weekly',
+      priority: 0.87,
+    },
+    {
       url: `${BASE_URL}/gunghap`,
       lastModified: now,
       changeFrequency: 'weekly',

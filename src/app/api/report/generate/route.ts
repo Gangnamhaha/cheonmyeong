@@ -8,13 +8,17 @@ import { verifyPortonePayment } from '@/lib/portone'
 import { calculateDaeun, type DaeunResult } from '@/lib/daeun'
 import { calculateYearlyFortune, type FortuneResult } from '@/lib/fortune'
 import type { FullSajuResult } from '@/lib/saju'
+import type { GunghapResult } from '@/lib/gunghap'
+import { calculateCost, logTokenUsage } from '@/lib/ai-cost'
 
 type Category = '종합' | '성격' | '연애' | '직업' | '건강' | '재물' | '인생성장'
 type ProSection = '대운 분석' | '세운 전망 (2025-2027)' | '인생 통합 조언'
-type SectionKey = Category | ProSection
-type ReportTier = 'basic' | 'pro'
+type GunghapSection = '궁합총평' | '성격궁합' | '연애궁합' | '직장궁합' | '관계조언'
+type SectionKey = Category | ProSection | GunghapSection
+type ReportTier = 'basic' | 'pro' | 'gunghap'
 
 const CATEGORIES: Category[] = ['종합', '성격', '연애', '직업', '건강', '재물', '인생성장']
+const GUNGHAP_CATEGORIES: GunghapSection[] = ['궁합총평', '성격궁합', '연애궁합', '직장궁합', '관계조언']
 
 const PREMIUM_SYSTEM_PROMPT = `당신은 20년 이상 임상 상담 경험을 가진 한국 명리학자입니다.
 사용자가 제공한 "계산 결과"를 재계산하지 말고, 그 근거를 바탕으로 전통 명리학의 언어로 해석하되 현대 삶에 적용 가능한 조언으로 연결하세요.
@@ -40,6 +44,20 @@ const PREMIUM_SYSTEM_PROMPT = `당신은 20년 이상 임상 상담 경험을 �
 - 사용자 입력의 [REQUEST] 블록에서 카테고리와 분량 지시를 확인하고 정확히 따르세요
 - 따뜻하고 공감적이되 구체적이고 실용적인 조언을 제공하세요`
 
+const GUNGHAP_SYSTEM_PROMPT = `당신은 20년 이상 임상 상담 경험을 가진 한국 명리학 궁합 전문가입니다.
+입력된 궁합 계산 결과(점수, 카테고리, 오행 보완)를 재계산하지 말고, 근거 있는 관계 해석과 실천 조언을 제시하세요.
+
+■ 해석 원칙
+- 확정적 예언, 공포 조장, 단정 표현 금지
+- 두 사람의 차이를 갈등이 아닌 조율 포인트로 설명
+- 관계 조언은 현실적 행동으로 제시
+
+■ 출력 규칙
+- [REQUEST] 블록의 카테고리와 분량 지시를 정확히 준수
+- 마크다운 금지, 순수 텍스트
+- 첫 1~2줄에 핵심 진단과 키워드 제시
+- 점수와 카테고리 설명을 근거로 구체적 해석 제공`
+
 async function logAiUsage(params: {
   section: SectionKey
   model: 'gpt-4o' | 'gpt-4o-mini'
@@ -63,10 +81,20 @@ async function logAiUsage(params: {
       input_tokens: params.inputTokens,
       output_tokens: params.outputTokens,
       category: params.section,
-      feature: 'premium_report',
+      feature: params.tier === 'gunghap' ? 'gunghap_premium_report' : 'premium_report',
       tier: params.tier,
       estimated_cost: estimatedCost,
     },
+  })
+
+  const feature = params.tier === 'gunghap' ? 'gunghap_premium_report' : 'premium_report'
+  const tokenCost = calculateCost(params.model, params.inputTokens, params.outputTokens)
+  await logTokenUsage({
+    model: params.model,
+    inputTokens: params.inputTokens,
+    outputTokens: params.outputTokens,
+    feature,
+    estimatedCost: tokenCost,
   })
 }
 
@@ -96,13 +124,14 @@ async function createSection(params: {
   section: SectionKey
   prompt: string
   tier: ReportTier
+  systemPrompt: string
 }): Promise<string> {
   const completion = await params.openai.chat.completions.create({
     model: params.model,
     temperature: 0.5,
     max_tokens: 3000,
     messages: [
-      { role: 'system', content: PREMIUM_SYSTEM_PROMPT },
+      { role: 'system', content: params.systemPrompt },
       { role: 'user', content: params.prompt },
     ],
   })
@@ -135,6 +164,8 @@ export async function POST(req: NextRequest) {
   let body: {
     sajuData?: FullSajuResult
     formData?: Record<string, unknown>
+    person2Data?: Record<string, unknown>
+    gunghapResult?: GunghapResult
     traditionalContext?: string
     paymentId?: string
     tier?: ReportTier
@@ -146,16 +177,27 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: '잘못된 요청 형식입니다.' }, { status: 400 })
   }
 
-  if (!body.sajuData || !body.formData || !body.paymentId) {
-    return NextResponse.json({ error: 'sajuData, formData, paymentId는 필수입니다.' }, { status: 400 })
+  if (!body.formData || !body.paymentId) {
+    return NextResponse.json({ error: 'formData, paymentId는 필수입니다.' }, { status: 400 })
+  }
+
+  const tier: ReportTier = body.tier === 'pro' || body.tier === 'gunghap' ? body.tier : 'basic'
+
+  if (!body.sajuData) {
+    return NextResponse.json({ error: 'sajuData는 필수입니다.' }, { status: 400 })
+  }
+
+  if (tier === 'gunghap' && (!body.person2Data || !body.gunghapResult)) {
+    return NextResponse.json({ error: 'gunghap tier는 person2Data, gunghapResult, sajuData가 필요합니다.' }, { status: 400 })
   }
 
   const sajuData = body.sajuData
   const formData = body.formData
+  const person2Data = body.person2Data
+  const gunghapResult = body.gunghapResult
   const paymentId = body.paymentId
 
-  const tier: ReportTier = body.tier === 'pro' ? 'pro' : 'basic'
-  const expectedAmount = tier === 'pro' ? 25000 : 9900
+  const expectedAmount = tier === 'pro' ? 25000 : tier === 'gunghap' ? 15000 : 9900
 
   const payment = await verifyPortonePayment(paymentId)
   if (payment.status !== 'PAID') {
@@ -183,18 +225,64 @@ export async function POST(req: NextRequest) {
     const interpretations: Partial<Record<SectionKey, string>> = {}
     const baseModel: 'gpt-4o' | 'gpt-4o-mini' = tier === 'pro' ? 'gpt-4o-mini' : 'gpt-4o'
 
-    for (const category of CATEGORIES) {
-      let prompt = formatSajuForAI(sajuData, category, formData)
-      if (body.traditionalContext?.trim()) {
-        prompt += `\n\n[TRADITIONAL CONTEXT]\n${body.traditionalContext.trim()}`
+    if (tier === 'gunghap') {
+      const person1Name = typeof formData.name === 'string' ? formData.name : '첫 번째 사람'
+      const person2Name = typeof person2Data?.name === 'string' ? person2Data.name : '두 번째 사람'
+
+      const gunghapContext = [
+        '[궁합 계산 결과]',
+        `총점: ${gunghapResult?.score ?? 0}/100`,
+        `성격: ${gunghapResult?.categories.personality.score ?? 0}점 / ${gunghapResult?.categories.personality.description ?? ''}`,
+        `연애: ${gunghapResult?.categories.love.score ?? 0}점 / ${gunghapResult?.categories.love.description ?? ''}`,
+        `직장: ${gunghapResult?.categories.work.score ?? 0}점 / ${gunghapResult?.categories.work.description ?? ''}`,
+        `건강: ${gunghapResult?.categories.health.score ?? 0}점 / ${gunghapResult?.categories.health.description ?? ''}`,
+        `오행 보완: ${gunghapResult?.ohengBalance ?? ''}`,
+        `총평: ${gunghapResult?.categories.overall ?? ''}`,
+        '',
+        '[첫 번째 사람 정보]',
+        JSON.stringify(formData, null, 2),
+        '',
+        '[두 번째 사람 정보]',
+        JSON.stringify(person2Data, null, 2),
+        '',
+        '[첫 번째 사람 사주 데이터]',
+        JSON.stringify(sajuData, null, 2),
+      ].join('\n')
+
+      const sectionRequests: Record<GunghapSection, string> = {
+        궁합총평: `카테고리: 궁합총평\n분량: 1200~1500자\n요구: ${person1Name}과 ${person2Name}의 관계 전반을 핵심 강점/주의점/관계 운영 전략으로 정리`,
+        성격궁합: `카테고리: 성격궁합\n분량: 1000~1300자\n요구: 성향 차이, 갈등 유발 패턴, 대화 방식, 감정 조율법을 구체적으로 제시`,
+        연애궁합: `카테고리: 연애궁합\n분량: 1000~1300자\n요구: 애정 표현 방식, 친밀감 형성, 갈등 회복 포인트를 현실적으로 제시`,
+        직장궁합: `카테고리: 직장궁합\n분량: 900~1200자\n요구: 협업/역할 분담/의사결정 스타일과 시너지 전략을 제시`,
+        관계조언: `카테고리: 관계조언\n분량: 900~1200자\n요구: 지금 바로 실행 가능한 주간/월간 관계 개선 루틴을 제시`,
       }
-      interpretations[category] = await createSection({
-        openai,
-        model: baseModel,
-        section: category,
-        prompt,
-        tier,
-      })
+
+      for (const section of GUNGHAP_CATEGORIES) {
+        const prompt = [`[REQUEST]`, sectionRequests[section], '', gunghapContext].join('\n')
+        interpretations[section] = await createSection({
+          openai,
+          model: 'gpt-4o',
+          section,
+          prompt,
+          tier,
+          systemPrompt: GUNGHAP_SYSTEM_PROMPT,
+        })
+      }
+    } else {
+      for (const category of CATEGORIES) {
+        let prompt = formatSajuForAI(sajuData, category, formData)
+        if (body.traditionalContext?.trim()) {
+          prompt += `\n\n[TRADITIONAL CONTEXT]\n${body.traditionalContext.trim()}`
+        }
+        interpretations[category] = await createSection({
+          openai,
+          model: baseModel,
+          section: category,
+          prompt,
+          tier,
+          systemPrompt: PREMIUM_SYSTEM_PROMPT,
+        })
+      }
     }
 
     if (tier === 'pro') {
@@ -253,6 +341,7 @@ export async function POST(req: NextRequest) {
         section: '대운 분석',
         prompt: daeunPrompt,
         tier,
+        systemPrompt: PREMIUM_SYSTEM_PROMPT,
       })
 
       interpretations['세운 전망 (2025-2027)'] = await createSection({
@@ -261,6 +350,7 @@ export async function POST(req: NextRequest) {
         section: '세운 전망 (2025-2027)',
         prompt: seunPrompt,
         tier,
+        systemPrompt: PREMIUM_SYSTEM_PROMPT,
       })
 
       const combinedLifeAdvicePrompt = [
@@ -279,6 +369,7 @@ export async function POST(req: NextRequest) {
         section: '인생 통합 조언',
         prompt: combinedLifeAdvicePrompt,
         tier,
+        systemPrompt: PREMIUM_SYSTEM_PROMPT,
       })
 
       interpretations['대운 분석'] = [
@@ -298,10 +389,15 @@ export async function POST(req: NextRequest) {
         user_id: userId,
         payment_id: paymentId,
         saju_data: sajuData,
-        form_data: { ...formData, reportTier: tier },
+        form_data: {
+          ...formData,
+          reportTier: tier,
+          ...(tier === 'gunghap' ? { person2Data, gunghapResult } : {}),
+        },
         report_content: interpretations,
         status: 'completed',
         amount: expectedAmount,
+        tier,
       })
       .select('id')
       .single()

@@ -8,11 +8,14 @@ import {
   TableOfContents,
   TextRun,
 } from 'docx'
+import type { GunghapResult } from '@/lib/gunghap'
 
 type PremiumCategory = '종합' | '성격' | '연애' | '직업' | '건강' | '재물' | '인생성장'
 type ProCategory = PremiumCategory | '대운 분석' | '세운 전망 (2025-2027)' | '인생 통합 조언'
+type GunghapReportCategory = '궁합총평' | '성격궁합' | '연애궁합' | '직장궁합' | '관계조언'
 
 const CATEGORY_ORDER: PremiumCategory[] = ['종합', '성격', '연애', '직업', '건강', '재물', '인생성장']
+const GUNGHAP_CATEGORY_ORDER: GunghapReportCategory[] = ['궁합총평', '성격궁합', '연애궁합', '직장궁합', '관계조언']
 
 type FormDataLike = {
   name?: string
@@ -119,6 +122,122 @@ function extractDaeunPeriods(sajuData: unknown): DaeunTimelinePeriod[] {
     && typeof period.stem === 'string'
     && typeof period.branch === 'string'
   ))
+}
+
+export async function generateGunghapReport(
+  person1Data: FormDataLike,
+  person2Data: FormDataLike,
+  gunghapResult: GunghapResult,
+  interpretations: Partial<Record<GunghapReportCategory, string>>,
+): Promise<Buffer> {
+  const formatPersonInfo = (person: FormDataLike, fallbackName: string): string => {
+    const name = person.name?.trim() || fallbackName
+    const birthInfo = [person.year, person.month, person.day].every((v) => typeof v === 'number')
+      ? `${person.year}년 ${person.month}월 ${person.day}일`
+      : '생년월일 정보 없음'
+    const genderInfo = person.gender === 'male' ? '남성' : person.gender === 'female' ? '여성' : '성별 정보 없음'
+    return `${name} | ${birthInfo} | ${genderInfo}`
+  }
+
+  const sections: Paragraph[] = [
+    new Paragraph({
+      alignment: AlignmentType.CENTER,
+      heading: HeadingLevel.TITLE,
+      children: [new TextRun({ text: '천명(天命) 궁합 분석 리포트', bold: true, size: 44 })],
+      spacing: { after: 280 },
+    }),
+    new Paragraph({
+      alignment: AlignmentType.CENTER,
+      children: [new TextRun({ text: formatPersonInfo(person1Data, '첫 번째 사람'), size: 24 })],
+      spacing: { after: 80 },
+    }),
+    new Paragraph({
+      alignment: AlignmentType.CENTER,
+      children: [new TextRun({ text: formatPersonInfo(person2Data, '두 번째 사람'), size: 24 })],
+      spacing: { after: 80 },
+    }),
+    new Paragraph({
+      alignment: AlignmentType.CENTER,
+      children: [new TextRun({ text: `생성일: ${new Date().toISOString().slice(0, 10)}`, size: 20, color: '666666' })],
+      spacing: { after: 160 },
+    }),
+    new Paragraph({
+      alignment: AlignmentType.CENTER,
+      children: [new TextRun({ text: `궁합 종합 점수: ${gunghapResult.score} / 100`, bold: true, size: 28 })],
+      spacing: { after: 140 },
+    }),
+    new Paragraph({
+      children: [
+        new TextRun({ text: `- 성격 궁합: ${gunghapResult.categories.personality.score}점`, size: 22 }),
+      ],
+      spacing: { after: 60 },
+    }),
+    new Paragraph({
+      children: [
+        new TextRun({ text: `- 연애 궁합: ${gunghapResult.categories.love.score}점`, size: 22 }),
+      ],
+      spacing: { after: 60 },
+    }),
+    new Paragraph({
+      children: [
+        new TextRun({ text: `- 직장 궁합: ${gunghapResult.categories.work.score}점`, size: 22 }),
+      ],
+      spacing: { after: 60 },
+    }),
+    new Paragraph({
+      children: [
+        new TextRun({ text: `- 건강 궁합: ${gunghapResult.categories.health.score}점`, size: 22 }),
+      ],
+      spacing: { after: 80 },
+    }),
+    new Paragraph({
+      children: [new TextRun({ text: `오행 보완: ${gunghapResult.ohengBalance}`, size: 22 })],
+      spacing: { after: 140 },
+    }),
+    new Paragraph({
+      children: [new TextRun({ text: `총평: ${gunghapResult.categories.overall}`, size: 22 })],
+      spacing: { after: 120 },
+    }),
+  ]
+
+  for (const category of GUNGHAP_CATEGORY_ORDER) {
+    const content = interpretations[category] ?? '생성된 해석이 없습니다.'
+    sections.push(...buildCategorySection(category, content))
+  }
+
+  const doc = new Document({
+    styles: {
+      default: {
+        document: { run: { font: 'Malgun Gothic' } },
+        title: { run: { font: 'Malgun Gothic' } },
+        heading1: { run: { font: 'Malgun Gothic' } },
+        heading2: { run: { font: 'Malgun Gothic' } },
+      },
+    },
+    sections: [
+      {
+        footers: {
+          default: new Footer({
+            children: [
+              new Paragraph({
+                alignment: AlignmentType.CENTER,
+                children: [
+                  new TextRun({
+                    text: '천명(天命) AI 사주팔자 분석 서비스 | cheonmyeong.vercel.app',
+                    size: 18,
+                    color: '777777',
+                  }),
+                ],
+              }),
+            ],
+          }),
+        },
+        children: sections,
+      },
+    ],
+  })
+
+  return Packer.toBuffer(doc)
 }
 
 export async function generatePremiumReport(

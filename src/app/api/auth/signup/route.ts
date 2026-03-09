@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { createUser } from '@/lib/user'
 import { applyReferralCode } from '@/lib/referral'
+import { sendEmail } from '@/lib/email'
+import { WelcomeEmail } from '@/emails/WelcomeEmail'
 
 interface SignupBody {
   email?: string
@@ -58,6 +60,16 @@ export async function POST(request: Request) {
 
     // ─── Create user ─────────────────────────────────────────────
     const user = await createUser(trimmedEmail, password, trimmedName)
+
+    try {
+      await sendEmail(
+        user.email,
+        '천명 AI에 오신 것을 환영합니다!',
+        WelcomeEmail({ name: user.name || '고객' }),
+      )
+    } catch (emailError) {
+      console.error('Welcome email send failed:', emailError)
+    }
 
     let referralApplied = false
     let referralMessage: string | null = null
