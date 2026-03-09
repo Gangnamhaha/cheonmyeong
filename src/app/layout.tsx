@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { Noto_Serif_KR } from 'next/font/google'
 import Script from 'next/script'
 import './globals.css'
 import ErrorBoundary from '@/components/ErrorBoundary'
@@ -9,6 +10,14 @@ import Navbar from '@/components/Navbar'
 import PushNotificationBanner from '@/components/PushNotificationBanner'
 
 const GA_ID = process.env.NEXT_PUBLIC_GA4_ID
+
+const notoSerifKr = Noto_Serif_KR({
+  subsets: ['latin'],
+  weight: ['400', '700', '900'],
+  display: 'swap',
+  preload: true,
+  variable: '--font-noto-serif-kr',
+})
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://cheonmyeong.vercel.app'),
@@ -49,12 +58,8 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="ko" className="dark" suppressHydrationWarning>
+    <html lang="ko" className={`${notoSerifKr.variable} dark`} suppressHydrationWarning>
       <head>
-        <link
-          href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;700;900&display=swap"
-          rel="stylesheet"
-        />
         <link rel="manifest" href="/manifest.json" />
         <meta name="naver-site-verification" content="79258edfff8cfed2a6cd162dcfa591ac9a5a2770" />
         <meta name="theme-color" content="#f59e0b" />

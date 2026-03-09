@@ -42,6 +42,12 @@ const YEARLY_OUTLOOK: Record<AnimalSlug, string> = {
   pig: '2026년 돼지띠는 확장과 안정이 균형을 이루는 해입니다. 상반기에는 새로운 공부, 자격, 업무 스킬 업그레이드에 투자할수록 하반기 성과가 커집니다. 주변 도움운이 좋아 협업 제안과 소개 기회가 자연스럽게 들어옵니다. 하반기에는 금전 흐름이 안정되며, 중장기 목표를 세우고 자동화 저축을 적용하면 체감 성과가 빠릅니다. 연애운은 편안한 소통이 관계를 깊게 만들고, 싱글은 취향 기반 모임에서 인연운이 좋습니다. 건강은 식습관 균형과 늦은 야식 조절이 핵심이며, 수면 시간을 확보하면 전반적 운세 상승을 체감합니다.',
 }
 
+const TOPIC_LINKS = [
+  { slug: 'jaemulun', label: '재물운' },
+  { slug: 'yeonaewun', label: '연애운' },
+  { slug: 'chwieobun', label: '취업운' },
+] as const
+
 function getZodiacBySlug(animal: string) {
   return ZODIAC.find(item => item.slug === animal)
 }
@@ -121,6 +127,7 @@ export default async function DdiAnimalFortunePage({ params }: Params) {
   }
 
   const otherAnimals = ZODIAC.filter(item => item.slug !== zodiac.slug)
+  const topicAnimalSlug = zodiac.slug === 'sheep' ? 'goat' : zodiac.slug
 
   return (
     <main className="min-h-screen bg-slate-950 px-4 py-12 text-slate-100">
@@ -174,6 +181,24 @@ export default async function DdiAnimalFortunePage({ params }: Params) {
                 className="rounded-lg border border-slate-700 px-3 py-2 text-xs text-slate-200 transition hover:border-amber-400 hover:text-amber-300"
               >
                 {item.icon} {item.animal}띠
+              </Link>
+            ))}
+          </div>
+        </section>
+
+        <section className="mt-6 rounded-2xl border border-slate-800 bg-slate-900/70 p-6">
+          <h2 className="font-serif-kr text-xl font-bold text-amber-300">더 자세한 운세</h2>
+          <p className="mt-3 text-sm leading-relaxed text-slate-300">
+            {zodiac.animal}띠의 세부 카테고리 운세를 확인하고 재물, 연애, 취업 흐름을 더 구체적으로 살펴보세요.
+          </p>
+          <div className="mt-4 flex flex-wrap gap-2">
+            {TOPIC_LINKS.map(topic => (
+              <Link
+                key={topic.slug}
+                href={`/fortune/ddi/${topicAnimalSlug}/${topic.slug}`}
+                className="rounded-lg border border-slate-700 px-3 py-2 text-xs text-slate-200 transition hover:border-amber-400 hover:text-amber-300"
+              >
+                {zodiac.animal}띠 {topic.label}
               </Link>
             ))}
           </div>

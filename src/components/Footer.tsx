@@ -46,8 +46,20 @@ export default function Footer() {
                 <Link href="/fortune/ddi/rat" className="transition-colors hover:text-[var(--text-accent)]">
                   띠별 운세
                 </Link>
+                <Link href="/fortune/ddi/rat/jaemulun" className="transition-colors hover:text-[var(--text-accent)]">
+                  재물운
+                </Link>
+                <Link href="/fortune/ddi/rat/yeonaewun" className="transition-colors hover:text-[var(--text-accent)]">
+                  연애운
+                </Link>
+                <Link href="/fortune/ddi/rat/chwieobun" className="transition-colors hover:text-[var(--text-accent)]">
+                  취업운
+                </Link>
                 <Link href="/saju/free" className="transition-colors hover:text-[var(--text-accent)]">
                   무료 사주풀이
+                </Link>
+                <Link href="/blog" className="transition-colors hover:text-[var(--text-accent)]">
+                  블로그
                 </Link>
               </nav>
             </div>

@@ -59,7 +59,7 @@ body {
 
 /* ─── Serif Font for Titles ─── */
 .font-serif-kr {
-  font-family: 'Noto Serif KR', serif;
+  font-family: var(--font-noto-serif-kr), serif;
 }
 
 /* ─── Animations ─── */

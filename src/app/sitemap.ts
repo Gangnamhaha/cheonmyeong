@@ -1,7 +1,10 @@
 import type { MetadataRoute } from 'next'
+import { BLOG_ARTICLE_SLUGS } from '@/data/blog-articles'
 
 const BASE_URL = 'https://cheonmyeong.vercel.app'
 const ZODIAC_SLUGS = ['rat', 'ox', 'tiger', 'rabbit', 'dragon', 'snake', 'horse', 'sheep', 'monkey', 'rooster', 'dog', 'pig'] as const
+const PROGRAMMATIC_ZODIAC_SLUGS = ['rat', 'ox', 'tiger', 'rabbit', 'dragon', 'snake', 'horse', 'goat', 'monkey', 'rooster', 'dog', 'pig'] as const
+const FORTUNE_TOPIC_SLUGS = ['jaemulun', 'yeonaewun', 'chwieobun'] as const
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date()
@@ -31,6 +34,14 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: 'daily' as const,
       priority: 0.88,
     })),
+    ...PROGRAMMATIC_ZODIAC_SLUGS.flatMap((animal) =>
+      FORTUNE_TOPIC_SLUGS.map((topic) => ({
+        url: `${BASE_URL}/fortune/ddi/${animal}/${topic}`,
+        lastModified: now,
+        changeFrequency: 'weekly' as const,
+        priority: 0.85,
+      })),
+    ),
     {
       url: `${BASE_URL}/fortune/2026`,
       lastModified: now,
@@ -62,6 +73,24 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.87,
     },
     {
+      url: `${BASE_URL}/fortune/2026/tojeongbigyeol`,
+      lastModified: now,
+      changeFrequency: 'weekly',
+      priority: 0.9,
+    },
+    {
+      url: `${BASE_URL}/fortune/2026/samjae`,
+      lastModified: now,
+      changeFrequency: 'weekly',
+      priority: 0.9,
+    },
+    {
+      url: `${BASE_URL}/fortune/2026/daebak`,
+      lastModified: now,
+      changeFrequency: 'weekly',
+      priority: 0.9,
+    },
+    {
       url: `${BASE_URL}/gunghap`,
       lastModified: now,
       changeFrequency: 'weekly',
@@ -85,6 +114,18 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: 'monthly',
       priority: 0.82,
     },
+    {
+      url: `${BASE_URL}/blog`,
+      lastModified: now,
+      changeFrequency: 'monthly',
+      priority: 0.7,
+    },
+    ...BLOG_ARTICLE_SLUGS.map(slug => ({
+      url: `${BASE_URL}/blog/${slug}`,
+      lastModified: now,
+      changeFrequency: 'monthly' as const,
+      priority: 0.8,
+    })),
     {
       url: `${BASE_URL}/pricing`,
       lastModified: now,
