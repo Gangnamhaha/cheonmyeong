@@ -37,7 +37,7 @@ type MovieGenre = 'classic' | 'romance' | 'growth' | 'adventure' | 'fantasy' | '
 /*  Constants                                                          */
 /* ------------------------------------------------------------------ */
 
-const SCENE_DURATIONS = [8000, 7000, 10000, 8000, 8000, 8000, 10000, 6000] as const
+const SCENE_DURATIONS = [14000, 12000, 18000, 14000, 14000, 14000, 18000, 10000] as const
 const OHENG_ORDER: OhengKey[] = ['목', '화', '토', '금', '수']
 const OHENG_HANJA: Record<OhengKey, string> = { 목: '木', 화: '火', 토: '土', 금: '金', 수: '水' }
 const KOREAN_FONT = "'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif"

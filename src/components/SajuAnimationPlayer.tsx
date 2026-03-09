@@ -26,7 +26,7 @@ interface SajuAnimationPlayerProps {
 type SceneIndex = 0 | 1 | 2 | 3 | 4 | 5 | 6
 type OhengKey = '목' | '화' | '토' | '금' | '수'
 
-const SCENE_DURATIONS = [2500, 3500, 2500, 3000, 3000, 4000, 2500] as const
+const SCENE_DURATIONS = [5000, 7000, 5000, 6000, 6000, 8000, 5000] as const
 const OHENG_ORDER: OhengKey[] = ['목', '화', '토', '금', '수']
 const OHENG_HANJA: Record<OhengKey, string> = {
   목: '木',
