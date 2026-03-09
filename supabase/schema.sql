@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS users (
   email TEXT UNIQUE NOT NULL,
   name TEXT NOT NULL,
   password_hash TEXT NOT NULL,
+  referral_code TEXT UNIQUE,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -172,3 +173,33 @@ CREATE TABLE IF NOT EXISTS saju_results (
 
 CREATE INDEX IF NOT EXISTS idx_saju_results_user ON saju_results(user_id);
 CREATE INDEX IF NOT EXISTS idx_saju_results_created ON saju_results(created_at DESC);
+
+-- Premium AI report purchases and generated content
+CREATE TABLE IF NOT EXISTS premium_reports (
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  user_id TEXT,
+  payment_id TEXT,
+  saju_data JSONB NOT NULL,
+  form_data JSONB NOT NULL,
+  report_content JSONB,
+  status TEXT DEFAULT 'pending',
+  amount INT DEFAULT 9900,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_premium_reports_user ON premium_reports(user_id);
+
+-- Referrals
+CREATE TABLE IF NOT EXISTS referrals (
+  id SERIAL PRIMARY KEY,
+  referrer_id TEXT NOT NULL,
+  referred_id TEXT NOT NULL,
+  referral_code TEXT NOT NULL,
+  credits_awarded_referrer INT DEFAULT 5,
+  credits_awarded_referred INT DEFAULT 3,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(referred_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_referrals_referrer ON referrals(referrer_id);
+CREATE INDEX IF NOT EXISTS idx_referrals_code ON referrals(referral_code);

@@ -2,7 +2,7 @@
 
 import { type FormEvent, useCallback, useEffect, useMemo, useState } from 'react'
 
-type TabKey = 'dashboard' | 'users' | 'revenue' | 'credits' | 'announcements' | 'inquiries' | 'settings'
+type TabKey = 'dashboard' | 'users' | 'revenue' | 'credits' | 'referrals' | 'announcements' | 'inquiries' | 'settings' | 'ai-costs'
 
 interface DashboardStats {
   totalUsers: number
@@ -80,11 +80,52 @@ interface SettingsResponse {
   envStatus: Record<string, string>
 }
 
+interface AICostData {
+  monthlyUsage: {
+    totalCost: number
+    byFeature: Record<string, number>
+    byDay: Array<{ date: string; cost: number }>
+  }
+  recentCalls: Array<{
+    timestamp: string
+    feature: string
+    model: string
+    inputTokens: number
+    outputTokens: number
+    cost: number
+  }>
+  budget: {
+    withinBudget: boolean
+    monthlySpend: number
+    monthlyBudget: number
+  }
+}
+
+interface AdminReferralStats {
+  totalReferrals: number
+  topReferrers: Array<{
+    referrerId: string
+    count: number
+    creditsEarned: number
+  }>
+  recentReferrals: Array<{
+    id: number
+    referrerId: string
+    referredId: string
+    referralCode: string
+    creditsAwardedReferrer: number
+    creditsAwardedReferred: number
+    createdAt: string
+  }>
+}
+
 const TABS: { key: TabKey; label: string }[] = [
   { key: 'dashboard', label: '대시보드' },
   { key: 'users', label: '사용자 관리' },
   { key: 'revenue', label: '매출/결제' },
   { key: 'credits', label: '크레딧 관리' },
+  { key: 'referrals', label: '레퍼럴' },
+  { key: 'ai-costs', label: 'AI 비용' },
   { key: 'announcements', label: '공지사항' },
   { key: 'inquiries', label: '고객문의' },
   { key: 'settings', label: '시스템 설정' },
@@ -146,6 +187,18 @@ export default function AdminDashboardClient() {
   const [replyingId, setReplyingId] = useState<string | null>(null)
   const [replyText, setReplyText] = useState('')
   const [replyLoading, setReplyLoading] = useState(false)
+
+  const [aiCosts, setAICosts] = useState<AICostData | null>(null)
+  const [aiCostsLoading, setAICostsLoading] = useState(false)
+  const [aiCostsError, setAICostsError] = useState<string | null>(null)
+
+  const [referralStats, setReferralStats] = useState<AdminReferralStats>({
+    totalReferrals: 0,
+    topReferrers: [],
+    recentReferrals: [],
+  })
+  const [referralLoading, setReferralLoading] = useState(false)
+  const [referralError, setReferralError] = useState<string | null>(null)
 
   const fetchStats = useCallback(async () => {
     setStatsLoading(true)
@@ -241,6 +294,42 @@ export default function AdminDashboardClient() {
     }
   }, [])
 
+  const fetchAICosts = useCallback(async () => {
+    setAICostsLoading(true)
+    setAICostsError(null)
+    try {
+      const res = await fetch('/api/admin/ai-costs')
+      const data = (await res.json()) as AICostData | { error?: string }
+      if (!res.ok || !('monthlyUsage' in data)) {
+        setAICostsError('error' in data ? (data.error ?? 'AI 비용 데이터를 불러오지 못했습니다.') : 'AI 비용 데이터를 불러오지 못했습니다.')
+        return
+      }
+      setAICosts(data)
+    } catch {
+      setAICostsError('AI 비용 데이터를 불러오지 못했습니다.')
+    } finally {
+      setAICostsLoading(false)
+    }
+  }, [])
+
+  const fetchReferralStats = useCallback(async () => {
+    setReferralLoading(true)
+    setReferralError(null)
+    try {
+      const res = await fetch('/api/admin/referrals')
+      const data = (await res.json()) as AdminReferralStats | { error?: string }
+      if (!res.ok || !('totalReferrals' in data)) {
+        setReferralError('error' in data ? (data.error ?? '레퍼럴 통계를 불러오지 못했습니다.') : '레퍼럴 통계를 불러오지 못했습니다.')
+        return
+      }
+      setReferralStats(data)
+    } catch {
+      setReferralError('레퍼럴 통계를 불러오지 못했습니다.')
+    } finally {
+      setReferralLoading(false)
+    }
+  }, [])
+
   useEffect(() => {
     async function checkAuth() {
       try {
@@ -252,6 +341,8 @@ export default function AdminDashboardClient() {
           fetchAnnouncements()
           fetchInquiries()
           fetchSettings()
+          fetchAICosts()
+          fetchReferralStats()
         }
       } catch {
         // not authenticated
@@ -260,7 +351,7 @@ export default function AdminDashboardClient() {
       }
     }
     checkAuth()
-  }, [fetchAnnouncements, fetchInquiries, fetchSettings, fetchStats, fetchUsers])
+  }, [fetchAnnouncements, fetchInquiries, fetchSettings, fetchStats, fetchUsers, fetchAICosts, fetchReferralStats])
 
   useEffect(() => {
     if (!isAuthenticated) return
@@ -298,6 +389,8 @@ export default function AdminDashboardClient() {
       fetchAnnouncements()
       fetchInquiries()
       fetchSettings()
+      fetchAICosts()
+      fetchReferralStats()
     } catch {
       setLoginError('서버 연결에 실패했습니다.')
     } finally {
@@ -1035,6 +1128,210 @@ export default function AdminDashboardClient() {
                   </div>
                 ))}
               </div>
+            </div>
+          </section>
+        )}
+
+        {activeTab === 'referrals' && (
+          <section className="space-y-4">
+            {referralError && <p className="rounded-lg border border-red-500/50 bg-red-900/20 px-4 py-3 text-sm text-red-300">{referralError}</p>}
+
+            <div className="rounded-xl border border-slate-700 bg-slate-800 p-5">
+              <p className="text-xs text-slate-400">총 레퍼럴</p>
+              <p className="mt-2 text-3xl font-semibold text-amber-400">
+                {referralLoading ? '...' : referralStats.totalReferrals.toLocaleString('ko-KR')}
+              </p>
+            </div>
+
+            <div className="rounded-xl border border-slate-700 bg-slate-800 p-4">
+              <div className="mb-3 flex items-center justify-between">
+                <h2 className="text-lg font-semibold text-amber-400">상위 추천인</h2>
+                <button
+                  onClick={fetchReferralStats}
+                  disabled={referralLoading}
+                  className="rounded-lg border border-slate-600 px-3 py-1.5 text-xs text-slate-300 hover:bg-slate-700 disabled:opacity-50"
+                >
+                  새로고침
+                </button>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="min-w-full text-sm">
+                  <thead className="text-left text-xs uppercase tracking-wider text-slate-400">
+                    <tr>
+                      <th className="px-3 py-2">추천인 ID</th>
+                      <th className="px-3 py-2">추천 수</th>
+                      <th className="px-3 py-2">보너스 크레딧</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {referralStats.topReferrers.length === 0 && (
+                      <tr>
+                        <td className="px-3 py-3 text-slate-500" colSpan={3}>레퍼럴 데이터가 없습니다.</td>
+                      </tr>
+                    )}
+                    {referralStats.topReferrers.map((item) => (
+                      <tr key={item.referrerId} className="border-t border-slate-700/70">
+                        <td className="px-3 py-2">{item.referrerId}</td>
+                        <td className="px-3 py-2">{item.count}</td>
+                        <td className="px-3 py-2 text-amber-400">{item.creditsEarned}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-slate-700 bg-slate-800 p-4">
+              <h3 className="text-base font-semibold">최근 레퍼럴</h3>
+              <div className="mt-3 overflow-x-auto">
+                <table className="min-w-full text-sm">
+                  <thead className="text-left text-xs uppercase tracking-wider text-slate-400">
+                    <tr>
+                      <th className="px-3 py-2">일시</th>
+                      <th className="px-3 py-2">추천인</th>
+                      <th className="px-3 py-2">가입자</th>
+                      <th className="px-3 py-2">코드</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {referralStats.recentReferrals.length === 0 && (
+                      <tr>
+                        <td className="px-3 py-3 text-slate-500" colSpan={4}>최근 레퍼럴이 없습니다.</td>
+                      </tr>
+                    )}
+                    {referralStats.recentReferrals.map((item) => (
+                      <tr key={item.id} className="border-t border-slate-700/70">
+                        <td className="px-3 py-2 text-slate-400">{new Date(item.createdAt).toLocaleString('ko-KR')}</td>
+                        <td className="px-3 py-2">{item.referrerId}</td>
+                        <td className="px-3 py-2">{item.referredId}</td>
+                        <td className="px-3 py-2 text-amber-400">{item.referralCode}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {activeTab === 'ai-costs' && (
+          <section className="space-y-4">
+            {/* Budget Status */}
+            <div className="rounded-xl border border-slate-700 bg-slate-800 p-4">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold text-amber-400">AI 비용 모니터링</h2>
+                <button onClick={fetchAICosts} className="rounded-lg border border-slate-600 px-3 py-1.5 text-xs text-slate-300 hover:bg-slate-700">새로고침</button>
+              </div>
+              {aiCostsLoading && <p className="text-sm text-slate-400">로딩 중...</p>}
+              {aiCostsError && <p className="text-sm text-red-300">{aiCostsError}</p>}
+              {!aiCostsLoading && aiCosts && (
+                <div className="space-y-4">
+                  {/* Monthly Budget */}
+                  <div className="rounded-lg border border-slate-700 bg-slate-900 p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium text-slate-300">이번 달 총 비용</span>
+                      <span className={`text-lg font-bold ${aiCosts.budget.withinBudget ? 'text-green-400' : 'text-red-400'}`}>
+                        ${aiCosts.budget.monthlySpend.toFixed(2)} / ${aiCosts.budget.monthlyBudget.toFixed(2)}
+                      </span>
+                    </div>
+                    <div className="w-full bg-slate-700 rounded-full h-2">
+                      <div
+                        className={`h-2 rounded-full transition-all ${aiCosts.budget.withinBudget ? 'bg-green-500' : 'bg-red-500'}`}
+                        style={{ width: `${Math.min((aiCosts.budget.monthlySpend / aiCosts.budget.monthlyBudget) * 100, 100)}%` }}
+                      />
+                    </div>
+                    <p className="text-xs text-slate-400 mt-2">
+                      {aiCosts.budget.withinBudget ? '✓ 예산 범위 내' : '⚠ 예산 초과'}
+                    </p>
+                  </div>
+
+                  {/* Daily Costs Chart */}
+                  {aiCosts.monthlyUsage.byDay.length > 0 && (
+                    <div className="rounded-lg border border-slate-700 bg-slate-900 p-4">
+                      <h3 className="text-sm font-semibold text-slate-200 mb-3">일별 비용</h3>
+                      <div className="flex items-end gap-1 h-32">
+                        {aiCosts.monthlyUsage.byDay.map((day) => {
+                          const maxCost = Math.max(...aiCosts.monthlyUsage.byDay.map(d => d.cost), 1)
+                          const height = (day.cost / maxCost) * 100
+                          return (
+                            <div key={day.date} className="flex-1 flex flex-col items-center gap-1">
+                              <div
+                                className="w-full bg-amber-500/60 rounded-t hover:bg-amber-400 transition-colors"
+                                style={{ height: `${height}%`, minHeight: '4px' }}
+                                title={`${day.date}: $${day.cost.toFixed(2)}`}
+                              />
+                              <span className="text-[10px] text-slate-500">{day.date.slice(5)}</span>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Feature Breakdown */}
+                  {Object.keys(aiCosts.monthlyUsage.byFeature).length > 0 && (
+                    <div className="rounded-lg border border-slate-700 bg-slate-900 p-4">
+                      <h3 className="text-sm font-semibold text-slate-200 mb-3">기능별 비용</h3>
+                      <div className="overflow-x-auto">
+                        <table className="min-w-full text-sm">
+                          <thead className="text-left text-xs uppercase tracking-wider text-slate-400">
+                            <tr>
+                              <th className="px-3 py-2">기능</th>
+                              <th className="px-3 py-2 text-right">비용</th>
+                              <th className="px-3 py-2 text-right">비율</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {Object.entries(aiCosts.monthlyUsage.byFeature).map(([feature, cost]) => {
+                              const percentage = (cost / aiCosts.monthlyUsage.totalCost) * 100
+                              return (
+                                <tr key={feature} className="border-t border-slate-700/70">
+                                  <td className="px-3 py-2 text-slate-300">{feature}</td>
+                                  <td className="px-3 py-2 text-right text-amber-400">${cost.toFixed(4)}</td>
+                                  <td className="px-3 py-2 text-right text-slate-400">{percentage.toFixed(1)}%</td>
+                                </tr>
+                              )
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Recent API Calls */}
+                  {aiCosts.recentCalls.length > 0 && (
+                    <div className="rounded-lg border border-slate-700 bg-slate-900 p-4">
+                      <h3 className="text-sm font-semibold text-slate-200 mb-3">최근 API 호출 (상위 20개)</h3>
+                      <div className="overflow-x-auto">
+                        <table className="min-w-full text-xs">
+                          <thead className="text-left uppercase tracking-wider text-slate-400">
+                            <tr>
+                              <th className="px-3 py-2">시간</th>
+                              <th className="px-3 py-2">기능</th>
+                              <th className="px-3 py-2">모델</th>
+                              <th className="px-3 py-2 text-right">입력</th>
+                              <th className="px-3 py-2 text-right">출력</th>
+                              <th className="px-3 py-2 text-right">비용</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {aiCosts.recentCalls.map((call, idx) => (
+                              <tr key={idx} className="border-t border-slate-700/70">
+                                <td className="px-3 py-2 text-slate-400">{new Date(call.timestamp).toLocaleTimeString('ko-KR')}</td>
+                                <td className="px-3 py-2 text-slate-300">{call.feature}</td>
+                                <td className="px-3 py-2 text-slate-400">{call.model}</td>
+                                <td className="px-3 py-2 text-right text-slate-400">{call.inputTokens}</td>
+                                <td className="px-3 py-2 text-right text-slate-400">{call.outputTokens}</td>
+                                <td className="px-3 py-2 text-right text-amber-400">${call.cost.toFixed(4)}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </section>
         )}

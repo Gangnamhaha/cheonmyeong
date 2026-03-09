@@ -124,6 +124,44 @@ export function shareGunghapResult(params: {
   })
 }
 
+/** Share referral invite via KakaoTalk */
+export function shareReferralInvite(referralCode: string) {
+  const trimmedCode = referralCode.trim().toUpperCase()
+  const link = `https://cheonmyeong.vercel.app/signup?ref=${trimmedCode}`
+
+  if (!trimmedCode) {
+    fallbackShare('초대', 'https://cheonmyeong.vercel.app/signup')
+    return
+  }
+
+  if (!initKakao()) {
+    fallbackShare('초대', link)
+    return
+  }
+
+  window.Kakao.Share.sendDefault({
+    objectType: 'feed',
+    content: {
+      title: '천명(天命) 친구 초대',
+      description: '천명에서 무료 AI 사주를 확인해보세요! 가입하면 3크레딧 보너스!',
+      imageUrl: 'https://cheonmyeong.vercel.app/opengraph-image.png',
+      link: {
+        mobileWebUrl: link,
+        webUrl: link,
+      },
+    },
+    buttons: [
+      {
+        title: '초대 링크 열기',
+        link: {
+          mobileWebUrl: link,
+          webUrl: link,
+        },
+      },
+    ],
+  })
+}
+
 /** Fallback when Kakao SDK not available — copy link */
 function fallbackShare(label: string, url?: string) {
   const targetUrl = url || window.location.href

@@ -1,16 +1,18 @@
 import { NextResponse } from 'next/server'
 import { createUser } from '@/lib/user'
+import { applyReferralCode } from '@/lib/referral'
 
 interface SignupBody {
   email?: string
   password?: string
   name?: string
+  referralCode?: string
 }
 
 export async function POST(request: Request) {
   try {
     const body = (await request.json()) as SignupBody
-    const { email, password, name } = body
+    const { email, password, name, referralCode } = body
 
     // ─── Validation ──────────────────────────────────────────────
     if (!email || !password || !name) {
@@ -55,10 +57,26 @@ export async function POST(request: Request) {
     }
 
     // ─── Create user ─────────────────────────────────────────────
-    await createUser(trimmedEmail, password, trimmedName)
+    const user = await createUser(trimmedEmail, password, trimmedName)
+
+    let referralApplied = false
+    let referralMessage: string | null = null
+
+    if (referralCode?.trim()) {
+      try {
+        await applyReferralCode(user.id, referralCode)
+        referralApplied = true
+      } catch (referralError) {
+        referralMessage = referralError instanceof Error ? referralError.message : '초대 코드 적용에 실패했습니다.'
+      }
+    }
 
     return NextResponse.json(
-      { message: '회원가입이 완료되었습니다.' },
+      {
+        message: '회원가입이 완료되었습니다.',
+        referralApplied,
+        referralMessage,
+      },
       { status: 201 },
     )
   } catch (error) {

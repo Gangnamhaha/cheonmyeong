@@ -1,23 +1,48 @@
 'use client'
 
-import { useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { signIn } from 'next-auth/react'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { trackSignUp } from '@/lib/analytics'
 
+const REFERRAL_STORAGE_KEY = 'signup_ref_code'
+
 export default function SignupPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen" style={{ background: 'var(--bg-primary)' }} />}>
+      <SignupContent />
+    </Suspense>
+  )
+}
+
+function SignupContent() {
+  const searchParams = useSearchParams()
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
+  const [referralCode, setReferralCode] = useState('')
   const [error, setError] = useState('')
+  const [info, setInfo] = useState('')
   const [loading, setLoading] = useState(false)
 
   const isValid = name.trim() && email.trim() && password.length >= 6 && password === confirmPassword
 
+  useEffect(() => {
+    const queryRef = searchParams.get('ref')?.trim().toUpperCase() ?? ''
+    const storedRef = sessionStorage.getItem(REFERRAL_STORAGE_KEY)?.trim().toUpperCase() ?? ''
+    const code = queryRef || storedRef
+
+    if (!code) return
+    setReferralCode(code.slice(0, 6))
+    sessionStorage.setItem(REFERRAL_STORAGE_KEY, code.slice(0, 6))
+  }, [searchParams])
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError('')
+    setInfo('')
 
     if (!name.trim()) { setError('이름을 입력해주세요.'); return }
     if (!email.trim()) { setError('이메일을 입력해주세요.'); return }
@@ -27,13 +52,20 @@ export default function SignupPage() {
     setLoading(true)
 
     try {
+      const normalizedReferralCode = referralCode.trim().toUpperCase()
+
       const res = await fetch('/api/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: name.trim(), email: email.trim(), password }),
+        body: JSON.stringify({
+          name: name.trim(),
+          email: email.trim(),
+          password,
+          referralCode: normalizedReferralCode || undefined,
+        }),
       })
 
-      const data = (await res.json()) as { error?: string }
+      const data = (await res.json()) as { error?: string; referralApplied?: boolean; referralMessage?: string | null }
 
       if (!res.ok) {
         setError(data.error ?? '회원가입에 실패했습니다.')
@@ -44,7 +76,18 @@ export default function SignupPage() {
       // Track signup event
       trackSignUp('email')
 
+      if (data.referralApplied) {
+        setInfo('초대 코드가 적용되었습니다! 3 크레딧이 지급되었습니다.')
+        sessionStorage.removeItem(REFERRAL_STORAGE_KEY)
+      } else if (data.referralMessage) {
+        setInfo(`초대 코드 안내: ${data.referralMessage}`)
+      }
+
       // Auto-login after signup
+      if (data.referralApplied) {
+        await new Promise((resolve) => setTimeout(resolve, 900))
+      }
+
       await signIn('credentials', {
         email: email.trim(),
         password,
@@ -106,6 +149,15 @@ export default function SignupPage() {
               </div>
             )}
 
+            {info && (
+              <div
+                className="rounded-xl px-4 py-2.5 text-sm"
+                style={{ background: 'rgba(74, 222, 128, 0.12)', color: '#4ade80' }}
+              >
+                {info}
+              </div>
+            )}
+
             <input
               type="text"
               value={name}
@@ -154,6 +206,28 @@ export default function SignupPage() {
               value={confirmPassword}
               onChange={e => setConfirmPassword(e.target.value)}
               placeholder="비밀번호 확인"
+              className="w-full rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-1 transition-colors"
+              style={{
+                background: 'var(--bg-secondary)',
+                border: '1px solid var(--border-color)',
+                color: 'var(--text-primary)',
+              }}
+              disabled={loading}
+            />
+
+            <input
+              type="text"
+              value={referralCode}
+              onChange={e => {
+                const next = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6)
+                setReferralCode(next)
+                if (next) {
+                  sessionStorage.setItem(REFERRAL_STORAGE_KEY, next)
+                } else {
+                  sessionStorage.removeItem(REFERRAL_STORAGE_KEY)
+                }
+              }}
+              placeholder="초대 코드 (선택)"
               className="w-full rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-1 transition-colors"
               style={{
                 background: 'var(--bg-secondary)',

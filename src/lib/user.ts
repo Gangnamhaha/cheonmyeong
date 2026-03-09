@@ -10,12 +10,14 @@
 import { Redis } from '@upstash/redis'
 import { hash, compare } from 'bcryptjs'
 import { getSupabase } from '@/lib/db'
+import { generateReferralCode } from '@/lib/referral'
 
 export interface StoredUser {
   id: string
   email: string
   name: string
   passwordHash: string
+  referralCode?: string | null
   createdAt: string
 }
 
@@ -32,6 +34,26 @@ const memUsers = new Map<string, StoredUser>()
 const USER_KEY = (email: string) => `user:email:${email.toLowerCase().trim()}`
 
 const SALT_ROUNDS = 12
+
+async function createUniqueReferralCode(): Promise<string | null> {
+  const supabase = getSupabase()
+  if (!supabase) return null
+
+  for (let i = 0; i < 20; i += 1) {
+    const code = generateReferralCode()
+    const { data: duplicate } = await supabase
+      .from('users')
+      .select('id')
+      .eq('referral_code', code)
+      .maybeSingle()
+
+    if (!duplicate) {
+      return code
+    }
+  }
+
+  return null
+}
 
 // ─── Create user ─────────────────────────────────────────────────
 
@@ -55,17 +77,21 @@ export async function createUser(
     email: normalizedEmail,
     name: name.trim(),
     passwordHash,
+    referralCode: null,
     createdAt: new Date().toISOString(),
   }
 
   // Dual-write: Supabase (primary) + Redis (cache)
   const supabase = getSupabase()
   if (supabase) {
+    user.referralCode = await createUniqueReferralCode()
+
     await supabase.from('users').insert({
       id: user.id,
       email: user.email,
       name: user.name,
       password_hash: user.passwordHash,
+      referral_code: user.referralCode,
       created_at: user.createdAt,
     })
   }
@@ -98,6 +124,7 @@ export async function findUserByEmail(email: string): Promise<StoredUser | null>
         email: data.email,
         name: data.name,
         passwordHash: data.password_hash,
+        referralCode: data.referral_code,
         createdAt: data.created_at,
       }
     }

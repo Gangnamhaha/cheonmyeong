@@ -2,6 +2,7 @@
 
 import { useSession, signIn, signOut } from 'next-auth/react'
 import { useState, useEffect } from 'react'
+import { shareReferralInvite } from '@/lib/kakao'
 
 interface CreditInfo {
   authenticated: boolean
@@ -12,13 +13,25 @@ interface CreditInfo {
   total: number
 }
 
+interface ReferralInfo {
+  code: string
+  totalReferrals: number
+  creditsEarned: number
+}
+
 export default function UserMenu() {
   const { data: session, status } = useSession()
   const [credits, setCredits] = useState<CreditInfo | null>(null)
+  const [referral, setReferral] = useState<ReferralInfo | null>(null)
   const [menuOpen, setMenuOpen] = useState(false)
 
   useEffect(() => {
     fetchCredits()
+    if (session?.user) {
+      fetchReferral()
+    } else {
+      setReferral(null)
+    }
   }, [session])
 
   async function fetchCredits() {
@@ -29,6 +42,28 @@ export default function UserMenu() {
         setCredits(data)
       }
     } catch { /* ignore */ }
+  }
+
+  async function fetchReferral() {
+    try {
+      const res = await fetch('/api/referral')
+      if (!res.ok) return
+      const data = await res.json()
+      setReferral(data)
+    } catch {
+      // ignore
+    }
+  }
+
+  async function copyReferralLink() {
+    if (!referral?.code) return
+    const link = `https://cheonmyeong.vercel.app/signup?ref=${referral.code}`
+    try {
+      await navigator.clipboard.writeText(link)
+      alert('초대 링크가 복사되었습니다!')
+    } catch {
+      alert('초대 링크 복사에 실패했습니다.')
+    }
   }
 
   if (status === 'loading') {
@@ -222,6 +257,35 @@ export default function UserMenu() {
                       background: 'var(--accent)',
                     }}
                   />
+                </div>
+              </div>
+            )}
+
+            {referral && (
+              <div className="px-4 py-3 border-b" style={{ borderColor: 'var(--border-color)' }}>
+                <p className="text-xs mb-2" style={{ color: 'var(--text-secondary)' }}>친구 초대</p>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs" style={{ color: 'var(--text-muted)' }}>내 코드</span>
+                  <span className="text-sm font-bold tracking-wider" style={{ color: 'var(--text-accent)' }}>{referral.code}</span>
+                </div>
+                <p className="text-[11px] mb-2" style={{ color: 'var(--text-muted)' }}>
+                  초대한 친구: {referral.totalReferrals}명 | 보너스 크레딧: {referral.creditsEarned}
+                </p>
+                <div className="space-y-1.5">
+                  <button
+                    onClick={copyReferralLink}
+                    className="w-full rounded-lg px-3 py-1.5 text-xs font-medium hover:opacity-80 transition-opacity"
+                    style={{ background: 'var(--bg-secondary)', color: 'var(--text-primary)', border: '1px solid var(--border-color)' }}
+                  >
+                    초대 링크 복사
+                  </button>
+                  <button
+                    onClick={() => shareReferralInvite(referral.code)}
+                    className="w-full rounded-lg px-3 py-1.5 text-xs font-medium hover:opacity-80 transition-opacity"
+                    style={{ background: '#FEE500', color: '#000000' }}
+                  >
+                    카카오톡으로 초대
+                  </button>
                 </div>
               </div>
             )}
