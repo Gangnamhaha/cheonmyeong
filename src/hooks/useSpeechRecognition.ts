@@ -51,14 +51,19 @@ declare global {
 
 interface UseSpeechRecognitionOptions {
   continuous?: boolean
+  /** Maximum listening duration in ms (default: 60000 = 60s) */
+  maxDuration?: number
 }
 
 export function useSpeechRecognition(options: UseSpeechRecognitionOptions = {}) {
-  const { continuous = false } = options
+  const { continuous = true, maxDuration = 60_000 } = options
   const [isListening, setIsListening] = useState(false)
   const [transcript, setTranscript] = useState('')
   const [interimTranscript, setInterimTranscript] = useState('')
   const recognitionRef = useRef<BrowserSpeechRecognition | null>(null)
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  /** Whether the user explicitly wants to be listening (vs. browser auto-stop). */
+  const wantListeningRef = useRef(false)
 
   const isSupported = useMemo(() => {
     if (typeof window === 'undefined') {
@@ -117,13 +122,24 @@ export function useSpeechRecognition(options: UseSpeechRecognitionOptions = {}) 
     }
 
     recognition.onend = () => {
-      setIsListening(false)
       setInterimTranscript('')
+      // Auto-restart if the user still wants to listen (browser stops on silence)
+      if (wantListeningRef.current) {
+        try {
+          recognition.start()
+          return
+        } catch {
+          // Failed to restart — fall through and mark as stopped
+        }
+      }
+      setIsListening(false)
     }
 
     recognitionRef.current = recognition
 
     return () => {
+      wantListeningRef.current = false
+      if (timerRef.current) { clearTimeout(timerRef.current); timerRef.current = null }
       recognition.onresult = null
       recognition.onerror = null
       recognition.onend = null
@@ -140,12 +156,23 @@ export function useSpeechRecognition(options: UseSpeechRecognitionOptions = {}) 
 
     try {
       setInterimTranscript('')
+      wantListeningRef.current = true
       recognition.start()
       setIsListening(true)
+
+      // Auto-stop after maxDuration
+      if (timerRef.current) clearTimeout(timerRef.current)
+      timerRef.current = setTimeout(() => {
+        wantListeningRef.current = false
+        recognition.stop()
+        setIsListening(false)
+        setInterimTranscript('')
+      }, maxDuration)
     } catch {
+      wantListeningRef.current = false
       setIsListening(false)
     }
-  }, [isListening])
+  }, [isListening, maxDuration])
 
   const stopListening = useCallback(() => {
     const recognition = recognitionRef.current
@@ -153,6 +180,8 @@ export function useSpeechRecognition(options: UseSpeechRecognitionOptions = {}) 
       return
     }
 
+    wantListeningRef.current = false
+    if (timerRef.current) { clearTimeout(timerRef.current); timerRef.current = null }
     recognition.stop()
     setIsListening(false)
     setInterimTranscript('')
