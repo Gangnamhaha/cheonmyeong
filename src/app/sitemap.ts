@@ -1,6 +1,7 @@
 import type { MetadataRoute } from 'next'
 
 const BASE_URL = 'https://cheonmyeong.vercel.app'
+const ZODIAC_SLUGS = ['rat', 'ox', 'tiger', 'rabbit', 'dragon', 'snake', 'horse', 'sheep', 'monkey', 'rooster', 'dog', 'pig'] as const
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date()
@@ -24,6 +25,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: 'hourly',
       priority: 0.93,
     },
+    ...ZODIAC_SLUGS.map((slug) => ({
+      url: `${BASE_URL}/fortune/ddi/${slug}`,
+      lastModified: now,
+      changeFrequency: 'daily' as const,
+      priority: 0.88,
+    })),
     {
       url: `${BASE_URL}/fortune/2026`,
       lastModified: now,
@@ -59,6 +66,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: now,
       changeFrequency: 'weekly',
       priority: 0.8,
+    },
+    {
+      url: `${BASE_URL}/history`,
+      lastModified: now,
+      changeFrequency: 'weekly',
+      priority: 0.5,
     },
     {
       url: `${BASE_URL}/login`,

@@ -52,11 +52,12 @@ declare global {
   }
 }
 
-type PlanMode = 'onetime' | 'subscription'
+type PlanMode = 'onetime' | 'monthly' | 'annual'
 type PaymentMethod = 'card' | 'kakao_pay'
 
-const ONETIME_PLANS: OnetimePlanKey[] = ['starter', 'pro', 'unlimited']
-const SUBSCRIPTION_PLANS: SubscriptionPlanKey[] = ['sub_basic', 'sub_pro', 'sub_premium']
+const ONETIME_PLANS: OnetimePlanKey[] = ['starter', 'pro', 'bundle_50', 'bundle_200', 'unlimited']
+const MONTHLY_SUBSCRIPTION_PLANS: SubscriptionPlanKey[] = ['sub_basic', 'sub_pro', 'sub_premium']
+const ANNUAL_SUBSCRIPTION_PLANS: SubscriptionPlanKey[] = ['sub_basic_annual', 'sub_pro_annual']
 
 export default function PricingPage() {
   return (
@@ -71,7 +72,7 @@ function PricingContent() {
   const { theme, toggleTheme, cycleFontSize, fontSizeLabel } = useTheme()
   const searchParams = useSearchParams()
 
-  const [planMode, setPlanMode] = useState<PlanMode>('subscription')
+  const [planMode, setPlanMode] = useState<PlanMode>('monthly')
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('card')
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null)
   const [toast, setToast] = useState<string | null>(null)
@@ -368,7 +369,10 @@ function PricingContent() {
     }
   }
 
-  const currentPlans = planMode === 'onetime' ? ONETIME_PLANS : SUBSCRIPTION_PLANS
+  const currentPlans = 
+    planMode === 'onetime' ? ONETIME_PLANS : 
+    planMode === 'monthly' ? MONTHLY_SUBSCRIPTION_PLANS : 
+    ANNUAL_SUBSCRIPTION_PLANS
 
   return (
     <div className="min-h-screen px-4 py-12" style={{ background: 'var(--bg-primary)' }}>
@@ -461,7 +465,7 @@ function PricingContent() {
           </div>
         )}
 
-        {/* Plan Mode Toggle */}
+         {/* Plan Mode Toggle */}
          <div className="flex justify-center mb-8">
            <div className="inline-flex rounded-full p-1" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)' }}>
              <button
@@ -475,14 +479,24 @@ function PricingContent() {
                일회성
              </button>
              <button
-               onClick={() => setPlanMode('subscription')}
+               onClick={() => setPlanMode('monthly')}
                className="px-5 py-2 rounded-full text-sm font-bold transition-all"
                style={{
-                 background: planMode === 'subscription' ? 'var(--accent)' : 'transparent',
-                 color: planMode === 'subscription' ? 'var(--accent-text)' : 'var(--text-muted)',
+                 background: planMode === 'monthly' ? 'var(--accent)' : 'transparent',
+                 color: planMode === 'monthly' ? 'var(--accent-text)' : 'var(--text-muted)',
                }}
              >
-               구독
+               월 구독
+             </button>
+             <button
+               onClick={() => setPlanMode('annual')}
+               className="px-5 py-2 rounded-full text-sm font-bold transition-all"
+               style={{
+                 background: planMode === 'annual' ? 'var(--accent)' : 'transparent',
+                 color: planMode === 'annual' ? 'var(--accent-text)' : 'var(--text-muted)',
+               }}
+             >
+               연 구독
              </button>
            </div>
          </div>
@@ -516,13 +530,15 @@ function PricingContent() {
          )}
 
          {/* Subscription Card-Only Notice */}
-         {planMode === 'subscription' && (
+         {(planMode === 'monthly' || planMode === 'annual') && (
            <div
              className="rounded-2xl p-4 mb-6 theme-transition"
              style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)' }}
            >
              <p className="text-xs text-center" style={{ color: 'var(--text-secondary)' }}>
-               구독은 카드결제만 지원됩니다.
+               {planMode === 'annual' 
+                 ? '연간 구독은 카드결제만 지원됩니다. 매월 크레딧이 자동 충전됩니다.'
+                 : '구독은 카드결제만 지원됩니다.'}
              </p>
            </div>
          )}
@@ -556,30 +572,39 @@ function PricingContent() {
 
         {/* Plan Cards */}
         <div className="space-y-4">
-          {currentPlans.map((key) => {
-            const plan = PLANS[key]
-            const isPopular = plan.popular
-            const isCurrent = credits?.plan === key
-            const isSubscription = plan.type === 'subscription'
+           {currentPlans.map((key) => {
+             const plan = PLANS[key]
+             const isPopular = plan.popular
+             const isCurrent = credits?.plan === key
+             const isSubscription = plan.type === 'subscription'
+             const isAnnual = isSubscription && plan.interval === 'year'
 
-            return (
-              <div
-                key={key}
-                className="rounded-2xl p-5 theme-transition relative overflow-hidden"
-                style={{
-                  background: 'var(--bg-card)',
-                  border: isPopular ? '2px solid var(--accent)' : '1px solid var(--border-color)',
-                  boxShadow: isPopular ? '0 4px 24px rgba(245,158,11,0.15)' : undefined,
-                }}
-              >
-                {isPopular && (
-                  <div
-                    className="absolute top-0 right-0 px-3 py-1 text-[10px] font-bold rounded-bl-lg"
-                    style={{ background: 'var(--accent)', color: 'var(--accent-text)' }}
-                  >
-                    인기
-                  </div>
-                )}
+             return (
+               <div
+                 key={key}
+                 className="rounded-2xl p-5 theme-transition relative overflow-hidden"
+                 style={{
+                   background: 'var(--bg-card)',
+                   border: isPopular ? '2px solid var(--accent)' : '1px solid var(--border-color)',
+                   boxShadow: isPopular ? '0 4px 24px rgba(245,158,11,0.15)' : undefined,
+                 }}
+               >
+                 {isPopular && (
+                   <div
+                     className="absolute top-0 right-0 px-3 py-1 text-[10px] font-bold rounded-bl-lg"
+                     style={{ background: 'var(--accent)', color: 'var(--accent-text)' }}
+                   >
+                     인기
+                   </div>
+                 )}
+                 {isAnnual && (
+                   <div
+                     className="absolute top-0 right-0 px-3 py-1 text-[10px] font-bold rounded-bl-lg"
+                     style={{ background: '#10b981', color: 'white' }}
+                   >
+                     20% 할인
+                   </div>
+                 )}
 
                 <div className="flex items-center justify-between mb-3">
                   <div>

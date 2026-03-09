@@ -292,6 +292,14 @@ export default function UserMenu() {
 
             {/* Actions */}
             <a
+              href="/history"
+              className="block px-4 py-2.5 text-sm hover:opacity-80 transition-opacity"
+              style={{ color: 'var(--text-secondary)' }}
+              onClick={() => setMenuOpen(false)}
+            >
+              📋 내 히스토리
+            </a>
+            <a
               href="/pricing"
               className="block px-4 py-2.5 text-sm hover:opacity-80 transition-opacity"
               style={{ color: 'var(--text-accent)' }}

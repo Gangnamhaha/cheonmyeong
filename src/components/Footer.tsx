@@ -31,6 +31,9 @@ export default function Footer() {
                 <Link href="/fortune/2026" className="transition-colors hover:text-[var(--text-accent)]">
                   2026년 운세
                 </Link>
+                <Link href="/fortune/ddi/rat" className="transition-colors hover:text-[var(--text-accent)]">
+                  띠별 운세
+                </Link>
                 <Link href="/saju/free" className="transition-colors hover:text-[var(--text-accent)]">
                   무료 사주풀이
                 </Link>
