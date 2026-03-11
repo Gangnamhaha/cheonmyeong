@@ -37,7 +37,7 @@ type MovieGenre = 'classic' | 'romance' | 'growth' | 'adventure' | 'fantasy' | '
 /*  Constants                                                          */
 /* ------------------------------------------------------------------ */
 
-const SCENE_DURATIONS = [14000, 12000, 18000, 14000, 14000, 14000, 18000, 10000] as const
+const SCENE_DURATIONS = [20000, 18000, 25000, 20000, 20000, 20000, 25000, 15000] as const
 const OHENG_ORDER: OhengKey[] = ['목', '화', '토', '금', '수']
 const OHENG_HANJA: Record<OhengKey, string> = { 목: '木', 화: '火', 토: '土', 금: '金', 수: '水' }
 const KOREAN_FONT = "'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif"
@@ -733,7 +733,7 @@ export default function SajuMoviePlayer({
         if (i < scenes.length - 1) {
           await new Promise<void>((resolve) => {
             let frameIdx = 0
-            const totalFrames = 15
+              const totalFrames = 30
             const frame = () => {
               const t = frameIdx / (totalFrames - 1)
               if (t < 0.5) {
@@ -1312,7 +1312,7 @@ export default function SajuMoviePlayer({
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 1.2, ease: 'circInOut' }}
+              transition={{ duration: 2.0, ease: 'circInOut' }}
             >
               {/* AI-generated scene background image */}
               {sceneImages[currentScene] && (

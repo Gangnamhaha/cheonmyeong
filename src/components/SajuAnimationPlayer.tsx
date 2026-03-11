@@ -26,7 +26,7 @@ interface SajuAnimationPlayerProps {
 type SceneIndex = 0 | 1 | 2 | 3 | 4 | 5 | 6
 type OhengKey = '목' | '화' | '토' | '금' | '수'
 
-const SCENE_DURATIONS = [5000, 7000, 5000, 6000, 6000, 8000, 5000] as const
+const SCENE_DURATIONS = [8000, 11000, 8000, 10000, 10000, 12000, 8000] as const
 const OHENG_ORDER: OhengKey[] = ['목', '화', '토', '금', '수']
 const OHENG_HANJA: Record<OhengKey, string> = {
   목: '木',
@@ -581,7 +581,7 @@ export default function SajuAnimationPlayer({
       width: number,
       height: number,
     ) => {
-      const totalFrames = 10
+      const totalFrames = 20
       await new Promise<void>((resolve) => {
         let frameIndex = 0
         const frame = () => {
@@ -1055,7 +1055,7 @@ export default function SajuAnimationPlayer({
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -16 }}
-            transition={{ duration: 0.45, ease: 'easeInOut' }}
+            transition={{ duration: 0.9, ease: 'easeInOut' }}
           >
             {renderScene()}
           </motion.div>
