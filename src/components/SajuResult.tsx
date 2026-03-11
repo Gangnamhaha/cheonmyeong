@@ -25,7 +25,7 @@ export default function SajuResultCard({ result }: SajuResultProps) {
       <p className="text-center text-slate-400 text-sm mb-5">{result.rawText}</p>
 
       {/* 4기둥 카드 */}
-      <div className="grid grid-cols-4 gap-2">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         {pillars.map((pillar, i) => {
           const color = OHENG_COLORS[pillar.element] ?? '#94a3b8'
           const isLight = pillar.element === '금' // 금은 흰색이라 텍스트 어둡게

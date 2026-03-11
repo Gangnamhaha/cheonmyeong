@@ -40,7 +40,7 @@ export default function SipsinChart({ result }: SipsinChartProps) {
       </h2>
 
       {/* 4기둥 십신 그리드 */}
-      <div className="grid grid-cols-4 gap-2 mb-4">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 mb-4">
         {positions.map((pos, i) => (
           <div
             key={i}
@@ -80,7 +80,7 @@ export default function SipsinChart({ result }: SipsinChartProps) {
 
       {/* 십신 요약 */}
       <div className="bg-slate-800/50 rounded-xl border border-slate-700 p-3">
-        <div className="grid grid-cols-5 gap-1">
+        <div className="grid grid-cols-3 gap-1 sm:grid-cols-5">
           {Object.values(SIPSIN_GROUP).map(group => {
             const count = group.members.reduce((sum, m) => sum + (result.summary[m] ?? 0), 0)
             return (

@@ -874,7 +874,7 @@ export default function SajuMoviePlayer({
             >
               사주팔자
             </motion.h3>
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
               {pillars.map(({ label, p }, idx) => {
                 const c = OHENG_COLORS[p.element] ?? '#94a3b8'
                 return (
