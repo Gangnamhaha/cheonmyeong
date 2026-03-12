@@ -32,7 +32,7 @@ export default function SajuFreeClient() {
         <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-6">
           <h1 className="font-serif-kr text-3xl font-black text-amber-400">무료 AI 사주팔자 풀이</h1>
           <p className="mt-3 text-sm leading-relaxed text-slate-300">
-            사주해은 전통 명리학 구조를 바탕으로 오행, 십신, 용신의 핵심을 쉽게 해석해 드립니다.
+            사주해는 전통 명리학 구조를 바탕으로 오행, 십신, 용신의 핵심을 쉽게 해석해 드립니다.
             무료로 시작해 내 성향, 연애 흐름, 일과 재물의 방향을 빠르게 확인해 보세요.
           </p>
           <div className="mt-5 flex flex-wrap gap-3 text-sm">

@@ -118,7 +118,7 @@ const STARS = generateStars(60)
 function getGreeting(): string {
   const h = new Date().getHours()
   if (h >= 5 && h < 9) return '상쾌한 아침, 오늘의 운명을 살펴볼까요?'
-  if (h >= 9 && h < 12) return '좋은 오전이에요. 사주해이 기다리고 있어요.'
+  if (h >= 9 && h < 12) return '좋은 오전이에요. 사주해가 기다리고 있어요.'
   if (h >= 12 && h < 14) return '점심 시간, 잠깐 운세를 들여다볼까요?'
   if (h >= 14 && h < 18) return '오후의 여유, 사주로 내일을 준비하세요.'
   if (h >= 18 && h < 21) return '해 질 녘, 별빛 아래 운명을 읽어봅니다.'
@@ -398,7 +398,7 @@ export default function SajuForm({ onSubmit, loading = false }: SajuFormProps) {
             className="font-serif-kr text-2xl tracking-[0.3em] mb-4"
             style={{ color: 'var(--text-secondary)' }}
           >
-            天命
+            AI 사주팔자
           </p>
 
           {/* D2: Time-based greeting */}
@@ -458,7 +458,7 @@ export default function SajuForm({ onSubmit, loading = false }: SajuFormProps) {
           className="font-serif-kr text-center text-xl font-bold mb-2"
           style={{ color: 'var(--text-accent)', opacity: 0, animation: 'fadeIn 0.5s ease-out 0.3s forwards' }}
         >
-          사주해이 제공하는 기능
+          사주해가 제공하는 기능
         </h2>
         <p
           className="text-center text-xs mb-8 max-w-xs mx-auto leading-relaxed"

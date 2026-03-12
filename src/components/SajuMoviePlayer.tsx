@@ -289,7 +289,7 @@ function drawSceneForCanvas(
   switch (scene.type) {
     case 'prologue':
       drawCenteredText(ctx, '사주해', w / 2, h * 0.38, 120, accent)
-      drawCenteredText(ctx, '天命', w / 2, h * 0.45, 40, '#64748b')
+      drawCenteredText(ctx, 'AI 사주팔자', w / 2, h * 0.45, 40, '#64748b')
       drawWrappedText(ctx, scene.narration, w / 2, h * 0.62, w * 0.7, 52, 32, '#e2e8f0')
       break
 
@@ -825,7 +825,7 @@ export default function SajuMoviePlayer({
               animate={{ opacity: 1 }}
               transition={{ delay: 1.5, duration: 1 }}
             >
-              天命
+              AI 사주팔자
             </motion.p>
             {narrationBlock}
           </div>

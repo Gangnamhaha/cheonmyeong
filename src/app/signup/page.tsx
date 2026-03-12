@@ -104,7 +104,7 @@ function SignupContent() {
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <h1 className="font-serif-kr text-3xl font-bold mb-1" style={{ color: 'var(--text-accent)' }}>사주해</h1>
-          <p className="font-serif-kr text-lg tracking-widest mb-4" style={{ color: 'var(--text-secondary)' }}>天命</p>
+          <p className="font-serif-kr text-lg tracking-widest mb-4" style={{ color: 'var(--text-secondary)' }}>AI 사주팔자</p>
           <p className="text-sm" style={{ color: 'var(--text-muted)' }}>회원가입하고 AI 사주 해석을 이용하세요</p>
         </div>
 

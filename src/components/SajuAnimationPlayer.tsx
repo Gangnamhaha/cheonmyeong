@@ -154,7 +154,7 @@ function drawScene0(
 ) {
   drawBaseBackground(ctx, w, h)
   drawText(ctx, '사주해', w / 2, h * 0.38, 124, '#fbbf24')
-  drawText(ctx, '天命 사주분석', w / 2, h * 0.45, 36, '#94a3b8')
+  drawText(ctx, 'AI 사주분석', w / 2, h * 0.45, 36, '#94a3b8')
   drawText(
     ctx,
     `${formData.name} · ${formData.gender === 'male' ? '남' : '여'} · ${formData.year}년 ${formData.month}월 ${formData.day}일`,
@@ -724,7 +724,7 @@ export default function SajuAnimationPlayer({
             animate={{ opacity: 1 }}
             transition={{ delay: 0.6, duration: 0.8 }}
           >
-            天命 사주분석
+            AI 사주분석
           </motion.p>
           <motion.p
             className="mt-7 text-sm text-slate-300"

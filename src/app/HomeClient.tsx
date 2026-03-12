@@ -427,7 +427,7 @@ export default function HomeClient() {
       })
       const link = document.createElement('a')
       const name = formData?.name ? `_${formData.name}` : ''
-      link.download = `\uCC9C\uBA85_\uC0AC\uC8FC\uACB0\uACFC${name}_${new Date().toISOString().slice(0, 10)}.png`
+      link.download = `\uC0AC\uC8FC\uD574_\uC0AC\uC8FC\uACB0\uACFC${name}_${new Date().toISOString().slice(0, 10)}.png`
       link.href = canvas.toDataURL('image/png')
       link.click()
     } catch {
@@ -504,7 +504,7 @@ export default function HomeClient() {
 
       const sections = [
         new Paragraph({ heading: HeadingLevel.TITLE, alignment: AlignmentType.CENTER, children: [
-          new TextRun({ text: '사주해 (天命) 사주분석', bold: true, size: 36, font: 'Malgun Gothic' }),
+          new TextRun({ text: '사주해 사주분석', bold: true, size: 36, font: 'Malgun Gothic' }),
         ] }),
         new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 200 }, children: [
           new TextRun({
@@ -931,7 +931,7 @@ export default function HomeClient() {
                 </button>
                 <div>
                   <h1 className="font-serif-kr text-3xl font-bold" style={{ color: 'var(--text-accent)' }}>사주해</h1>
-                  <p className="font-serif-kr text-sm tracking-widest" style={{ color: 'var(--text-muted)' }}>天命</p>
+                  <p className="font-serif-kr text-sm tracking-widest" style={{ color: 'var(--text-muted)' }}>AI 사주팔자</p>
                 </div>
                 {/* View Mode Toggle */}
                 <button
@@ -1297,7 +1297,7 @@ export default function HomeClient() {
             {'사주해'}
           </div>
           <div style={{ fontSize: '12px', color: '#64748b', letterSpacing: '4px', marginTop: '2px' }}>
-            {'天命 사주분석'}
+            {'AI 사주분석'}
           </div>
           {formData && (
             <div style={{ marginTop: '12px', color: '#94a3b8', fontSize: '13px' }}>

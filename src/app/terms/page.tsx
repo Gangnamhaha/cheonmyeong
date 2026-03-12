@@ -18,7 +18,7 @@ export default function TermsPage() {
             <section>
               <h2 className="mb-2 text-lg font-semibold text-[var(--text-primary)]">제1조 (서비스 소개)</h2>
               <p>
-                사주해은 이용자가 입력한 생년월일시, 성별 등 정보를 기반으로 사주팔자, 오행, 십신, 용신, 대운 등 명리 요소를 분석하고 AI 해석을 제공하는 온라인 SaaS 서비스입니다.
+                사주해는 이용자가 입력한 생년월일시, 성별 등 정보를 기반으로 사주팔자, 오행, 십신, 용신, 대운 등 명리 요소를 분석하고 AI 해석을 제공하는 온라인 SaaS 서비스입니다.
               </p>
             </section>
 
