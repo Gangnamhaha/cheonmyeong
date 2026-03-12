@@ -65,7 +65,7 @@ export async function GET(req: NextRequest) {
         const payment = await payWithBillingKey({
           paymentId,
           billingKey,
-          orderName: `천명 - ${planInfo.name} (자동 갱신)`,
+          orderName: `사주해 - ${planInfo.name} (자동 갱신)`,
           amount: planInfo.price,
           customer: { id: userId },
         })

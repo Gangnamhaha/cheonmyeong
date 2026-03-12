@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
     const payment = await payWithBillingKey({
       paymentId,
       billingKey,
-      orderName: `천명 - ${planInfo.name} (첫 결제)`,
+      orderName: `사주해 - ${planInfo.name} (첫 결제)`,
       amount: planInfo.price,
       customer: {
         id: userId,

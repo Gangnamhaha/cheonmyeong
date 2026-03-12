@@ -45,7 +45,7 @@ export function shareSajuResult(params: {
   resultUrl?: string
   resultId?: string
 }) {
-  const baseUrl = 'https://cheonmyeong.vercel.app'
+  const baseUrl = 'https://sajuhae.vercel.app'
   const shareUrl = params.resultUrl || baseUrl
   const extractedResultId = params.resultId || (shareUrl.includes('/result/') ? shareUrl.split('/result/')[1]?.split('?')[0] : undefined)
   const imageUrl = extractedResultId
@@ -106,18 +106,18 @@ export function shareGunghapResult(params: {
     content: {
       title: `${params.person1} ♥ ${params.person2} 궁합 결과`,
       description,
-      imageUrl: 'https://cheonmyeong.vercel.app/opengraph-image.png',
+      imageUrl: 'https://sajuhae.vercel.app/opengraph-image.png',
       link: {
-        mobileWebUrl: 'https://cheonmyeong.vercel.app/gunghap',
-        webUrl: 'https://cheonmyeong.vercel.app/gunghap',
+        mobileWebUrl: 'https://sajuhae.vercel.app/gunghap',
+        webUrl: 'https://sajuhae.vercel.app/gunghap',
       },
     },
     buttons: [
       {
         title: '나도 궁합 보기',
         link: {
-          mobileWebUrl: 'https://cheonmyeong.vercel.app/gunghap',
-          webUrl: 'https://cheonmyeong.vercel.app/gunghap',
+          mobileWebUrl: 'https://sajuhae.vercel.app/gunghap',
+          webUrl: 'https://sajuhae.vercel.app/gunghap',
         },
       },
     ],
@@ -127,10 +127,10 @@ export function shareGunghapResult(params: {
 /** Share referral invite via KakaoTalk */
 export function shareReferralInvite(referralCode: string) {
   const trimmedCode = referralCode.trim().toUpperCase()
-  const link = `https://cheonmyeong.vercel.app/signup?ref=${trimmedCode}`
+  const link = `https://sajuhae.vercel.app/signup?ref=${trimmedCode}`
 
   if (!trimmedCode) {
-    fallbackShare('초대', 'https://cheonmyeong.vercel.app/signup')
+    fallbackShare('초대', 'https://sajuhae.vercel.app/signup')
     return
   }
 
@@ -142,9 +142,9 @@ export function shareReferralInvite(referralCode: string) {
   window.Kakao.Share.sendDefault({
     objectType: 'feed',
     content: {
-      title: '천명(天命) 친구 초대',
-      description: '천명에서 무료 AI 사주를 확인해보세요! 가입하면 3크레딧 보너스!',
-      imageUrl: 'https://cheonmyeong.vercel.app/opengraph-image.png',
+      title: '사주해 친구 초대',
+      description: '사주해에서 무료 AI 사주를 확인해보세요! 가입하면 3크레딧 보너스!',
+      imageUrl: 'https://sajuhae.vercel.app/opengraph-image.png',
       link: {
         mobileWebUrl: link,
         webUrl: link,

@@ -153,7 +153,7 @@ function drawScene0(
   formData: SajuAnimationPlayerProps['formData'],
 ) {
   drawBaseBackground(ctx, w, h)
-  drawText(ctx, '천명', w / 2, h * 0.38, 124, '#fbbf24')
+  drawText(ctx, '사주해', w / 2, h * 0.38, 124, '#fbbf24')
   drawText(ctx, '天命 사주분석', w / 2, h * 0.45, 36, '#94a3b8')
   drawText(
     ctx,
@@ -328,7 +328,7 @@ function drawScene5(
 function drawScene6(ctx: CanvasRenderingContext2D, w: number, h: number) {
   drawBaseBackground(ctx, w, h)
   drawText(ctx, '당신의 운명이 펼쳐집니다', w / 2, h * 0.45, 62, '#f8fafc')
-  drawText(ctx, '천명 cheonmyeong.vercel.app', w / 2, h * 0.54, 30, '#fbbf24')
+  drawText(ctx, '사주해 sajuhae.vercel.app', w / 2, h * 0.54, 30, '#fbbf24')
   ctx.strokeStyle = '#fbbf24'
   ctx.lineWidth = 4
   ctx.strokeRect(56, 56, w - 112, h - 112)
@@ -421,7 +421,7 @@ export default function SajuAnimationPlayer({
   const getNarrationText = useCallback((scene: SceneIndex): string => {
     switch (scene) {
       case 0:
-        return `천명 사주분석. ${formData.name}, ${formData.gender === 'male' ? '남성' : '여성'}, ${formData.year}년 ${formData.month}월 ${formData.day}일의 사주를 분석합니다.`
+        return `사주해 사주분석. ${formData.name}, ${formData.gender === 'male' ? '남성' : '여성'}, ${formData.year}년 ${formData.month}월 ${formData.day}일의 사주를 분석합니다.`
       case 1: {
         const p = fullResult.saju
         return `사주팔자. 시주 ${p.hourPillar.heavenlyStem} ${p.hourPillar.earthlyBranch}, 일주 ${p.dayPillar.heavenlyStem} ${p.dayPillar.earthlyBranch}, 월주 ${p.monthPillar.heavenlyStem} ${p.monthPillar.earthlyBranch}, 년주 ${p.yearPillar.heavenlyStem} ${p.yearPillar.earthlyBranch}.`
@@ -447,7 +447,7 @@ export default function SajuAnimationPlayer({
         return `운명의 메시지. ${snippet}`
       }
       case 6:
-        return '당신의 운명이 펼쳐집니다. 천명.'
+        return '당신의 운명이 펼쳐집니다. 사주해.'
       default:
         return ''
     }
@@ -662,7 +662,7 @@ export default function SajuAnimationPlayer({
       const a = document.createElement('a')
       const date = new Date().toISOString().slice(0, 10)
       a.href = url
-      a.download = `천명_운명스토리_${formData.name}_${date}.webm`
+      a.download = `사주해_운명스토리_${formData.name}_${date}.webm`
       document.body.appendChild(a)
       a.click()
       document.body.removeChild(a)
@@ -716,7 +716,7 @@ export default function SajuAnimationPlayer({
             animate={{ scale: 1, opacity: 1 }}
             transition={{ type: 'spring', stiffness: 160, damping: 18 }}
           >
-            천명
+            사주해
           </motion.h2>
           <motion.p
             className="mt-4 text-sm tracking-[0.3em] text-slate-500"
@@ -1019,7 +1019,7 @@ export default function SajuAnimationPlayer({
           />
         </motion.div>
         <p className="text-center text-3xl font-semibold text-slate-100">당신의 운명이 펼쳐집니다</p>
-        <p className="mt-4 text-sm text-amber-300">천명 cheonmyeong.vercel.app</p>
+        <p className="mt-4 text-sm text-amber-300">사주해 sajuhae.vercel.app</p>
       </motion.div>
     )
   }

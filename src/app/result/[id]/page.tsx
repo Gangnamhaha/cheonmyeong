@@ -41,7 +41,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const row = await getResult(params.id)
   if (!row) {
     return {
-      title: '사주 결과를 찾을 수 없습니다 | 천명',
+      title: '사주 결과를 찾을 수 없습니다 | 사주해',
       description: '요청한 사주 결과가 존재하지 않습니다.',
     }
   }
@@ -53,16 +53,16 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const yongsin = getYongsinText(sajuData)
 
   return {
-    title: `${name}님의 사주팔자 결과 | 천명`,
+    title: `${name}님의 사주팔자 결과 | 사주해`,
     description: `일주: ${dayPillar} | 용신: ${yongsin} | AI 사주 분석 결과`,
     openGraph: {
-      title: `${name}님의 사주팔자 결과 | 천명`,
+      title: `${name}님의 사주팔자 결과 | 사주해`,
       description: `일주: ${dayPillar} | 용신: ${yongsin} | AI 사주 분석 결과`,
       images: [{ url: `/api/og/${params.id}`, width: 1200, height: 630 }],
     },
     twitter: {
       card: 'summary_large_image',
-      title: `${name}님의 사주팔자 결과 | 천명`,
+      title: `${name}님의 사주팔자 결과 | 사주해`,
       description: `일주: ${dayPillar} | 용신: ${yongsin} | AI 사주 분석 결과`,
       images: [`/api/og/${params.id}`],
     },
@@ -92,7 +92,7 @@ export default async function ResultPage({ params }: Params) {
     <main className="min-h-screen px-4 py-10" style={{ background: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
       <div className="mx-auto max-w-3xl space-y-6">
         <section className="rounded-2xl border p-6" style={{ background: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
-          <p className="text-xs tracking-widest" style={{ color: 'var(--text-muted)' }}>천명 공유 결과</p>
+          <p className="text-xs tracking-widest" style={{ color: 'var(--text-muted)' }}>사주해 공유 결과</p>
           <h1 className="mt-2 text-3xl font-bold" style={{ color: 'var(--text-accent)' }}>
             {(formData.name as string) || '사용자'}님의 사주팔자
           </h1>

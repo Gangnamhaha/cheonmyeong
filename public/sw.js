@@ -1,5 +1,5 @@
-// Service Worker for 천명(天命) PWA
-const CACHE_NAME = 'cheonmyeong-v1';
+// Service Worker for 사주해 PWA
+const CACHE_NAME = 'sajuhae-v1';
 const STATIC_ASSETS = [
   '/',
   '/offline.html',

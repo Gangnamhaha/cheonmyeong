@@ -79,7 +79,7 @@ export function isAdminEmail(email: string): boolean {
   return allowList.includes(email.toLowerCase())
 }
 
-const ADMIN_TOKEN_SECRET = process.env.NEXTAUTH_SECRET || 'cheonmyeong-dev-secret-change-in-production'
+const ADMIN_TOKEN_SECRET = process.env.NEXTAUTH_SECRET || 'sajuhae-dev-secret-change-in-production'
 
 export function verifyAdminCredentials(username: string, password: string): boolean {
   const adminUsername = process.env.ADMIN_USERNAME

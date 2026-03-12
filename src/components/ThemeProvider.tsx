@@ -39,11 +39,11 @@ export default function ThemeProvider({ children }: { children: React.ReactNode 
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    const storedTheme = localStorage.getItem('cheonmyeong-theme') as Theme | null
+    const storedTheme = localStorage.getItem('sajuhae-theme') as Theme | null
     if (storedTheme === 'light' || storedTheme === 'dark') {
       setTheme(storedTheme)
     }
-    const storedFontSize = localStorage.getItem('cheonmyeong-fontsize') as FontSize | null
+    const storedFontSize = localStorage.getItem('sajuhae-fontsize') as FontSize | null
     if (storedFontSize && FONT_SIZE_ORDER.includes(storedFontSize)) {
       setFontSize(storedFontSize)
     }
@@ -61,7 +61,7 @@ export default function ThemeProvider({ children }: { children: React.ReactNode 
       root.classList.add('light')
       root.classList.remove('dark')
     }
-    localStorage.setItem('cheonmyeong-theme', theme)
+    localStorage.setItem('sajuhae-theme', theme)
   }, [theme, mounted])
 
   // Apply font size class
@@ -70,7 +70,7 @@ export default function ThemeProvider({ children }: { children: React.ReactNode 
     const root = document.documentElement
     FONT_SIZE_ORDER.forEach(s => root.classList.remove(`fontsize-${s}`))
     root.classList.add(`fontsize-${fontSize}`)
-    localStorage.setItem('cheonmyeong-fontsize', fontSize)
+    localStorage.setItem('sajuhae-fontsize', fontSize)
   }, [fontSize, mounted])
 
   const toggleTheme = useCallback(() => {

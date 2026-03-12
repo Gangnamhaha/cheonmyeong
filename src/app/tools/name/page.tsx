@@ -6,7 +6,7 @@ import NameClient from './NameClient'
 
 export function generateMetadata(): Metadata {
   return {
-    title: '이름풀이 - 이름 획수 오행 분석 | 천명',
+    title: '이름풀이 - 이름 획수 오행 분석 | 사주해',
     description:
       '이름 획수와 오행을 바탕으로 성향, 강점, 궁합 오행, 행운 숫자/컬러를 무료로 확인하는 이름풀이 도구입니다. 전통 작명학 해석을 가볍고 직관적으로 제공해요.',
     keywords: ['이름풀이', '이름 획수', '이름 오행', '작명', '이름운세', '무료 이름 분석'],
@@ -16,7 +16,7 @@ export function generateMetadata(): Metadata {
 const webApplicationSchema = {
   '@context': 'https://schema.org',
   '@type': 'WebApplication',
-  name: '천명 이름풀이',
+  name: '사주해 이름풀이',
   description: '이름 획수와 오행 분포를 기반으로 성향, 운세 등급, 행운 포인트를 제공하는 무료 이름 분석 도구',
   applicationCategory: 'LifestyleApplication',
   operatingSystem: 'Web',
@@ -27,7 +27,7 @@ const webApplicationSchema = {
     price: '0',
     priceCurrency: 'KRW',
   },
-  url: 'https://cheonmyeong.vercel.app/tools/name',
+  url: 'https://sajuhae.vercel.app/tools/name',
 }
 
 const faqSchema = {

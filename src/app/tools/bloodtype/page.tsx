@@ -6,7 +6,7 @@ import BloodTypeClient from './BloodTypeClient'
 
 export function generateMetadata(): Metadata {
   return {
-    title: '혈액형 궁합 - A B O AB형 궁합 테스트 | 천명',
+    title: '혈액형 궁합 - A B O AB형 궁합 테스트 | 사주해',
     description:
       'A형, B형, O형, AB형 궁합을 무료로 확인해보세요. 혈액형 성격론 기반 궁합 점수, 관계 강점, 갈등 포인트, 연애 조언까지 한 번에 제공하는 재미있는 궁합 테스트.',
     keywords: [
@@ -63,7 +63,7 @@ const faqSchema = {
 const webApplicationSchema = {
   '@context': 'https://schema.org',
   '@type': 'WebApplication',
-  name: '천명 혈액형 궁합 테스트',
+  name: '사주해 혈액형 궁합 테스트',
   description:
     'A형 B형 O형 AB형 조합별 궁합 점수와 성격 매치, 갈등 포인트, 실전 조언을 제공하는 무료 궁합 도구',
   applicationCategory: 'LifestyleApplication',
@@ -75,7 +75,7 @@ const webApplicationSchema = {
     price: '0',
     priceCurrency: 'KRW',
   },
-  url: 'https://cheonmyeong.vercel.app/tools/bloodtype',
+  url: 'https://sajuhae.vercel.app/tools/bloodtype',
 }
 
 const RELATED_LINKS = [
@@ -118,7 +118,7 @@ export default function BloodTypeToolPage() {
               것이 아니라, 서로의 리듬 차이를 재미있게 인식하게 만드는 힘이 있기 때문입니다.
             </p>
             <p>
-              천명의 혈액형 궁합 도구는 4가지 혈액형의 모든 조합을 개별 분석해 보여줍니다. 단순한 한 줄 결과가 아니라 성향 매치,
+              사주해의 혈액형 궁합 도구는 4가지 혈액형의 모든 조합을 개별 분석해 보여줍니다. 단순한 한 줄 결과가 아니라 성향 매치,
               강점, 잠재 갈등, 실전 조언을 함께 제공해 실제 대화에 바로 활용할 수 있습니다. 친구와 함께 돌려보며 웃고 넘겨도 좋고,
               연인과 함께 보면 서로 서운했던 지점을 부드럽게 풀어내는 계기가 됩니다. 그리고 더 깊은 관계 분석이 필요하다면 혈액형
               궁합으로 가볍게 시작한 뒤 사주 기반 정밀 궁합으로 확장해 시기와 에너지 흐름까지 확인해 보세요.

@@ -64,7 +64,7 @@ export async function POST(request: Request) {
     try {
       await sendEmail(
         user.email,
-        '천명 AI에 오신 것을 환영합니다!',
+        '사주해 AI에 오신 것을 환영합니다!',
         WelcomeEmail({ name: user.name || '고객' }),
       )
     } catch (emailError) {

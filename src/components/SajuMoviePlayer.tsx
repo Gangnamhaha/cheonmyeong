@@ -288,7 +288,7 @@ function drawSceneForCanvas(
 
   switch (scene.type) {
     case 'prologue':
-      drawCenteredText(ctx, '천명', w / 2, h * 0.38, 120, accent)
+      drawCenteredText(ctx, '사주해', w / 2, h * 0.38, 120, accent)
       drawCenteredText(ctx, '天命', w / 2, h * 0.45, 40, '#64748b')
       drawWrappedText(ctx, scene.narration, w / 2, h * 0.62, w * 0.7, 52, 32, '#e2e8f0')
       break
@@ -380,7 +380,7 @@ function drawSceneForCanvas(
 
     case 'epilogue':
       drawCenteredText(ctx, scene.narration.split('.')[0] ?? scene.narration, w / 2, h * 0.45, 42, '#f8fafc')
-      drawCenteredText(ctx, '천명 cheonmyeong.vercel.app', w / 2, h * 0.55, 26, accent)
+      drawCenteredText(ctx, '사주해 sajuhae.vercel.app', w / 2, h * 0.55, 26, accent)
       break
 
     default:
@@ -761,7 +761,7 @@ export default function SajuMoviePlayer({
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `천명_운명애니메이션_${formData.name}_${new Date().toISOString().slice(0, 10)}.webm`
+      a.download = `사주해_운명애니메이션_${formData.name}_${new Date().toISOString().slice(0, 10)}.webm`
       document.body.appendChild(a)
       a.click()
       document.body.removeChild(a)
@@ -808,7 +808,7 @@ export default function SajuMoviePlayer({
               animate={{ opacity: 1 }}
               transition={{ delay: 0.5, duration: 1.5 }}
             >
-              {scenario?.title ?? '천명의 이야기'}
+              {scenario?.title ?? '사주해의 이야기'}
             </motion.p>
             <motion.h1
               className="text-6xl font-black"
@@ -817,7 +817,7 @@ export default function SajuMoviePlayer({
               animate={{ scale: 1, opacity: 1 }}
               transition={{ type: 'spring', stiffness: 100, damping: 15, delay: 0.8 }}
             >
-              {'천명'}
+              {'사주해'}
             </motion.h1>
             <motion.p
               className="mt-3 text-sm tracking-[0.3em] text-slate-500"
@@ -1111,7 +1111,7 @@ export default function SajuMoviePlayer({
               animate={{ opacity: 1 }}
               transition={{ delay: 3, duration: 1 }}
             >
-              천명 cheonmyeong.vercel.app
+              사주해 sajuhae.vercel.app
             </motion.p>
           </div>
         )

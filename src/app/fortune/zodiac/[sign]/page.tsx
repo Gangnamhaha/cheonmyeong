@@ -20,18 +20,18 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 
   if (!zodiac) {
     return {
-      title: '별자리 운세 | 천명',
-      description: '천명에서 2026년 별자리 운세를 확인해 보세요.',
+      title: '별자리 운세 | 사주해',
+      description: '사주해에서 2026년 별자리 운세를 확인해 보세요.',
     }
   }
 
-  const title = `${zodiac.korean} 운세 2026 - ${zodiac.korean} 성격 재물운 연애운 | 천명`
+  const title = `${zodiac.korean} 운세 2026 - ${zodiac.korean} 성격 재물운 연애운 | 사주해`
   const description = `2026년 병오년 ${zodiac.korean}(${zodiac.english}) 운세 총정리. 성격, 연애운, 직업운, 재물운, 건강운과 궁합 좋은 별자리까지 한눈에 확인하세요.`
 
   return {
     title,
     description,
-    keywords: [`${zodiac.korean} 운세`, `${zodiac.korean} 2026`, `${zodiac.korean} 성격`, `${zodiac.korean} 궁합`, '별자리 운세', '천명'],
+    keywords: [`${zodiac.korean} 운세`, `${zodiac.korean} 2026`, `${zodiac.korean} 성격`, `${zodiac.korean} 궁합`, '별자리 운세', '사주해'],
     alternates: {
       canonical: `/fortune/zodiac/${zodiac.slug}`,
     },
@@ -61,13 +61,13 @@ export default function ZodiacSignPage({ params }: Params) {
     dateModified: '2026-01-01',
     author: {
       '@type': 'Organization',
-      name: '천명',
+      name: '사주해',
     },
     publisher: {
       '@type': 'Organization',
-      name: '천명',
+      name: '사주해',
     },
-    mainEntityOfPage: `https://cheonmyeong.vercel.app/fortune/zodiac/${zodiac.slug}`,
+    mainEntityOfPage: `https://sajuhae.vercel.app/fortune/zodiac/${zodiac.slug}`,
   }
 
   return (

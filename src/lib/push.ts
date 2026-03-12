@@ -206,11 +206,11 @@ export async function sendPushNotification(params: {
                   icon: params.icon || '/app_icon_128.png',
                 },
                 fcm_options: {
-                  link: params.url || 'https://cheonmyeong.vercel.app',
+                  link: params.url || 'https://sajuhae.vercel.app',
                 },
               },
               data: {
-                url: params.url || 'https://cheonmyeong.vercel.app',
+                url: params.url || 'https://sajuhae.vercel.app',
               },
             },
           }),

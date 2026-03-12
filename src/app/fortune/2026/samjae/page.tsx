@@ -4,7 +4,7 @@ import Breadcrumb from '@/components/Breadcrumb'
 import RelatedContent from '@/components/RelatedContent'
 
 export const metadata: Metadata = {
-  title: '삼재띠 2026 - 병오년 삼재 해당 띠와 대비법 | 천명',
+  title: '삼재띠 2026 - 병오년 삼재 해당 띠와 대비법 | 사주해',
   description: '2026년 삼재띠를 확인하세요. 들삼재, 눌삼재, 날삼재의 뜻과 각 삼재띠별 주의사항, 대비법을 상세히 설명합니다.',
   keywords: ['삼재', '삼재띠 2026', '삼재 뜻', '삼재 대비법', '들삼재', '눌삼재', '날삼재', '병오년 삼재'],
 }

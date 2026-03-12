@@ -9,7 +9,7 @@ type BreadcrumbProps = {
   items: BreadcrumbItem[]
 }
 
-const SITE_ORIGIN = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '') || 'https://cheonmyeong.vercel.app'
+const SITE_ORIGIN = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '') || 'https://sajuhae.vercel.app'
 
 export default function Breadcrumb({ items }: BreadcrumbProps) {
   const breadcrumbSchema = {

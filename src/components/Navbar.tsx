@@ -32,7 +32,7 @@ export default function Navbar() {
             className="font-serif-kr text-lg font-bold tracking-tight"
             style={{ color: 'var(--text-accent)' }}
           >
-            천명(天命)
+            사주해
           </Link>
 
           {/* Desktop nav links */}

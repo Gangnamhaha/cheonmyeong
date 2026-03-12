@@ -6,9 +6,9 @@ import { getSupabase } from '@/lib/db'
 export const revalidate = 3600
 
 export const metadata: Metadata = {
-  title: '오늘의 운세 - 2026년 3월 | 천명',
+  title: '오늘의 운세 - 2026년 3월 | 사주해',
   description: '오늘의 띠별 운세를 확인하세요. 쥐띠부터 돼지띠까지 12띠 운세를 한 번에 보고, 내 사주 기반 맞춤 운세로 더 깊게 확인할 수 있습니다.',
-  keywords: ['오늘의 운세', '띠별 운세', '무료 운세', '사주 운세', '천명'],
+  keywords: ['오늘의 운세', '띠별 운세', '무료 운세', '사주 운세', '사주해'],
 }
 
 type DailyFortuneRow = {

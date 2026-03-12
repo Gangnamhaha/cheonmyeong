@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
       pushResult = await broadcastPush({
         title: '✅ 오늘 체크인 하셨나요?',
         body: '매일 체크인하면 무료 크레딧을 드려요! 지금 확인해보세요.',
-        url: 'https://cheonmyeong.vercel.app',
+        url: 'https://sajuhae.vercel.app',
       })
       notificationType = 'evening-checkin'
     }
@@ -29,7 +29,7 @@ export async function GET(req: NextRequest) {
       pushResult = await broadcastPush({
         title: '🌟 이번 주말 운세가 궁금하다면?',
         body: 'AI 사주 분석으로 주말 운세를 확인해보세요. 무료!',
-        url: 'https://cheonmyeong.vercel.app/fortune/today',
+        url: 'https://sajuhae.vercel.app/fortune/today',
       })
       notificationType = 'weekend-engagement'
     }

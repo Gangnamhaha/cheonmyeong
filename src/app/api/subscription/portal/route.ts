@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Stripe 고객 정보가 없습니다.' }, { status: 404 })
   }
 
-  const origin = req.headers.get('origin') || 'https://cheonmyeong.vercel.app'
+  const origin = req.headers.get('origin') || 'https://sajuhae.vercel.app'
   const portal = await stripe.billingPortal.sessions.create({
     customer: subscription.stripeCustomerId,
     return_url: `${origin}/pricing`,

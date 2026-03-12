@@ -152,7 +152,7 @@ export async function POST(req: NextRequest) {
       const paidDate = payment.paidAt ? new Date(payment.paidAt) : new Date()
       await sendEmail(
         target.email,
-        '천명 AI 결제 영수증 안내',
+        '사주해 AI 결제 영수증 안내',
         ReceiptEmail({
           name: target.name,
           planName: planInfo.name,

@@ -28,14 +28,14 @@ function hasValidInternalSecret(req: NextRequest): boolean {
 function renderTemplate(template: EmailTemplate, data: Record<string, unknown>) {
   if (template === 'welcome') {
     return {
-      subject: '천명 AI에 오신 것을 환영합니다!',
+      subject: '사주해 AI에 오신 것을 환영합니다!',
       react: createElement(WelcomeEmail, { name: String(data.name ?? '고객') }),
     }
   }
 
   if (template === 'receipt') {
     return {
-      subject: '천명 AI 결제 영수증 안내',
+      subject: '사주해 AI 결제 영수증 안내',
       react: createElement(ReceiptEmail, {
         name: String(data.name ?? '고객'),
         planName: String(data.planName ?? ''),
@@ -47,7 +47,7 @@ function renderTemplate(template: EmailTemplate, data: Record<string, unknown>) 
   }
 
   return {
-    subject: '천명 AI 비밀번호 재설정 안내',
+    subject: '사주해 AI 비밀번호 재설정 안내',
     react: createElement(PasswordResetEmail, { resetUrl: String(data.resetUrl ?? '') }),
   }
 }

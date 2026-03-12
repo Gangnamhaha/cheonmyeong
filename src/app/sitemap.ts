@@ -1,7 +1,7 @@
 import type { MetadataRoute } from 'next'
 import { BLOG_ARTICLE_SLUGS } from '@/data/blog-articles'
 
-const BASE_URL = 'https://cheonmyeong.vercel.app'
+const BASE_URL = 'https://sajuhae.vercel.app'
 const ZODIAC_SLUGS = ['rat', 'ox', 'tiger', 'rabbit', 'dragon', 'snake', 'horse', 'sheep', 'monkey', 'rooster', 'dog', 'pig'] as const
 const PROGRAMMATIC_ZODIAC_SLUGS = ['rat', 'ox', 'tiger', 'rabbit', 'dragon', 'snake', 'horse', 'goat', 'monkey', 'rooster', 'dog', 'pig'] as const
 const FORTUNE_TOPIC_SLUGS = ['jaemulun', 'yeonaewun', 'chwieobun'] as const

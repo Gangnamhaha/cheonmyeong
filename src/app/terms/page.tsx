@@ -11,14 +11,14 @@ export default function TermsPage() {
         <section className="mt-4 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-6 shadow-[var(--card-shadow)] sm:p-8">
           <h1 className="font-serif-kr text-3xl font-bold text-[var(--text-accent)]">이용약관</h1>
           <p className="mt-2 text-sm text-[var(--text-secondary)]">
-            천명(天命) 서비스 이용에 관한 기본 조건을 안내합니다. 본 약관은 cheonmyeong.vercel.app에서 제공하는 AI 기반 사주 분석 서비스 및 유료 상품 이용에 적용됩니다.
+            사주해 서비스 이용에 관한 기본 조건을 안내합니다. 본 약관은 sajuhae.vercel.app에서 제공하는 AI 기반 사주 분석 서비스 및 유료 상품 이용에 적용됩니다.
           </p>
 
           <div className="mt-8 space-y-6 text-sm leading-7 text-[var(--text-secondary)]">
             <section>
               <h2 className="mb-2 text-lg font-semibold text-[var(--text-primary)]">제1조 (서비스 소개)</h2>
               <p>
-                천명(天命)은 이용자가 입력한 생년월일시, 성별 등 정보를 기반으로 사주팔자, 오행, 십신, 용신, 대운 등 명리 요소를 분석하고 AI 해석을 제공하는 온라인 SaaS 서비스입니다.
+                사주해은 이용자가 입력한 생년월일시, 성별 등 정보를 기반으로 사주팔자, 오행, 십신, 용신, 대운 등 명리 요소를 분석하고 AI 해석을 제공하는 온라인 SaaS 서비스입니다.
               </p>
             </section>
 
@@ -39,14 +39,14 @@ export default function TermsPage() {
             <section>
               <h2 className="mb-2 text-lg font-semibold text-[var(--text-primary)]">제4조 (AI 분석 결과에 대한 면책)</h2>
               <p>
-                천명(天命)의 해석 결과는 통계적·알고리즘적 분석과 전통 명리 해석을 결합한 참고 정보이며, 의료·법률·투자·세무 등 전문 자문을 대체하지 않습니다. 이용자는 결과를 최종 판단의 유일한 근거로 사용해서는 안 되며, 회사는 이용자의 의사결정 및 그로 인한 손해에 대해 법령상 책임 범위를 넘어 보증하지 않습니다.
+                사주해의 해석 결과는 통계적·알고리즘적 분석과 전통 명리 해석을 결합한 참고 정보이며, 의료·법률·투자·세무 등 전문 자문을 대체하지 않습니다. 이용자는 결과를 최종 판단의 유일한 근거로 사용해서는 안 되며, 회사는 이용자의 의사결정 및 그로 인한 손해에 대해 법령상 책임 범위를 넘어 보증하지 않습니다.
               </p>
             </section>
 
             <section>
               <h2 className="mb-2 text-lg font-semibold text-[var(--text-primary)]">제5조 (지적재산권)</h2>
               <p>
-                서비스 화면 구성, 콘텐츠, 알고리즘 결과 표현, 상호 및 로고(천명(天命))에 관한 저작권 및 지적재산권은 회사 또는 정당한 권리자에게 귀속됩니다. 이용자는 회사의 사전 동의 없이 복제, 배포, 2차적 저작물 작성, 상업적 이용을 할 수 없습니다.
+                서비스 화면 구성, 콘텐츠, 알고리즘 결과 표현, 상호 및 로고(사주해)에 관한 저작권 및 지적재산권은 회사 또는 정당한 권리자에게 귀속됩니다. 이용자는 회사의 사전 동의 없이 복제, 배포, 2차적 저작물 작성, 상업적 이용을 할 수 없습니다.
               </p>
             </section>
 

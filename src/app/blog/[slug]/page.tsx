@@ -17,13 +17,13 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 
   if (!article) {
     return {
-      title: '블로그 | 천명',
-      description: '사주와 운세를 쉽게 풀어낸 천명 블로그입니다.',
+      title: '블로그 | 사주해',
+      description: '사주와 운세를 쉽게 풀어낸 사주해 블로그입니다.',
     }
   }
 
   return {
-    title: `${article.title} | 천명 블로그`,
+    title: `${article.title} | 사주해 블로그`,
     description: article.description,
     keywords: article.keywords,
     alternates: {
@@ -108,7 +108,7 @@ export default function BlogArticlePage({ params }: Params) {
         </section>
 
         <section className="mt-6 rounded-2xl border border-slate-800 bg-slate-900/65 p-6">
-          <h2 className="font-serif-kr text-2xl font-bold text-amber-300">천명 서비스 바로가기</h2>
+          <h2 className="font-serif-kr text-2xl font-bold text-amber-300">사주해 서비스 바로가기</h2>
           <div className="mt-3">
             <UpsellBanner variant="inline" />
           </div>

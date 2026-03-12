@@ -2,7 +2,7 @@ import { randomUUID } from 'crypto'
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabase } from '@/lib/db'
 
-const BASE_URL = 'https://cheonmyeong.vercel.app'
+const BASE_URL = 'https://sajuhae.vercel.app'
 
 function generateShortId(): string {
   return randomUUID().replace(/-/g, '').slice(0, 8)

@@ -5,7 +5,7 @@ import RelatedContent from '@/components/RelatedContent'
 import UpsellBanner from '@/components/UpsellBanner'
 
 export const metadata: Metadata = {
-  title: '2026년 운세 - 띠별 신년 운세 총정리 | 천명',
+  title: '2026년 운세 - 띠별 신년 운세 총정리 | 사주해',
   description: '2026년 병오년(丙午年) 띠별 운세를 한눈에 확인하세요. 연애, 일, 재물, 건강 흐름을 전통 원리에 맞춰 정리한 신년 운세 가이드입니다.',
   keywords: ['2026년 운세', '병오년 운세', '띠별 운세', '신년 운세', '사주 운세'],
 }

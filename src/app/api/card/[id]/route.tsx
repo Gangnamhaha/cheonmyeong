@@ -50,13 +50,13 @@ function renderFallbackImage(format: CardFormat) {
         }}
       >
         <div style={{ display: 'flex', flexDirection: 'column', gap: isStory ? 26 : 18 }}>
-          <div style={{ color: '#f59e0b', fontSize: isStory ? 58 : 44, fontWeight: 700 }}>천명(天命)</div>
+          <div style={{ color: '#f59e0b', fontSize: isStory ? 58 : 44, fontWeight: 700 }}>사주해</div>
           <div style={{ fontSize: isStory ? 78 : 64, fontWeight: 700, lineHeight: 1.2 }}>사주 카드</div>
           <div style={{ fontSize: isStory ? 40 : 32, color: '#dbeafe' }}>결과를 찾지 못했어요</div>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: isStory ? 20 : 14 }}>
-          <div style={{ fontSize: isStory ? 34 : 28, color: '#f8fafc' }}>나도 사주 보기 → cheonmyeong.vercel.app</div>
+          <div style={{ fontSize: isStory ? 34 : 28, color: '#f8fafc' }}>나도 사주 보기 → sajuhae.vercel.app</div>
         </div>
       </div>
     ),
@@ -111,7 +111,7 @@ export async function GET(request: Request, { params }: Params) {
         }}
       >
         <div style={{ display: 'flex', flexDirection: 'column', gap: isStory ? 26 : 18 }}>
-          <div style={{ color: '#f59e0b', fontSize: isStory ? 58 : 44, fontWeight: 700 }}>천명(天命)</div>
+          <div style={{ color: '#f59e0b', fontSize: isStory ? 58 : 44, fontWeight: 700 }}>사주해</div>
           <div style={{ fontSize: isStory ? 80 : 66, fontWeight: 700, lineHeight: 1.15 }}>{name}님의 사주</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: isStory ? 12 : 10 }}>
             <div style={{ fontSize: isStory ? 44 : 34, color: '#cbd5e1' }}>
@@ -169,7 +169,7 @@ export async function GET(request: Request, { params }: Params) {
           </div>
 
           <div style={{ marginTop: isStory ? 14 : 10, fontSize: isStory ? 34 : 28, color: '#f59e0b', fontWeight: 700 }}>
-            나도 사주 보기 → cheonmyeong.vercel.app
+            나도 사주 보기 → sajuhae.vercel.app
           </div>
         </div>
       </div>

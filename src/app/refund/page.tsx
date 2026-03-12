@@ -11,7 +11,7 @@ export default function RefundPage() {
         <section className="mt-4 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-6 shadow-[var(--card-shadow)] sm:p-8">
           <h1 className="font-serif-kr text-3xl font-bold text-[var(--text-accent)]">환불정책</h1>
           <p className="mt-2 text-sm text-[var(--text-secondary)]">
-            본 정책은 천명(天命)의 크레딧 상품 및 정기 구독 상품의 환불 기준과 절차를 안내합니다.
+            본 정책은 사주해의 크레딧 상품 및 정기 구독 상품의 환불 기준과 절차를 안내합니다.
           </p>
 
           <div className="mt-8 space-y-6 text-sm leading-7 text-[var(--text-secondary)]">
@@ -46,8 +46,8 @@ export default function RefundPage() {
             <section>
               <h2 className="mb-2 text-lg font-semibold text-[var(--text-primary)]">5. 문의처</h2>
               <p>
-                서비스명: 천명(天命)<br />
-                서비스 주소: cheonmyeong.vercel.app<br />
+                서비스명: 사주해<br />
+                서비스 주소: sajuhae.vercel.app<br />
                 이메일: any001004@gmail.com
               </p>
             </section>

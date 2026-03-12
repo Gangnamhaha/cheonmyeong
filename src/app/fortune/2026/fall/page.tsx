@@ -4,7 +4,7 @@ import Breadcrumb from '@/components/Breadcrumb'
 import RelatedContent from '@/components/RelatedContent'
 
 export const metadata: Metadata = {
-  title: '2026년 가을 운세 - 병오년 가을철 사주 운세 | 천명',
+  title: '2026년 가을 운세 - 병오년 가을철 사주 운세 | 사주해',
   description: '2026년 가을(9월-11월) 띠별 운세를 확인하세요. 수확, 안정, 정리의 가을철 운세를 전통 원리에 맞춰 정리한 계절 운세 가이드입니다.',
   keywords: ['2026년 가을 운세', '병오년 가을', '가을철 운세', '9월 운세', '사주 운세'],
 }

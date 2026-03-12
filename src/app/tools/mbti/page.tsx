@@ -6,7 +6,7 @@ import MbtiClient from './MbtiClient'
 
 export function generateMetadata(): Metadata {
   return {
-    title: 'MBTI 궁합 테스트 - 16가지 성격유형 궁합 분석 | 천명',
+    title: 'MBTI 궁합 테스트 - 16가지 성격유형 궁합 분석 | 사주해',
     description:
       'MBTI 16가지 성격유형 궁합을 쉽고 재미있게 확인하세요. 나의 MBTI와 상대 MBTI를 선택하면 궁합 점수, 강점, 주의 포인트, 현실적인 관계 조언까지 한 번에 확인할 수 있습니다.',
     keywords: [
@@ -64,7 +64,7 @@ const faqSchema = {
 const webApplicationSchema = {
   '@context': 'https://schema.org',
   '@type': 'WebApplication',
-  name: '천명 MBTI 궁합 테스트',
+  name: '사주해 MBTI 궁합 테스트',
   description:
     '두 사람의 MBTI를 선택하면 궁합 점수, 성향 매치 분석, 관계 강점과 주의 포인트를 확인할 수 있는 무료 도구',
   applicationCategory: 'LifestyleApplication',
@@ -76,7 +76,7 @@ const webApplicationSchema = {
     price: '0',
     priceCurrency: 'KRW',
   },
-  url: 'https://cheonmyeong.vercel.app/tools/mbti',
+  url: 'https://sajuhae.vercel.app/tools/mbti',
 }
 
 const RELATED_LINKS = [
@@ -121,7 +121,7 @@ export default function MbtiToolPage() {
               현실적으로 다가옵니다.
             </p>
             <p>
-              천명의 MBTI 궁합 도구는 이런 실전 감각에 맞춰 설계되었습니다. 두 유형을 선택하면 궁합 티어와 점수, 관계 강점,
+              사주해의 MBTI 궁합 도구는 이런 실전 감각에 맞춰 설계되었습니다. 두 유형을 선택하면 궁합 티어와 점수, 관계 강점,
               충돌 가능 지점, 바로 적용 가능한 조언까지 한눈에 볼 수 있습니다. 친구와 장난처럼 돌려봐도 재미있고, 연인과 함께
               보면 우리 관계의 패턴을 대화하기 쉬워집니다. 더 깊은 분석이 필요하다면 MBTI로 성향을 확인한 뒤 사주 궁합으로
               시기와 에너지 흐름까지 확장해 보는 방법도 좋습니다.

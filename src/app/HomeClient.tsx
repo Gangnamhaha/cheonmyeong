@@ -124,7 +124,7 @@ export default function HomeClient() {
   // New state for tabs and view mode
   const [activeTab, setActiveTab] = useState<ResultTab>('사주')
   const [viewMode, setViewMode] = useState<ViewMode>('detail')
-  const resultUrl = resultId ? `https://cheonmyeong.vercel.app/result/${resultId}` : null
+  const resultUrl = resultId ? `https://sajuhae.vercel.app/result/${resultId}` : null
 
   const fetchCheckinStatus = useCallback(async () => {
     if (!session?.user) {
@@ -504,7 +504,7 @@ export default function HomeClient() {
 
       const sections = [
         new Paragraph({ heading: HeadingLevel.TITLE, alignment: AlignmentType.CENTER, children: [
-          new TextRun({ text: '천명 (天命) 사주분석', bold: true, size: 36, font: 'Malgun Gothic' }),
+          new TextRun({ text: '사주해 (天命) 사주분석', bold: true, size: 36, font: 'Malgun Gothic' }),
         ] }),
         new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 200 }, children: [
           new TextRun({
@@ -603,7 +603,7 @@ export default function HomeClient() {
       sections.push(
         new Paragraph({ spacing: { before: 300 }, children: [] }),
         new Paragraph({ alignment: AlignmentType.CENTER, children: [
-          new TextRun({ text: `${new Date().toISOString().slice(0, 10)} | cheonmyeong.vercel.app`, size: 16, color: 'AAAAAA' }),
+          new TextRun({ text: `${new Date().toISOString().slice(0, 10)} | sajuhae.vercel.app`, size: 16, color: 'AAAAAA' }),
         ] }),
       )
 
@@ -625,7 +625,7 @@ export default function HomeClient() {
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `천명_사주결과${name}_${new Date().toISOString().slice(0, 10)}.docx`
+      a.download = `사주해_사주결과${name}_${new Date().toISOString().slice(0, 10)}.docx`
       a.click()
       URL.revokeObjectURL(url)
     } catch {
@@ -930,7 +930,7 @@ export default function HomeClient() {
                   {fontSizeLabel}
                 </button>
                 <div>
-                  <h1 className="font-serif-kr text-3xl font-bold" style={{ color: 'var(--text-accent)' }}>천명</h1>
+                  <h1 className="font-serif-kr text-3xl font-bold" style={{ color: 'var(--text-accent)' }}>사주해</h1>
                   <p className="font-serif-kr text-sm tracking-widest" style={{ color: 'var(--text-muted)' }}>天命</p>
                 </div>
                 {/* View Mode Toggle */}
@@ -1294,7 +1294,7 @@ export default function HomeClient() {
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: '24px' }}>
           <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#fbbf24', letterSpacing: '2px' }}>
-            {'천명'}
+            {'사주해'}
           </div>
           <div style={{ fontSize: '12px', color: '#64748b', letterSpacing: '4px', marginTop: '2px' }}>
             {'天命 사주분석'}
@@ -1451,7 +1451,7 @@ export default function HomeClient() {
             {new Date().toISOString().slice(0, 10)}
           </span>
           <span style={{ fontSize: '10px', color: '#475569' }}>
-            cheonmyeong.vercel.app
+            sajuhae.vercel.app
           </span>
         </div>
       </div>

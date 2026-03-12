@@ -11,7 +11,7 @@ export default function PrivacyPage() {
         <section className="mt-4 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-6 shadow-[var(--card-shadow)] sm:p-8">
           <h1 className="font-serif-kr text-3xl font-bold text-[var(--text-accent)]">개인정보처리방침</h1>
           <p className="mt-2 text-sm text-[var(--text-secondary)]">
-            천명(天命)은 개인정보보호법 등 관련 법령을 준수하며, 이용자의 개인정보를 안전하게 처리합니다.
+            사주해은 개인정보보호법 등 관련 법령을 준수하며, 이용자의 개인정보를 안전하게 처리합니다.
           </p>
 
           <div className="mt-8 space-y-6 text-sm leading-7 text-[var(--text-secondary)]">
@@ -60,7 +60,7 @@ export default function PrivacyPage() {
             <section>
               <h2 className="mb-2 text-lg font-semibold text-[var(--text-primary)]">7. 개인정보 보호책임자</h2>
               <p>
-                개인정보 보호책임자: 천명(天命) 운영팀<br />
+                개인정보 보호책임자: 사주해 운영팀<br />
                 연락처: any001004@gmail.com
               </p>
             </section>

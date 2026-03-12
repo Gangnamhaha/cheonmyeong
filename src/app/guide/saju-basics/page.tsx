@@ -4,7 +4,7 @@ import Breadcrumb from '@/components/Breadcrumb'
 import RelatedContent from '@/components/RelatedContent'
 
 export const metadata: Metadata = {
-  title: '사주팔자란? - 사주 입문 가이드 | 천명',
+  title: '사주팔자란? - 사주 입문 가이드 | 사주해',
   description: '사주팔자의 의미, 천간과 지지, 오행, 십신, 용신까지 처음 보는 분도 이해할 수 있게 정리한 사주 입문 가이드입니다.',
   keywords: ['사주팔자란', '사주 기초', '천간 지지', '십신', '용신', '명리학 입문'],
 }

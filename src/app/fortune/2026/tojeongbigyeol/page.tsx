@@ -4,7 +4,7 @@ import Breadcrumb from '@/components/Breadcrumb'
 import RelatedContent from '@/components/RelatedContent'
 
 export const metadata: Metadata = {
-  title: '토정비결 2026 - 병오년 토정비결 운세 총정리 | 천명',
+  title: '토정비결 2026 - 병오년 토정비결 운세 총정리 | 사주해',
   description: '토정비결 2026 병오년 운세를 한눈에 확인하세요. 이지함 선생의 토정비결로 보는 12지 동물별 월별 운세 분석과 해석입니다.',
   keywords: ['토정비결', '토정비결 2026', '병오년 토정비결', '무료 토정비결', '토정비결 운세'],
 }

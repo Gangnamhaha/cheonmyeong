@@ -21,30 +21,30 @@ const notoSerifKr = Noto_Serif_KR({
 })
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://cheonmyeong.vercel.app'),
-  title: '천명(天命) - AI 사주팔자 풀이',
+  metadataBase: new URL('https://sajuhae.vercel.app'),
+  title: '사주해 - AI 사주팔자 풀이',
   description: '생년월일시를 입력하면 사주팔자, 오행, 십신, 용신, 대운을 분석하고 AI가 해석해드립니다. 무료 사주 풀이 서비스.',
-  keywords: ['사주', '사주팔자', '팔자', '오행', '십신', '용신', '대운', '운세', 'AI 사주', '무료 사주', '천명', '명리학'],
+  keywords: ['사주', '사주팔자', '팔자', '오행', '십신', '용신', '대운', '운세', 'AI 사주', '무료 사주', '사주해', '명리학'],
   icons: {
     icon: '/icon.png',
     apple: '/apple-icon.png',
   },
   openGraph: {
-    title: '천명(天命) - AI 사주팔자 풀이',
+    title: '사주해 - AI 사주팔자 풀이',
     description: '생년월일시를 입력하면 사주팔자, 오행, 십신, 용신, 대운을 분석하고 AI가 해석해드립니다.',
     type: 'website',
     locale: 'ko_KR',
-    siteName: '천명(天命)',
+    siteName: '사주해',
     images: [{
       url: '/opengraph-image.png',
       width: 512,
       height: 512,
-      alt: '천명(天命) - AI 사주팔자 풀이',
+      alt: '사주해 - AI 사주팔자 풀이',
     }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: '천명(天命) - AI 사주팔자 풀이',
+    title: '사주해 - AI 사주팔자 풀이',
     description: '나의 사주팔자를 AI로 분석해보세요. 십신, 용신, 대운까지 상세 해석.',
   },
   robots: {
@@ -106,8 +106,8 @@ export default function RootLayout({
             __html: JSON.stringify({
               "@context": "https://schema.org",
               "@type": "WebApplication",
-              "name": "천명(天命) - AI 사주팔자 풀이",
-              "url": "https://cheonmyeong.vercel.app",
+              "name": "사주해 - AI 사주팔자 풀이",
+              "url": "https://sajuhae.vercel.app",
               "description": "생년월일시를 입력하면 사주팔자, 오행, 십신, 용신, 대운을 분석하고 AI가 해석해드립니다.",
               "applicationCategory": "LifestyleApplication",
               "operatingSystem": "Web",
@@ -120,7 +120,7 @@ export default function RootLayout({
               "inLanguage": "ko",
               "creator": {
                 "@type": "Organization",
-                "name": "천명(天命)"
+                "name": "사주해"
               }
             })
           }}

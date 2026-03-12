@@ -57,7 +57,7 @@ export default function UserMenu() {
 
   async function copyReferralLink() {
     if (!referral?.code) return
-    const link = `https://cheonmyeong.vercel.app/signup?ref=${referral.code}`
+    const link = `https://sajuhae.vercel.app/signup?ref=${referral.code}`
     try {
       await navigator.clipboard.writeText(link)
       alert('초대 링크가 복사되었습니다!')

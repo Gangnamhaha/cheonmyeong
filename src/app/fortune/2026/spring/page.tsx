@@ -4,7 +4,7 @@ import Breadcrumb from '@/components/Breadcrumb'
 import RelatedContent from '@/components/RelatedContent'
 
 export const metadata: Metadata = {
-  title: '2026년 봄 운세 - 병오년 봄철 사주 운세 | 천명',
+  title: '2026년 봄 운세 - 병오년 봄철 사주 운세 | 사주해',
   description: '2026년 봄(3월-5월) 띠별 운세를 확인하세요. 새로운 시작, 성장, 활력의 봄철 운세를 전통 원리에 맞춰 정리한 계절 운세 가이드입니다.',
   keywords: ['2026년 봄 운세', '병오년 봄', '봄철 운세', '3월 운세', '사주 운세'],
 }

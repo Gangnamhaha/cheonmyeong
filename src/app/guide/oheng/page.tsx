@@ -5,7 +5,7 @@ import RelatedContent from '@/components/RelatedContent'
 import { OHENG_COLORS } from '@/lib/oheng'
 
 export const metadata: Metadata = {
-  title: '오행이란? - 목화토금수 완벽 가이드 | 천명',
+  title: '오행이란? - 목화토금수 완벽 가이드 | 사주해',
   description: '목화토금수 오행의 성격, 건강, 직업, 연애 특성을 한눈에 정리한 실전 가이드. 내 오행 균형을 이해하고 선택 기준을 세워보세요.',
   keywords: ['오행이란', '목화토금수', '오행 성격', '오행 직업', '오행 연애'],
 }
@@ -99,7 +99,7 @@ export default function OhengGuidePage() {
         <section className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-6 text-sm">
           <h2 className="font-serif-kr text-2xl font-bold text-amber-300">내 오행 밸런스 확인하기</h2>
           <p className="mt-3 leading-relaxed text-slate-200">
-            같은 직업, 같은 관계라도 오행 분포에 따라 에너지 소모 방식이 다릅니다. 천명에서 내 사주를 입력하고
+            같은 직업, 같은 관계라도 오행 분포에 따라 에너지 소모 방식이 다릅니다. 사주해에서 내 사주를 입력하고
             오행 차트를 확인하면 현재 삶의 피로 포인트와 보완 지점을 더 선명하게 파악할 수 있습니다.
           </p>
           <div className="mt-5 flex flex-wrap gap-3">

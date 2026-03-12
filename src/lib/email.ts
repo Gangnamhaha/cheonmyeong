@@ -2,7 +2,7 @@ import { Resend } from 'resend'
 import { type ReactElement } from 'react'
 
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null
-const FROM = process.env.EMAIL_FROM || '천명 AI <onboarding@resend.dev>'
+const FROM = process.env.EMAIL_FROM || '사주해 AI <onboarding@resend.dev>'
 
 export async function sendEmail(to: string, subject: string, react: ReactElement) {
   if (!resend) {

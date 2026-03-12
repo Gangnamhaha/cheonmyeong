@@ -24,7 +24,7 @@ export default class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBo
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo): void {
     // Log to console in development
-    console.error('[천명 Error]', error, errorInfo)
+    console.error('[사주해 Error]', error, errorInfo)
 
     // Send to error reporting endpoint
     if (typeof window !== 'undefined') {

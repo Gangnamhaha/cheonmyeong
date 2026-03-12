@@ -78,7 +78,7 @@ export async function POST(req: NextRequest) {
   const userId = (session.user as Record<string, unknown>).id as string
   const userEmail = session.user.email ?? undefined
   const userName = session.user.name ?? undefined
-  const origin = req.headers.get('origin') || 'https://cheonmyeong.vercel.app'
+  const origin = req.headers.get('origin') || 'https://sajuhae.vercel.app'
 
   try {
     if (requestedType === 'subscription') {
@@ -176,7 +176,7 @@ export async function POST(req: NextRequest) {
           price_data: {
             currency: 'krw',
             product_data: {
-              name: `천명(天命) ${onetimePlan.name} 크레딧`,
+              name: `사주해 ${onetimePlan.name} 크레딧`,
               description: `AI 사주 해석 ${onetimePlan.credits}회 크레딧`,
             },
             unit_amount: onetimePlan.price,

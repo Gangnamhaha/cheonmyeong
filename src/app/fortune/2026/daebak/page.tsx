@@ -4,7 +4,7 @@ import Breadcrumb from '@/components/Breadcrumb'
 import RelatedContent from '@/components/RelatedContent'
 
 export const metadata: Metadata = {
-  title: '대박띠 2026 - 병오년 가장 운이 좋은 띠 | 천명',
+  title: '대박띠 2026 - 병오년 가장 운이 좋은 띠 | 사주해',
   description: '2026년 병오년 대박띠를 확인하세요. 올해 가장 운이 좋은 띠와 각 대박띠별 상세 운세, 행운을 극대화하는 방법을 알려드립니다.',
   keywords: ['대박띠 2026', '올해 운 좋은 띠', '병오년 대박띠', '2026년 운세', '띠별 운세'],
 }

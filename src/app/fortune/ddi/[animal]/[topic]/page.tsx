@@ -39,7 +39,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 
   if (!animal || !topic) {
     return {
-      title: '띠별 운세 | 천명',
+      title: '띠별 운세 | 사주해',
       description: '띠별 세부 운세 카테고리를 확인해 보세요.',
     }
   }
@@ -47,13 +47,13 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const canonicalAnimalSlug = getCanonicalAnimalSlug(params.animal)
   if (!canonicalAnimalSlug) {
     return {
-      title: '띠별 운세 | 천명',
+      title: '띠별 운세 | 사주해',
       description: '띠별 세부 운세 카테고리를 확인해 보세요.',
     }
   }
 
   const topicData = getTopicData(canonicalAnimalSlug, topic.slug)
-  const title = `${animal.korean}띠 ${topic.slug} 2026 - ${animal.korean}띠 ${topic.korean} 운세 | 천명`
+  const title = `${animal.korean}띠 ${topic.slug} 2026 - ${animal.korean}띠 ${topic.korean} 운세 | 사주해`
 
   return {
     title,
@@ -64,7 +64,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
       `${animal.korean}띠 ${topic.korean}`,
       `${animal.korean}띠 ${topic.korean} 2026`,
       `${animal.korean}띠 운세`,
-      '천명',
+      '사주해',
     ],
     alternates: {
       canonical: `/fortune/ddi/${canonicalAnimalSlug}/${topic.slug}`,

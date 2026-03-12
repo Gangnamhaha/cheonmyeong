@@ -3,8 +3,8 @@ import Link from 'next/link'
 import { BLOG_ARTICLES } from '@/data/blog-articles'
 
 export const metadata: Metadata = {
-  title: '사주 운세 블로그 - 명리학 가이드 | 천명',
-  description: '사주, 궁합, 삼재, 오행, 대운까지 검색 수요가 높은 핵심 주제를 깊이 있게 다루는 천명 블로그입니다.',
+  title: '사주 운세 블로그 - 명리학 가이드 | 사주해',
+  description: '사주, 궁합, 삼재, 오행, 대운까지 검색 수요가 높은 핵심 주제를 깊이 있게 다루는 사주해 블로그입니다.',
   keywords: ['사주 블로그', '운세 블로그', '명리학 가이드', '사주 보는법', '궁합 보는법'],
 }
 

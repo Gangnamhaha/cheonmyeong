@@ -118,7 +118,7 @@ const STARS = generateStars(60)
 function getGreeting(): string {
   const h = new Date().getHours()
   if (h >= 5 && h < 9) return '상쾌한 아침, 오늘의 운명을 살펴볼까요?'
-  if (h >= 9 && h < 12) return '좋은 오전이에요. 천명이 기다리고 있어요.'
+  if (h >= 9 && h < 12) return '좋은 오전이에요. 사주해이 기다리고 있어요.'
   if (h >= 12 && h < 14) return '점심 시간, 잠깐 운세를 들여다볼까요?'
   if (h >= 14 && h < 18) return '오후의 여유, 사주로 내일을 준비하세요.'
   if (h >= 18 && h < 21) return '해 질 녘, 별빛 아래 운명을 읽어봅니다.'
@@ -173,7 +173,7 @@ function TaegeukSvg({ size = 280 }: { size?: number }) {
 function getHistory(): HistoryEntry[] {
   if (typeof window === 'undefined') return []
   try {
-    const raw = localStorage.getItem('cheonmyeong-history')
+    const raw = localStorage.getItem('sajuhae-history')
     return raw ? JSON.parse(raw) : []
   } catch { return [] }
 }
@@ -184,21 +184,21 @@ function saveHistory(entry: HistoryEntry) {
     const updated = [entry, ...existing.filter(e =>
       !(e.year === entry.year && e.month === entry.month && e.day === entry.day && e.hour === entry.hour)
     )].slice(0, 5)
-    localStorage.setItem('cheonmyeong-history', JSON.stringify(updated))
+    localStorage.setItem('sajuhae-history', JSON.stringify(updated))
   } catch { /* ignore */ }
 }
 
 function getAnalysisCount(): number {
   if (typeof window === 'undefined') return 0
   try {
-    return parseInt(localStorage.getItem('cheonmyeong-count') || '0', 10)
+    return parseInt(localStorage.getItem('sajuhae-count') || '0', 10)
   } catch { return 0 }
 }
 
 function incrementAnalysisCount() {
   try {
     const count = getAnalysisCount() + 1
-    localStorage.setItem('cheonmyeong-count', String(count))
+    localStorage.setItem('sajuhae-count', String(count))
   } catch { /* ignore */ }
 }
 
@@ -392,7 +392,7 @@ export default function SajuForm({ onSubmit, loading = false }: SajuFormProps) {
             className="font-serif-kr text-6xl font-black mb-2 tracking-tight"
             style={{ color: 'var(--text-accent)' }}
           >
-            천명
+            사주해
           </h1>
           <p
             className="font-serif-kr text-2xl tracking-[0.3em] mb-4"
@@ -412,7 +412,7 @@ export default function SajuForm({ onSubmit, loading = false }: SajuFormProps) {
           <SajuChat />
         </div>
         <p className="text-xs mt-4 max-w-xs mx-auto text-center leading-relaxed relative z-10" style={{ color: 'var(--text-muted)' }}>
-          천명 사주앱은 AI가 당신의 사주를 해석하고 질문에 답변을 해주는 앱입니다.
+          사주해 사주앱은 AI가 당신의 사주를 해석하고 질문에 답변을 해주는 앱입니다.
         </p>
         {/* D1: Daily quote */}
         <div
@@ -458,7 +458,7 @@ export default function SajuForm({ onSubmit, loading = false }: SajuFormProps) {
           className="font-serif-kr text-center text-xl font-bold mb-2"
           style={{ color: 'var(--text-accent)', opacity: 0, animation: 'fadeIn 0.5s ease-out 0.3s forwards' }}
         >
-          천명이 제공하는 기능
+          사주해이 제공하는 기능
         </h2>
         <p
           className="text-center text-xs mb-8 max-w-xs mx-auto leading-relaxed"

@@ -21,11 +21,11 @@ export function ReceiptEmail({ name, planName, amount, date, orderId }: ReceiptE
   return (
     <Html lang="ko">
       <Head />
-      <Preview>천명 AI 결제가 정상적으로 완료되었습니다</Preview>
+      <Preview>사주해 AI 결제가 정상적으로 완료되었습니다</Preview>
       <Tailwind>
         <Body className="bg-gray-100 py-8 font-sans">
           <Container className="mx-auto max-w-xl rounded-lg bg-white p-8">
-            <Text className="m-0 text-xl font-bold text-gray-900">천명 AI</Text>
+            <Text className="m-0 text-xl font-bold text-gray-900">사주해 AI</Text>
             <Text className="text-base text-gray-800">{name}님, 결제가 정상적으로 완료되었습니다.</Text>
 
             <Text className="mb-1 text-sm text-gray-600">플랜: {planName}</Text>
@@ -37,8 +37,8 @@ export function ReceiptEmail({ name, planName, amount, date, orderId }: ReceiptE
             <Text className="text-sm text-gray-600">
               환불 정책은 아래 링크에서 확인하실 수 있습니다.
             </Text>
-            <Text className="text-sm text-gray-800">https://cheonmyeong.ai/refund-policy</Text>
-            <Text className="m-0 text-xs text-gray-500">© 2026 천명(天命)</Text>
+            <Text className="text-sm text-gray-800">https://sajuhae.ai/refund-policy</Text>
+            <Text className="m-0 text-xs text-gray-500">© 2026 사주해</Text>
           </Container>
         </Body>
       </Tailwind>

@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
     storeId: PORTONE_STORE_ID,
     channelKey: PORTONE_CHANNEL_KEY_TOSS,
     issueKey,
-    issueName: `천명 - ${planInfo.name} 정기결제`,
+    issueName: `사주해 - ${planInfo.name} 정기결제`,
     customer: {
       customerId: userId,
       email: session.user.email || undefined,

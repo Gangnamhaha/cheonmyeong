@@ -763,7 +763,7 @@ export default function AdminDashboardClient() {
         <div className="w-full max-w-sm">
           <div className="rounded-2xl border border-slate-700 bg-slate-800 p-8">
             <h1 className="text-center text-2xl font-bold text-amber-400">관리자 로그인</h1>
-            <p className="mt-2 text-center text-sm text-slate-400">천명(天命) 관리자 페이지</p>
+            <p className="mt-2 text-center text-sm text-slate-400">사주해 관리자 페이지</p>
             <form onSubmit={handleLogin} className="mt-6 space-y-4">
               <div>
                 <label htmlFor="admin-username" className="block text-sm font-medium text-slate-300">아이디</label>
@@ -816,7 +816,7 @@ export default function AdminDashboardClient() {
         <div className="mb-6 flex items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-amber-400 sm:text-3xl">관리자 대시보드</h1>
-            <p className="mt-1 text-sm text-slate-400">천명(天命) 운영 현황과 데이터 관리</p>
+            <p className="mt-1 text-sm text-slate-400">사주해 운영 현황과 데이터 관리</p>
           </div>
           <div className="flex items-center gap-2">
             <a

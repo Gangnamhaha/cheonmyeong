@@ -20,13 +20,13 @@ const messaging = firebase.messaging()
 
 // Handle background messages
 messaging.onBackgroundMessage((payload) => {
-  const notificationTitle = payload.notification?.title || '천명(天命)'
+  const notificationTitle = payload.notification?.title || '사주해'
   const notificationOptions = {
     body: payload.notification?.body || '새로운 알림이 있습니다.',
     icon: '/app_icon_128.png',
     badge: '/app_icon_128.png',
     data: {
-      url: payload.data?.url || 'https://cheonmyeong.vercel.app',
+      url: payload.data?.url || 'https://sajuhae.vercel.app',
     },
   }
 
@@ -36,13 +36,13 @@ messaging.onBackgroundMessage((payload) => {
 // Handle notification click
 self.addEventListener('notificationclick', (event) => {
   event.notification.close()
-  const url = event.notification.data?.url || 'https://cheonmyeong.vercel.app'
+  const url = event.notification.data?.url || 'https://sajuhae.vercel.app'
 
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
       // If app is already open, focus it
       for (const client of clientList) {
-        if (client.url.includes('cheonmyeong') && 'focus' in client) {
+        if (client.url.includes('sajuhae') && 'focus' in client) {
           return client.focus()
         }
       }

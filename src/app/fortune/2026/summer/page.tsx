@@ -4,7 +4,7 @@ import Breadcrumb from '@/components/Breadcrumb'
 import RelatedContent from '@/components/RelatedContent'
 
 export const metadata: Metadata = {
-  title: '2026년 여름 운세 - 병오년 여름철 사주 운세 | 천명',
+  title: '2026년 여름 운세 - 병오년 여름철 사주 운세 | 사주해',
   description: '2026년 여름(6월-8월) 띠별 운세를 확인하세요. 열정, 결실, 도전의 여름철 운세를 전통 원리에 맞춰 정리한 계절 운세 가이드입니다.',
   keywords: ['2026년 여름 운세', '병오년 여름', '여름철 운세', '6월 운세', '사주 운세'],
 }

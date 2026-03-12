@@ -11,8 +11,8 @@ function buildContentDisposition(name: string, tier: 'basic' | 'pro' | 'gunghap'
   const safeName = name.replace(/[\\/:*?"<>|]/g, '').trim() || '사용자'
   const safeSecondName = (person2Name ?? '상대방').replace(/[\\/:*?"<>|]/g, '').trim() || '상대방'
   const filename = tier === 'gunghap'
-    ? `천명_궁합리포트_${safeName}_${safeSecondName}.docx`
-    : `천명_프리미엄_리포트_${safeName}.docx`
+    ? `사주해_궁합리포트_${safeName}_${safeSecondName}.docx`
+    : `사주해_프리미엄_리포트_${safeName}.docx`
   const encoded = encodeURIComponent(filename)
   return `attachment; filename="premium_report.docx"; filename*=UTF-8''${encoded}`
 }

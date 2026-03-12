@@ -143,7 +143,7 @@ export async function generateGunghapReport(
     new Paragraph({
       alignment: AlignmentType.CENTER,
       heading: HeadingLevel.TITLE,
-      children: [new TextRun({ text: '천명(天命) 궁합 분석 리포트', bold: true, size: 44 })],
+      children: [new TextRun({ text: '사주해 궁합 분석 리포트', bold: true, size: 44 })],
       spacing: { after: 280 },
     }),
     new Paragraph({
@@ -223,7 +223,7 @@ export async function generateGunghapReport(
                 alignment: AlignmentType.CENTER,
                 children: [
                   new TextRun({
-                    text: '천명(天命) AI 사주팔자 분석 서비스 | cheonmyeong.vercel.app',
+                    text: '사주해 AI 사주팔자 분석 서비스 | sajuhae.vercel.app',
                     size: 18,
                     color: '777777',
                   }),
@@ -247,7 +247,7 @@ export async function generatePremiumReport(
 ): Promise<Buffer> {
   const sections: Paragraph[] = buildIntroSections(
     formData,
-    '천명(天命) 프리미엄 사주 분석 리포트',
+    '사주해 프리미엄 사주 분석 리포트',
     '프리미엄 리포트 목차',
   )
 
@@ -274,7 +274,7 @@ export async function generatePremiumReport(
                 alignment: AlignmentType.CENTER,
                 children: [
                   new TextRun({
-                    text: '천명(天命) AI 사주팔자 분석 서비스 | cheonmyeong.vercel.app',
+                    text: '사주해 AI 사주팔자 분석 서비스 | sajuhae.vercel.app',
                     size: 18,
                     color: '777777',
                   }),
@@ -304,7 +304,7 @@ export async function generateProReport(
 ): Promise<Buffer> {
   const sections: Paragraph[] = buildIntroSections(
     formData,
-    '천명(天命) 프로페셔널 사주 분석 리포트',
+    '사주해 프로페셔널 사주 분석 리포트',
     '프로페셔널 리포트 목차',
   )
 
@@ -369,7 +369,7 @@ export async function generateProReport(
                 alignment: AlignmentType.CENTER,
                 children: [
                   new TextRun({
-                    text: '천명(天命) AI 사주팔자 분석 서비스 | cheonmyeong.vercel.app',
+                    text: '사주해 AI 사주팔자 분석 서비스 | sajuhae.vercel.app',
                     size: 18,
                     color: '777777',
                   }),

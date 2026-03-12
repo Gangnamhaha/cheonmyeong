@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
     paymentId,
     storeId: PORTONE_STORE_ID,
     channelKey: PORTONE_CHANNEL_KEY_TOSS,
-    orderName: `천명 - ${planInfo.name}`,
+    orderName: `사주해 - ${planInfo.name}`,
     totalAmount: planInfo.price,
     currency: 'CURRENCY_KRW',
     userId,

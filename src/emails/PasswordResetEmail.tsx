@@ -18,11 +18,11 @@ export function PasswordResetEmail({ resetUrl }: PasswordResetEmailProps) {
   return (
     <Html lang="ko">
       <Head />
-      <Preview>천명 AI 비밀번호 재설정 안내</Preview>
+      <Preview>사주해 AI 비밀번호 재설정 안내</Preview>
       <Tailwind>
         <Body className="bg-gray-100 py-8 font-sans">
           <Container className="mx-auto max-w-xl rounded-lg bg-white p-8">
-            <Text className="m-0 text-xl font-bold text-gray-900">천명 AI</Text>
+            <Text className="m-0 text-xl font-bold text-gray-900">사주해 AI</Text>
             <Text className="text-base text-gray-800">비밀번호 재설정을 요청하셨습니다.</Text>
             <Text className="text-base text-gray-700">
               아래 버튼을 눌러 1시간 이내에 비밀번호를 변경해주세요.
@@ -37,7 +37,7 @@ export function PasswordResetEmail({ resetUrl }: PasswordResetEmailProps) {
               본인이 요청하지 않았다면 이 이메일을 무시하셔도 됩니다.
             </Text>
             <Hr className="my-6 border-gray-200" />
-            <Text className="m-0 text-xs text-gray-500">© 2026 천명(天命)</Text>
+            <Text className="m-0 text-xs text-gray-500">© 2026 사주해</Text>
           </Container>
         </Body>
       </Tailwind>

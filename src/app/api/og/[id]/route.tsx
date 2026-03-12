@@ -35,7 +35,7 @@ export async function GET(_request: Request, { params }: Params) {
             fontSize: 48,
           }}
         >
-          천명(天命)
+          사주해
         </div>
       ),
       { width: 1200, height: 630 }
@@ -78,7 +78,7 @@ export async function GET(_request: Request, { params }: Params) {
         }}
       >
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <div style={{ color: '#f59e0b', fontSize: 36, fontWeight: 700 }}>천명(天命)</div>
+          <div style={{ color: '#f59e0b', fontSize: 36, fontWeight: 700 }}>사주해</div>
           <div style={{ fontSize: 58, fontWeight: 700 }}>{name}님의 사주팔자</div>
           <div style={{ display: 'flex', gap: 24, fontSize: 32 }}>
             <div>일주: <span style={{ color: '#f59e0b', fontWeight: 700 }}>{dayPillarText}</span></div>

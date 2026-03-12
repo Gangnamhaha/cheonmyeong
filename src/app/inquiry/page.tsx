@@ -90,7 +90,7 @@ export default function InquiryPage() {
         {/* Header */}
         <div className="text-center mb-8">
           <Link href="/">
-            <h1 className="font-serif-kr text-3xl font-bold mb-1" style={{ color: 'var(--text-accent)' }}>천명</h1>
+            <h1 className="font-serif-kr text-3xl font-bold mb-1" style={{ color: 'var(--text-accent)' }}>사주해</h1>
           </Link>
           <p className="font-serif-kr text-lg tracking-widest mb-4" style={{ color: 'var(--text-secondary)' }}>天命</p>
           <p className="text-sm" style={{ color: 'var(--text-muted)' }}>고객 문의</p>

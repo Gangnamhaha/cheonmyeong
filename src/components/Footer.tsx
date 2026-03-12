@@ -123,7 +123,7 @@ export default function Footer() {
           </div>
 
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-xs text-[var(--text-muted)]">&copy; {new Date().getFullYear()} 천명(天命). All rights reserved.</p>
+          <p className="text-xs text-[var(--text-muted)]">&copy; {new Date().getFullYear()} 사주해. All rights reserved.</p>
           <nav className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-[var(--text-secondary)]">
             <Link href="/terms" className="transition-colors hover:text-[var(--text-accent)]">
               이용약관

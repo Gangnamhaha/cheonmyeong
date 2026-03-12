@@ -45,12 +45,12 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 
   if (!monthlyData) {
     return {
-      title: '2026년 월별 운세 | 천명',
+      title: '2026년 월별 운세 | 사주해',
       description: '2026년 병오년 월별 띠별 운세를 확인하세요.',
     }
   }
 
-  const title = `2026년 ${monthlyData.monthName} 운세 - 병오년 ${monthlyData.monthName} 띠별 운세 | 천명`
+  const title = `2026년 ${monthlyData.monthName} 운세 - 병오년 ${monthlyData.monthName} 띠별 운세 | 사주해`
   const description = `2026년 병오년 ${monthlyData.monthName} 띠별 운세 총정리. ${monthlyData.overview}`
 
   return {
@@ -62,7 +62,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
       `${monthlyData.monthName} 운세`,
       `${monthlyData.monthName} 띠별 운세`,
       `2026 ${monthlyData.monthName} 사주`,
-      '천명',
+      '사주해',
     ],
     alternates: {
       canonical: `/fortune/2026/month/${monthlyData.month}`,
@@ -92,11 +92,11 @@ export default function Fortune2026MonthPage({ params }: Params) {
     dateModified: `2026-${String(monthNumber).padStart(2, '0')}-01`,
     author: {
       '@type': 'Organization',
-      name: '천명',
+      name: '사주해',
     },
     publisher: {
       '@type': 'Organization',
-      name: '천명',
+      name: '사주해',
     },
   }
 

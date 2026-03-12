@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 
 export const metadata: Metadata = {
-  title: '무료 궁합 테스트 - AI 사주 궁합 분석 | 천명',
+  title: '무료 궁합 테스트 - AI 사주 궁합 분석 | 사주해',
   description: '무료 궁합 테스트로 두 사람의 성향 합, 감정 흐름, 관계 밸런스를 빠르게 확인하세요. 사주 기반 AI 궁합 분석으로 핵심 포인트를 쉽게 파악할 수 있습니다.',
   keywords: ['무료 궁합', '사주 궁합', '궁합 테스트', 'AI 궁합', '궁합 보는 법'],
 }
@@ -14,7 +14,7 @@ export default function FreeGunghapPage() {
         <section className="rounded-2xl border border-slate-800 bg-slate-900/75 p-6">
           <h1 className="font-serif-kr text-3xl font-black text-pink-400">무료 궁합 테스트</h1>
           <p className="mt-3 text-sm leading-relaxed text-slate-300">
-            천명의 궁합 분석은 두 사람의 사주 구조를 비교해 관계의 강점과 충돌 지점을 읽어냅니다.
+            사주해의 궁합 분석은 두 사람의 사주 구조를 비교해 관계의 강점과 충돌 지점을 읽어냅니다.
             연애, 결혼, 동업, 장기 파트너십처럼 관계의 목적에 따라 해석 관점을 달리 제공합니다.
           </p>
           <div className="mt-5 flex flex-wrap gap-3 text-sm">

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { BLOG_ARTICLE_SLUGS } from '@/data/blog-articles'
 
 const INDEXNOW_KEY = 'b4f8c2d1e6a3f7094c5b8d2e1a6f3079'
-const HOST = 'cheonmyeong.vercel.app'
+const HOST = 'sajuhae.vercel.app'
 const KEY_LOCATION = `https://${HOST}/${INDEXNOW_KEY}.txt`
 
 // Zodiac animals

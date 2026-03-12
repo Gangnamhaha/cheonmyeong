@@ -1,6 +1,6 @@
 {
-  "name": "천명(天命) - AI 사주팔자",
-  "short_name": "천명",
+  "name": "사주해 - AI 사주팔자",
+  "short_name": "사주해",
   "description": "AI가 분석하는 사주팔자 풀이 서비스",
   "start_url": "/",
   "display": "standalone",

@@ -109,8 +109,8 @@ export async function GET(req: NextRequest) {
     try {
       pushResult = await broadcastPush({
         title: '🔮 오늘의 운세가 도착했어요!',
-        body: '천명 AI가 분석한 오늘의 사주 운세를 확인해보세요.',
-        url: 'https://cheonmyeong.vercel.app',
+        body: '사주해 AI가 분석한 오늘의 사주 운세를 확인해보세요.',
+        url: 'https://sajuhae.vercel.app',
       })
     } catch (e) {
       console.error('Push broadcast failed:', e)

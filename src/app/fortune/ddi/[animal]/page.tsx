@@ -73,12 +73,12 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 
   if (!zodiac) {
     return {
-      title: '띠별 운세 | 천명',
-      description: '천명에서 띠별 오늘 운세와 2026년 운세 흐름을 확인하세요.',
+      title: '띠별 운세 | 사주해',
+      description: '사주해에서 띠별 오늘 운세와 2026년 운세 흐름을 확인하세요.',
     }
   }
 
-  const title = `${zodiac.animal}띠 2026 운세 | 오늘의 ${zodiac.animal}띠 운세 | 천명`
+  const title = `${zodiac.animal}띠 2026 운세 | 오늘의 ${zodiac.animal}띠 운세 | 사주해`
   const description = `${zodiac.icon} ${zodiac.animal}띠를 위한 오늘의 운세와 2026년 연간 흐름을 한 페이지에서 확인하세요. ${zodiac.animal}띠 생년과 핵심 키워드, 맞춤 운세 안내까지 제공합니다.`
 
   return {
@@ -90,7 +90,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
       `${zodiac.animal}띠 운세`,
       `${zodiac.animal}띠 생년`,
       '띠별 운세',
-      '천명',
+      '사주해',
     ],
     alternates: {
       canonical: `/fortune/ddi/${zodiac.slug}`,

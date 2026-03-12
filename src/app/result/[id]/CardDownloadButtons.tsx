@@ -29,7 +29,7 @@ export default function CardDownloadButtons({ id, name }: Props) {
       const suffix = format === 'story' ? 'story' : 'instagram'
 
       anchor.href = url
-      anchor.download = `천명_사주카드_${safeName}_${suffix}.png`
+      anchor.download = `사주해_사주카드_${safeName}_${suffix}.png`
       anchor.click()
       URL.revokeObjectURL(url)
     } catch {
