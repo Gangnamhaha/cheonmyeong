@@ -1186,10 +1186,23 @@ export default function HomeClient() {
               💑 궁합 보기
             </a>
 
+            {/* 나의 사주 음악 버튼 */}
+            <a
+              href="/saju/music"
+              className="block w-full mt-4 font-bold py-3.5 px-4 rounded-xl text-sm text-center transition-all hover:scale-[1.02] active:scale-[0.98]"
+              style={{
+                background: 'linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%)',
+                color: '#f8fafc',
+                boxShadow: '0 4px 14px rgba(6, 182, 212, 0.3)',
+              }}
+            >
+              🎵 나의 사주 음악 듣기
+            </a>
+
             {/* 운명 스토리 보기 버튼 */}
             <button
               onClick={() => setShowAnimation(true)}
-              className="w-full mt-4 font-bold py-3.5 px-4 rounded-xl text-sm transition-all hover:scale-[1.02] active:scale-[0.98]"
+              className="w-full mt-2 font-bold py-3.5 px-4 rounded-xl text-sm transition-all hover:scale-[1.02] active:scale-[0.98]"
               style={{
                 background: 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)',
                 color: '#1e293b',
