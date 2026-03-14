@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { useTheme } from './ThemeProvider'
 import UserMenu from './UserMenu'
 import SajuChat from './SajuChat'
+import SearchModal from './SearchModal'
 import { useSpeechRecognition } from '@/hooks/useSpeechRecognition'
 
 interface SajuFormData {
@@ -217,6 +218,7 @@ export default function SajuForm({ onSubmit, loading = false }: SajuFormProps) {
   const [history, setHistory] = useState<HistoryEntry[]>([])
   const [totalCount, setTotalCount] = useState(0)
   const [showForm, setShowForm] = useState(false)
+  const [showSearchModal, setShowSearchModal] = useState(false)
   const [name, setName] = useState('')
   const {
     isListening: isNameListening,
@@ -253,6 +255,18 @@ export default function SajuForm({ onSubmit, loading = false }: SajuFormProps) {
     // Auto-show form after hero delay
     const timer = setTimeout(() => setShowForm(true), 200)
     return () => clearTimeout(timer)
+  }, [])
+
+  useEffect(() => {
+    function handleOpenSearchShortcut(e: KeyboardEvent) {
+      const isCommandOrCtrl = e.metaKey || e.ctrlKey
+      if (!isCommandOrCtrl || e.key.toLowerCase() !== 'k') return
+      e.preventDefault()
+      setShowSearchModal(true)
+    }
+
+    window.addEventListener('keydown', handleOpenSearchShortcut)
+    return () => window.removeEventListener('keydown', handleOpenSearchShortcut)
   }, [])
 
   useEffect(() => {
@@ -367,6 +381,15 @@ export default function SajuForm({ onSubmit, loading = false }: SajuFormProps) {
         {/* Top bar: theme toggle + user menu */}
         <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
           <UserMenu />
+          <button
+            onClick={() => setShowSearchModal(true)}
+            className="p-2.5 rounded-full hover-scale theme-transition"
+            style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', color: 'var(--text-secondary)' }}
+            aria-label="전체 검색"
+            title="검색 (Ctrl+K)"
+          >
+            🔍
+          </button>
           <button
             onClick={cycleFontSize}
             className="p-2.5 rounded-full hover-scale theme-transition text-xs font-bold"
@@ -719,6 +742,8 @@ export default function SajuForm({ onSubmit, loading = false }: SajuFormProps) {
           </div>
         </section>
       )}
+
+      <SearchModal isOpen={showSearchModal} onClose={() => setShowSearchModal(false)} />
     </div>
   )
 }

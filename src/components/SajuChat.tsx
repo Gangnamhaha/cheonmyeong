@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { useSpeechRecognition } from '@/hooks/useSpeechRecognition'
 import { useSpeechSynthesis } from '@/hooks/useSpeechSynthesis'
 
@@ -9,14 +10,51 @@ interface ChatMessage {
   content: string
 }
 
-const EXAMPLE_QUESTIONS = [
-  '사주에서 오행이 뭔가요?',
-  '용신이 뭔지 쉽게 알려주세요',
-  '올해 갑진년의 특징은?',
-  '음양의 조화란 무엇인가요?',
+interface GuideItem {
+  label: string
+  action: 'navigate' | 'ask'
+  target?: string
+  description: string
+}
+
+const GUIDE_SECTIONS: { title: string; items: GuideItem[] }[] = [
+  {
+    title: '🔮 사주 분석',
+    items: [
+      { label: '무료 사주 분석하기', action: 'navigate', target: '/', description: '생년월일시로 AI 사주팔자 분석' },
+      { label: '오행이 뭔가요?', action: 'ask', description: '오행의 기본 개념 알아보기' },
+      { label: '용신이란?', action: 'ask', description: '나에게 유리한 오행 찾기' },
+    ],
+  },
+  {
+    title: '💑 궁합 & 운세',
+    items: [
+      { label: '궁합 보기', action: 'navigate', target: '/gunghap', description: '두 사람의 사주 궁합 분석' },
+      { label: '오늘의 운세', action: 'navigate', target: '/fortune/today', description: '오늘 하루 운세 확인' },
+      { label: '2026년 운세', action: 'navigate', target: '/fortune/2026', description: '올해 전체 운세 흐름' },
+    ],
+  },
+  {
+    title: '🎵 특별 기능',
+    items: [
+      { label: '나의 사주 음악', action: 'navigate', target: '/saju/music', description: '사주 기반 맞춤 음악 생성' },
+      { label: 'MBTI 궁합', action: 'navigate', target: '/tools/mbti', description: 'MBTI 성격 유형별 궁합' },
+      { label: '이름 풀이', action: 'navigate', target: '/tools/name', description: '한글 이름 획수 분석' },
+    ],
+  },
+  {
+    title: '❓ 자주 묻는 질문',
+    items: [
+      { label: '사주팔자란 무엇인가요?', action: 'ask', description: '사주의 기본 개념' },
+      { label: '신강과 신약의 차이는?', action: 'ask', description: '일간 강약 이해하기' },
+      { label: '대운은 어떻게 바뀌나요?', action: 'ask', description: '10년 주기의 대운 흐름' },
+      { label: '십신 관계가 궁금해요', action: 'ask', description: '비겁, 식상, 재성 등 관계' },
+    ],
+  },
 ]
 
 export default function SajuChat() {
+  const router = useRouter()
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
@@ -144,6 +182,16 @@ export default function SajuChat() {
     speak(content)
   }
 
+  function handleGuideAction(item: GuideItem) {
+    if (item.action === 'navigate' && item.target) {
+      setIsOpen(false)
+      router.push(item.target)
+      return
+    }
+
+    sendMessage(item.label)
+  }
+
   // Collapsed state — just the toggle button
   if (!isOpen) {
     return (
@@ -163,7 +211,7 @@ export default function SajuChat() {
                 사주에 대해 궁금한 점이 있나요?
               </p>
               <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>
-                AI 명리학 전문가에게 물어보세요
+                사주해 이용 안내 · AI 상담
               </p>
             </div>
             <span className="text-lg" style={{ color: 'var(--text-muted)' }}>💬</span>
@@ -214,24 +262,50 @@ export default function SajuChat() {
           style={{ maxHeight: '320px', minHeight: '120px' }}
         >
           {messages.length === 0 && (
-            <div className="space-y-2">
+            <div className="space-y-3">
               <p className="text-xs text-center mb-3" style={{ color: 'var(--text-muted)' }}>
-                사주에 대해 궁금한 점을 자유롭게 물어보세요!
+                원하는 기능을 빠르게 시작하거나 AI에게 바로 물어보세요
               </p>
-              <div className="flex flex-wrap gap-1.5 justify-center">
-                {EXAMPLE_QUESTIONS.map((q) => (
-                  <button
-                    key={q}
-                    onClick={() => sendMessage(q)}
-                    className="px-3 py-1.5 rounded-full text-xs hover-scale theme-transition"
+              <div className="space-y-2 max-h-[230px] overflow-y-auto pr-1">
+                {GUIDE_SECTIONS.map((section) => (
+                  <div
+                    key={section.title}
+                    className="rounded-xl p-2.5"
                     style={{
                       background: 'var(--bg-secondary)',
-                      color: 'var(--text-secondary)',
                       border: '1px solid var(--border-color)',
                     }}
                   >
-                    {q}
-                  </button>
+                    <p className="text-[11px] font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
+                      {section.title}
+                    </p>
+                    <div className="space-y-1.5">
+                      {section.items.map((item) => (
+                        <button
+                          key={item.label}
+                          type="button"
+                          onClick={() => handleGuideAction(item)}
+                          className="w-full rounded-lg px-2.5 py-2 text-left hover-scale theme-transition"
+                          style={{
+                            background: 'var(--bg-card)',
+                            border: '1px solid var(--border-color)',
+                          }}
+                        >
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-xs font-medium" style={{ color: 'var(--text-primary)' }}>
+                              {item.label}
+                            </span>
+                            <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>
+                              {item.action === 'navigate' ? '이동' : '질문'}
+                            </span>
+                          </div>
+                          <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-muted)' }}>
+                            {item.description}
+                          </p>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 ))}
               </div>
             </div>
