@@ -6,6 +6,163 @@ import type { YongsinResult } from './yongsin'
 
 export type MoodType = 'mystical' | 'dramatic' | 'warm' | 'intense' | 'serene' | 'hopeful'
 
+export type MusicGenre =
+  | 'ambient'
+  | 'traditional'
+  | 'piano'
+  | 'electronic'
+  | 'orchestra'
+  | 'lofi'
+  | 'nature'
+
+export interface GenreConfig {
+  name: string
+  description: string
+  icon: string
+  padWaveform: OscillatorType
+  melodyWaveform: OscillatorType
+  tempoMultiplier: number
+  reverbDecay: number
+  delayTime: number
+  delayFeedback: number
+  filterType: BiquadFilterType
+  filterFreq: number
+  noteLength: { min: number; max: number }
+  percussionStyle: 'soft' | 'crisp' | 'none' | 'heavy' | 'shuffle'
+  padDetune: number
+  melodyOctaveRange: [number, number]
+  swingAmount: number
+}
+
+export const GENRE_CONFIGS: Record<MusicGenre, GenreConfig> = {
+  ambient: {
+    name: '명상 앰비언트',
+    description: '고요한 패드와 넓은 공간감으로 내면의 흐름을 느낍니다',
+    icon: '🌊',
+    padWaveform: 'triangle',
+    melodyWaveform: 'sine',
+    tempoMultiplier: 1,
+    reverbDecay: 2.8,
+    delayTime: 0.35,
+    delayFeedback: 0.35,
+    filterType: 'lowpass',
+    filterFreq: 1200,
+    noteLength: { min: 0.3, max: 1.2 },
+    percussionStyle: 'soft',
+    padDetune: 5,
+    melodyOctaveRange: [0, 1],
+    swingAmount: 0,
+  },
+  traditional: {
+    name: '한국 전통 국악',
+    description: '가야금과 대금의 울림을 연상시키는 동양적 선율',
+    icon: '🏛️',
+    padWaveform: 'sine',
+    melodyWaveform: 'triangle',
+    tempoMultiplier: 0.85,
+    reverbDecay: 3.5,
+    delayTime: 0.5,
+    delayFeedback: 0.2,
+    filterType: 'bandpass',
+    filterFreq: 800,
+    noteLength: { min: 0.4, max: 1.8 },
+    percussionStyle: 'soft',
+    padDetune: 12,
+    melodyOctaveRange: [0, 2],
+    swingAmount: 0.15,
+  },
+  piano: {
+    name: '피아노 발라드',
+    description: '부드러운 피아노 터치로 감성을 전달합니다',
+    icon: '🎹',
+    padWaveform: 'sine',
+    melodyWaveform: 'sine',
+    tempoMultiplier: 0.9,
+    reverbDecay: 2.2,
+    delayTime: 0.22,
+    delayFeedback: 0.18,
+    filterType: 'lowpass',
+    filterFreq: 3000,
+    noteLength: { min: 0.15, max: 0.6 },
+    percussionStyle: 'none',
+    padDetune: 2,
+    melodyOctaveRange: [0, 2],
+    swingAmount: 0.05,
+  },
+  electronic: {
+    name: '일렉트로닉',
+    description: '신스웨이브와 펄스가 만드는 미래지향적 사운드',
+    icon: '⚡',
+    padWaveform: 'sawtooth',
+    melodyWaveform: 'square',
+    tempoMultiplier: 1.25,
+    reverbDecay: 1.5,
+    delayTime: 0.18,
+    delayFeedback: 0.4,
+    filterType: 'lowpass',
+    filterFreq: 2000,
+    noteLength: { min: 0.08, max: 0.35 },
+    percussionStyle: 'crisp',
+    padDetune: 8,
+    melodyOctaveRange: [0, 3],
+    swingAmount: 0,
+  },
+  orchestra: {
+    name: '오케스트라',
+    description: '웅장한 현악과 관악이 인생의 서사시를 연주합니다',
+    icon: '🎻',
+    padWaveform: 'triangle',
+    melodyWaveform: 'triangle',
+    tempoMultiplier: 0.8,
+    reverbDecay: 3.2,
+    delayTime: 0.3,
+    delayFeedback: 0.15,
+    filterType: 'lowpass',
+    filterFreq: 1800,
+    noteLength: { min: 0.25, max: 1 },
+    percussionStyle: 'heavy',
+    padDetune: 3,
+    melodyOctaveRange: [0, 2],
+    swingAmount: 0,
+  },
+  lofi: {
+    name: '로파이 힙합',
+    description: '따뜻한 비트와 빈티지 텍스처의 편안한 사운드',
+    icon: '☕',
+    padWaveform: 'triangle',
+    melodyWaveform: 'sine',
+    tempoMultiplier: 0.75,
+    reverbDecay: 1.8,
+    delayTime: 0.28,
+    delayFeedback: 0.25,
+    filterType: 'lowpass',
+    filterFreq: 900,
+    noteLength: { min: 0.12, max: 0.5 },
+    percussionStyle: 'shuffle',
+    padDetune: 15,
+    melodyOctaveRange: [0, 1],
+    swingAmount: 0.3,
+  },
+  nature: {
+    name: '자연의 소리',
+    description: '바람, 물, 새소리와 어우러지는 치유의 사운드스케이프',
+    icon: '🌿',
+    padWaveform: 'sine',
+    melodyWaveform: 'sine',
+    tempoMultiplier: 0.7,
+    reverbDecay: 4,
+    delayTime: 0.6,
+    delayFeedback: 0.3,
+    filterType: 'lowpass',
+    filterFreq: 600,
+    noteLength: { min: 0.5, max: 2 },
+    percussionStyle: 'none',
+    padDetune: 20,
+    melodyOctaveRange: [0, 1],
+    swingAmount: 0.1,
+  },
+}
+
 export interface SajuMusicInput {
   oheng: OhengResult
   ilganStrength: IlganStrength
@@ -29,6 +186,8 @@ export interface Movement {
 }
 
 export interface SajuMusicParams {
+  genre: MusicGenre
+  genreConfig: GenreConfig
   overall: {
     tempo: number
     key: string
@@ -110,10 +269,12 @@ function resolveVoidMovementIndex(
   return weakIndex >= 0 ? weakIndex : null
 }
 
-export function mapSajuToMusic(input: SajuMusicInput): SajuMusicParams {
+export function mapSajuToMusic(input: SajuMusicInput, genre: MusicGenre = 'ambient'): SajuMusicParams {
   const { oheng, ilganStrength, yongsin, saju } = input
+  const genreConfig = GENRE_CONFIGS[genre]
 
-  const overallTempo = clamp(mapTempoFromStrength(ilganStrength.score), 60, 140)
+  const baseOverallTempo = clamp(mapTempoFromStrength(ilganStrength.score), 60, 140)
+  const overallTempo = clamp(Math.round(baseOverallTempo * genreConfig.tempoMultiplier), 56, 168)
   const dominantElementConfig = ELEMENT_TO_KEY[oheng.dominant] ?? ELEMENT_TO_KEY.토
   const { dominant, missing } = getDominantAndMissingElements(oheng)
 
@@ -150,7 +311,8 @@ export function mapSajuToMusic(input: SajuMusicInput): SajuMusicParams {
     intensity = clamp(intensity, 0.25, 1)
 
     const tempoOffset = (index - 1) * 4
-    const tempo = clamp(overallTempo + tempoOffset + Math.round((intensity - 0.6) * 18), 56, 148)
+    const baseTempo = clamp(baseOverallTempo + tempoOffset + Math.round((intensity - 0.6) * 18), 56, 148)
+    const tempo = clamp(Math.round(baseTempo * genreConfig.tempoMultiplier), 52, 176)
     const duration = isVoid ? 20 : 24 + (index % 2 === 0 ? 2 : 0)
 
     const descriptionParts = [
@@ -184,6 +346,8 @@ export function mapSajuToMusic(input: SajuMusicInput): SajuMusicParams {
   }) as [Movement, Movement, Movement, Movement]
 
   return {
+    genre,
+    genreConfig,
     overall: {
       tempo: overallTempo,
       key: dominantElementConfig.key,

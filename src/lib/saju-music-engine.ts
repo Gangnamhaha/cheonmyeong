@@ -1,4 +1,4 @@
-import type { Movement, SajuMusicParams } from './saju-music'
+import { GENRE_CONFIGS, type GenreConfig, type Movement, type SajuMusicParams } from './saju-music'
 
 interface ScheduledNode {
   stopAt: number
@@ -48,6 +48,7 @@ export class SajuMusicEngine {
   private currentMovementIndex = -1
   private volume = 0.85
   private _isPlaying = false
+  private genreConfig: GenreConfig = GENRE_CONFIGS.ambient
 
   get isPlaying(): boolean {
     return this._isPlaying
@@ -102,6 +103,20 @@ export class SajuMusicEngine {
 
     this.stop()
     this.callbacks = callbacks ?? {}
+    this.genreConfig = params.genreConfig
+
+    if (this.reverb) {
+      this.reverb.buffer = this.createImpulseResponse(
+        this.ctx,
+        clamp(this.genreConfig.reverbDecay, 1, 6),
+        clamp(1.4 + this.genreConfig.reverbDecay * 0.35, 1.4, 4),
+      )
+    }
+
+    if (this.delay && this.delayFeedback) {
+      this.delay.delayTime.setTargetAtTime(clamp(this.genreConfig.delayTime, 0.05, 1.2), this.ctx.currentTime, 0.05)
+      this.delayFeedback.gain.setTargetAtTime(clamp(this.genreConfig.delayFeedback, 0, 0.85), this.ctx.currentTime, 0.05)
+    }
 
     const now = this.ctx.currentTime + 0.05
     const crossfade = 2.4
@@ -263,8 +278,12 @@ export class SajuMusicEngine {
 
     const padGain = this.ctx.createGain()
     const colorFilter = this.ctx.createBiquadFilter()
-    colorFilter.type = 'lowpass'
-    colorFilter.frequency.value = movement.baseFreq * 8
+    colorFilter.type = this.genreConfig.filterType
+    colorFilter.frequency.value = clamp(
+      this.genreConfig.filterFreq + movement.baseFreq * (movement.intensity * 0.4 + 0.2),
+      200,
+      5200,
+    )
     colorFilter.Q.value = movement.mood === 'intense' ? 0.9 : 0.5
 
     const textureLfo = this.ctx.createOscillator()
@@ -280,14 +299,14 @@ export class SajuMusicEngine {
     padGain.gain.exponentialRampToValueAtTime(0.0001, endAt)
 
     const rootOsc = this.ctx.createOscillator()
-    rootOsc.type = pickWaveform(movement.mood)
+    rootOsc.type = this.genreConfig.padWaveform || pickWaveform(movement.mood)
     rootOsc.frequency.value = movement.baseFreq * 0.5
-    rootOsc.detune.value = movementIndex * 3
+    rootOsc.detune.value = movementIndex * this.genreConfig.padDetune
 
     const fifthOsc = this.ctx.createOscillator()
-    fifthOsc.type = 'sine'
+    fifthOsc.type = this.genreConfig.padWaveform || 'sine'
     fifthOsc.frequency.value = movement.baseFreq * 0.75
-    fifthOsc.detune.value = -5
+    fifthOsc.detune.value = -this.genreConfig.padDetune
 
     rootOsc.connect(padGain)
     fifthOsc.connect(padGain)
@@ -331,28 +350,33 @@ export class SajuMusicEngine {
     const sparseFactor = movement.intensity < 0.45 ? 2 : 1
     const step = beat / 2
     const maxNotes = Math.max(1, Math.floor((movement.duration / step) / sparseFactor))
+    const minOctaveShift = Math.min(this.genreConfig.melodyOctaveRange[0], this.genreConfig.melodyOctaveRange[1])
+    const maxOctaveShift = Math.max(this.genreConfig.melodyOctaveRange[0], this.genreConfig.melodyOctaveRange[1])
 
     for (let noteIndex = 0; noteIndex < maxNotes; noteIndex += 1) {
-      const noteTime = startAt + noteIndex * step * sparseFactor
+      const swingOffset = noteIndex % 2 === 1 ? this.genreConfig.swingAmount * (beat / 2) : 0
+      const noteTime = startAt + noteIndex * step * sparseFactor + swingOffset
       if (noteTime >= endAt - 0.05) break
 
       const seed = (movementIndex + 1) * 1000 + noteIndex * 17
       const ratioIndex = Math.floor(seededNoise(seed) * movement.scale.length)
-      const octaveShift = seededNoise(seed + 11) > 0.75 ? 2 : seededNoise(seed + 23) > 0.45 ? 1 : 0
+      const octaveRangeSpan = Math.max(0, maxOctaveShift - minOctaveShift)
+      const octaveShift = minOctaveShift + Math.round(seededNoise(seed + 11) * octaveRangeSpan)
       const ratio = movement.scale[ratioIndex] ?? 1
       const freq = movement.baseFreq * ratio * Math.pow(2, octaveShift)
-      const noteLength = clamp(step * (0.7 + seededNoise(seed + 31) * 0.4), 0.12, 0.9)
+      const rawLength = this.genreConfig.noteLength.min + seededNoise(seed + 31) * (this.genreConfig.noteLength.max - this.genreConfig.noteLength.min)
+      const noteLength = clamp(rawLength, 0.08, Math.max(0.1, beat * 1.8))
 
       const osc = this.ctx.createOscillator()
       const gain = this.ctx.createGain()
       const filter = this.ctx.createBiquadFilter()
 
-      osc.type = pickWaveform(movement.mood)
+      osc.type = this.genreConfig.melodyWaveform || pickWaveform(movement.mood)
       osc.frequency.setValueAtTime(freq, noteTime)
       osc.detune.setValueAtTime((seededNoise(seed + 47) - 0.5) * 7, noteTime)
 
       filter.type = 'bandpass'
-      filter.frequency.value = clamp(freq * 1.7, 200, 3200)
+      filter.frequency.value = clamp(this.genreConfig.filterFreq + freq * 0.7, 160, 4200)
       filter.Q.value = movement.mood === 'mystical' ? 8 : 4
 
       const peak = clamp(0.04 + movement.intensity * 0.09, 0.03, 0.14)
@@ -388,12 +412,26 @@ export class SajuMusicEngine {
   ): void {
     if (!this.ctx) return
 
+    const style = this.genreConfig.percussionStyle
+    if (style === 'none') return
+
     const beat = 60 / movement.tempo
     const interval = movement.intensity < 0.45 ? beat * 2 : beat
     const noiseBuffer = this.createNoiseBuffer(this.ctx, 0.2)
 
+    const hitShape =
+      style === 'crisp'
+        ? { attack: 0.002, decay: 0.08, levelMul: 1.45, freqBase: 950, freqSpread: 750 }
+        : style === 'heavy'
+          ? { attack: 0.008, decay: 0.2, levelMul: 1.9, freqBase: 220, freqSpread: 260 }
+          : style === 'shuffle'
+            ? { attack: 0.004, decay: 0.11, levelMul: 1.2, freqBase: 500, freqSpread: 450 }
+            : { attack: 0.005, decay: 0.12, levelMul: 1, freqBase: 250, freqSpread: 400 }
+
     for (let hit = 0; ; hit += 1) {
-      const hitTime = startAt + hit * interval
+      const beatInBar = hit % 4
+      const swingOffset = style === 'shuffle' && beatInBar % 2 === 1 ? this.genreConfig.swingAmount * (beat / 2) : 0
+      const hitTime = startAt + hit * interval + swingOffset
       if (hitTime >= endAt - 0.04) break
 
       const noise = this.ctx.createBufferSource()
@@ -401,24 +439,29 @@ export class SajuMusicEngine {
 
       const hitFilter = this.ctx.createBiquadFilter()
       hitFilter.type = 'bandpass'
-      hitFilter.frequency.value = clamp(250 + movementIndex * 80 + movement.intensity * 400, 200, 1200)
-      hitFilter.Q.value = 1.2 + movement.intensity * 2
+      hitFilter.frequency.value = clamp(
+        hitShape.freqBase + movementIndex * 80 + movement.intensity * hitShape.freqSpread,
+        180,
+        style === 'crisp' ? 2600 : 1500,
+      )
+      hitFilter.Q.value = style === 'crisp' ? 3.1 : style === 'heavy' ? 1 : 1.2 + movement.intensity * 2
 
       const hitGain = this.ctx.createGain()
-      const level = clamp(0.01 + movement.intensity * 0.04, 0.01, 0.06)
+      const grooveLevel = style === 'shuffle' ? (beatInBar === 0 || beatInBar === 2 ? 1.2 : 0.7) : 1
+      const level = clamp((0.01 + movement.intensity * 0.04) * hitShape.levelMul * grooveLevel, 0.008, 0.16)
       hitGain.gain.setValueAtTime(0.0001, hitTime)
-      hitGain.gain.exponentialRampToValueAtTime(level, hitTime + 0.005)
-      hitGain.gain.exponentialRampToValueAtTime(0.0001, hitTime + 0.12)
+      hitGain.gain.exponentialRampToValueAtTime(level, hitTime + hitShape.attack)
+      hitGain.gain.exponentialRampToValueAtTime(0.0001, hitTime + hitShape.decay)
 
       noise.connect(hitFilter)
       hitFilter.connect(hitGain)
       hitGain.connect(destination)
 
       noise.start(hitTime)
-      noise.stop(hitTime + 0.14)
+      noise.stop(hitTime + hitShape.decay + 0.02)
 
       this.scheduled.push({
-        stopAt: hitTime + 0.14,
+        stopAt: hitTime + hitShape.decay + 0.02,
         stop: () => {
           noise.stop()
           noise.disconnect()
