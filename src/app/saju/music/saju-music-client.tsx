@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { OHENG_COLORS } from '@/lib/oheng'
-import { mapSajuToMusic, type SajuMusicInput, type SajuMusicParams } from '@/lib/saju-music'
+import { GENRE_CONFIGS, mapSajuToMusic, type MusicGenre, type SajuMusicInput, type SajuMusicParams } from '@/lib/saju-music'
 import { SajuMusicEngine } from '@/lib/saju-music-engine'
 
 type StoredResult = Partial<SajuMusicInput>
@@ -18,6 +18,11 @@ const STORAGE_KEYS = [
 ] as const
 
 const ELEMENTS = ['목', '화', '토', '금', '수'] as const
+
+const GENRES = (Object.entries(GENRE_CONFIGS) as Array<[MusicGenre, (typeof GENRE_CONFIGS)[MusicGenre]]>).map(([id, config]) => ({
+  id,
+  ...config,
+}))
 
 function isMusicInput(value: unknown): value is SajuMusicInput {
   if (!value || typeof value !== 'object') return false
@@ -57,6 +62,7 @@ function createAiPrompt(params: SajuMusicParams): string {
 
 export default function SajuMusicClient() {
   const engineRef = useRef<SajuMusicEngine | null>(null)
+  const previousGenreRef = useRef<MusicGenre>('ambient')
 
   const [musicInput, setMusicInput] = useState<SajuMusicInput | null>(null)
   const [loadingInput, setLoadingInput] = useState(true)
@@ -66,6 +72,7 @@ export default function SajuMusicClient() {
   const [isRunning, setIsRunning] = useState(false)
   const [volume, setVolume] = useState(0.85)
   const [audioError, setAudioError] = useState<string | null>(null)
+  const [selectedGenre, setSelectedGenre] = useState<MusicGenre>('ambient')
 
   const [aiLoading, setAiLoading] = useState(false)
   const [aiError, setAiError] = useState<string | null>(null)
@@ -79,8 +86,8 @@ export default function SajuMusicClient() {
 
   const musicParams = useMemo(() => {
     if (!musicInput) return null
-    return mapSajuToMusic(musicInput)
-  }, [musicInput])
+    return mapSajuToMusic(musicInput, selectedGenre)
+  }, [musicInput, selectedGenre])
 
   const currentMovement = musicParams?.movements[currentMovementIndex] ?? null
   const progressPercent = totalDuration > 0 ? Math.min(100, (progress / totalDuration) * 100) : 0
@@ -129,6 +136,18 @@ export default function SajuMusicClient() {
       setIsRunning(false)
     }
   }, [musicParams, totalDuration, volume])
+
+  useEffect(() => {
+    if (previousGenreRef.current === selectedGenre) return
+    previousGenreRef.current = selectedGenre
+    if (!isRunning) return
+
+    engineRef.current?.stop()
+    setIsRunning(false)
+    startComposition().catch(() => {
+      setAudioError('장르 변경 중 재생 재시작에 실패했습니다.')
+    })
+  }, [isRunning, selectedGenre, startComposition])
 
   const handlePlayPause = useCallback(async () => {
     if (!musicParams) return
@@ -231,10 +250,34 @@ export default function SajuMusicClient() {
         </section>
 
         <section className="rounded-3xl border border-slate-800 bg-slate-900/60 p-5 md:p-7">
+          <h2 className="font-serif-kr text-xl font-bold text-slate-100 md:text-2xl">장르 선택</h2>
+          <div className="mt-4 flex gap-3 overflow-x-auto pb-2 md:flex-wrap md:overflow-visible">
+            {GENRES.map((genre) => {
+              const selected = selectedGenre === genre.id
+              return (
+                <button
+                  key={genre.id}
+                  onClick={() => setSelectedGenre(genre.id)}
+                  className={`group flex min-w-[220px] flex-col gap-1 rounded-2xl border px-4 py-3 text-left transition-all duration-300 md:min-w-[250px] md:flex-1 ${
+                    selected
+                      ? 'scale-[1.02] border-amber-300/80 bg-amber-300/10 shadow-[0_0_24px_rgba(245,158,11,0.28)]'
+                      : 'border-slate-700 bg-slate-950/50 hover:border-slate-500 hover:bg-slate-900/70'
+                  }`}
+                >
+                  <span className="text-2xl">{genre.icon}</span>
+                  <span className={`font-bold ${selected ? 'text-amber-200' : 'text-slate-100'}`}>{genre.name}</span>
+                  <span className={`text-xs leading-relaxed ${selected ? 'text-amber-100/80' : 'text-slate-400'}`}>{genre.description}</span>
+                </button>
+              )
+            })}
+          </div>
+        </section>
+
+        <section className="rounded-3xl border border-slate-800 bg-slate-900/60 p-5 md:p-7">
           <div className="flex items-center justify-between gap-3">
             <h2 className="font-serif-kr text-xl font-bold text-slate-100 md:text-2xl">4악장 인생 타임라인</h2>
             <span className="rounded-full border border-amber-300/40 bg-amber-400/10 px-3 py-1 text-xs text-amber-300">
-              Key {musicParams.overall.key} · {musicParams.overall.tempo} BPM
+              {musicParams.genreConfig.name} · Key {musicParams.overall.key} · {musicParams.overall.tempo} BPM
             </span>
           </div>
 
