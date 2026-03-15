@@ -446,23 +446,7 @@ export default function SajuForm({ onSubmit, loading = false }: SajuFormProps) {
         <div className="w-full max-w-md mt-4 relative z-10">
           <AnimationShowcase />
         </div>
-        {/* D1: Daily quote */}
-        <div
-          className="mt-8 text-center relative z-10 max-w-sm mx-auto"
-          style={{ opacity: 0, animation: 'fadeIn 0.6s ease-out 0.4s forwards' }}
-        >
-          <div
-            className="rounded-xl px-6 py-4 theme-transition"
-            style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)' }}
-          >
-            <p className="font-serif-kr text-sm leading-relaxed" style={{ color: 'var(--text-primary)' }}>
-              &ldquo;{dailyQuote.text}&rdquo;
-            </p>
-            <p className="font-serif-kr text-xs mt-2 tracking-widest" style={{ color: 'var(--text-muted)' }}>
-              — {dailyQuote.hanja}
-            </p>
-          </div>
-        </div>
+
 
         {/* C4: Usage stats */}
         {totalCount > 0 && (
