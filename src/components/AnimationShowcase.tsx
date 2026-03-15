@@ -36,7 +36,7 @@ const SAMPLE_PROFILES: Array<{
       daeun: { startAge: 3, cycles: [{ age: 3, stem: '경', branch: '술', element: '금' }, { age: 13, stem: '기', branch: '유', element: '토' }] },
       yearlyFortune: { stem: '병', branch: '오', element: '화', sipsin: '정재', rating: '길' as const, description: '재물운이 열리는 해' },
       monthlyFortune: { stem: '기', branch: '축', element: '토', sipsin: '편관', rating: '평' as const, description: '안정적인 달' },
-    } as FullSajuResult,
+    } as unknown as FullSajuResult,
   },
   {
     mood: 'dramatic', title: '극적인 전환', desc: '화(火) 기운이 강한 사주', icon: '🎭',
@@ -57,7 +57,7 @@ const SAMPLE_PROFILES: Array<{
       daeun: { startAge: 5, cycles: [{ age: 5, stem: '기', branch: '미', element: '토' }, { age: 15, stem: '경', branch: '신', element: '금' }] },
       yearlyFortune: { stem: '병', branch: '오', element: '화', sipsin: '비견', rating: '평' as const, description: '자기 확신의 해' },
       monthlyFortune: { stem: '경', branch: '인', element: '금', sipsin: '편재', rating: '길' as const, description: '재물 기회의 달' },
-    } as FullSajuResult,
+    } as unknown as FullSajuResult,
   },
   {
     mood: 'warm', title: '따뜻한 인연', desc: '토(土) 기운이 강한 사주', icon: '🌅',
@@ -78,7 +78,7 @@ const SAMPLE_PROFILES: Array<{
       daeun: { startAge: 7, cycles: [{ age: 7, stem: '경', branch: '진', element: '금' }, { age: 17, stem: '신', branch: '사', element: '금' }] },
       yearlyFortune: { stem: '병', branch: '오', element: '화', sipsin: '정관', rating: '길' as const, description: '안정과 성취의 해' },
       monthlyFortune: { stem: '신', branch: '축', element: '금', sipsin: '식신', rating: '길' as const, description: '표현력이 빛나는 달' },
-    } as FullSajuResult,
+    } as unknown as FullSajuResult,
   },
   {
     mood: 'intense', title: '강렬한 운세', desc: '금(金) 기운이 강한 사주', icon: '🔥',
@@ -99,7 +99,7 @@ const SAMPLE_PROFILES: Array<{
       daeun: { startAge: 4, cycles: [{ age: 4, stem: '병', branch: '술', element: '화' }, { age: 14, stem: '정', branch: '해', element: '화' }] },
       yearlyFortune: { stem: '병', branch: '오', element: '화', sipsin: '정관', rating: '길' as const, description: '도전과 성취의 해' },
       monthlyFortune: { stem: '무', branch: '인', element: '토', sipsin: '정인', rating: '평' as const, description: '학습과 성장의 달' },
-    } as FullSajuResult,
+    } as unknown as FullSajuResult,
   },
   {
     mood: 'serene', title: '고요한 흐름', desc: '목(木) 기운이 강한 사주', icon: '🌊',
@@ -120,7 +120,7 @@ const SAMPLE_PROFILES: Array<{
       daeun: { startAge: 6, cycles: [{ age: 6, stem: '을', branch: '축', element: '목' }, { age: 16, stem: '갑', branch: '자', element: '목' }] },
       yearlyFortune: { stem: '병', branch: '오', element: '화', sipsin: '식신', rating: '길' as const, description: '창의력이 폭발하는 해' },
       monthlyFortune: { stem: '경', branch: '인', element: '금', sipsin: '편관', rating: '평' as const, description: '규율과 절제의 달' },
-    } as FullSajuResult,
+    } as unknown as FullSajuResult,
   },
   {
     mood: 'hopeful', title: '희망의 빛', desc: '균형 잡힌 오행의 사주', icon: '✨',
@@ -141,7 +141,7 @@ const SAMPLE_PROFILES: Array<{
       daeun: { startAge: 3, cycles: [{ age: 3, stem: '병', branch: '신', element: '화' }, { age: 13, stem: '정', branch: '유', element: '화' }] },
       yearlyFortune: { stem: '병', branch: '오', element: '화', sipsin: '편관', rating: '평' as const, description: '변화와 성장의 해' },
       monthlyFortune: { stem: '기', branch: '해', element: '토', sipsin: '정인', rating: '길' as const, description: '지혜가 빛나는 달' },
-    } as FullSajuResult,
+    } as unknown as FullSajuResult,
   },
 ]
 
