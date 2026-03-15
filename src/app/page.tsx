@@ -1,5 +1,4 @@
 import type { Metadata } from 'next'
-import Link from 'next/link'
 import HomeClient from './HomeClient'
 
 const faqSchema = {
@@ -70,24 +69,12 @@ export const metadata: Metadata = {
 export default function Home() {
   return (
     <>
-      <section style={{ background: 'var(--bg-secondary)' }} className="px-4 py-3">
-        <div className="max-w-4xl mx-auto flex items-center justify-between gap-3">
-          <h1 className="text-sm font-bold whitespace-nowrap" style={{ color: 'var(--accent)' }}>
-            AI 사주팔자 무료 풀이
-          </h1>
-          <div className="flex gap-1.5 overflow-x-auto scrollbar-hide">
-            <Link href="/" className="rounded-full px-3 py-1 text-xs whitespace-nowrap font-medium" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', color: 'var(--accent)' }}>사주</Link>
-            <Link href="/gunghap" className="rounded-full px-3 py-1 text-xs whitespace-nowrap font-medium" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', color: 'var(--text-secondary)' }}>궁합</Link>
-            <Link href="/fortune/today" className="rounded-full px-3 py-1 text-xs whitespace-nowrap font-medium" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', color: 'var(--text-secondary)' }}>운세</Link>
-            <Link href="/pricing" className="rounded-full px-3 py-1 text-xs whitespace-nowrap font-medium" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', color: 'var(--text-secondary)' }}>요금제</Link>
-          </div>
-        </div>
-        {/* SEO — hidden from view, visible to crawlers */}
-        <div className="sr-only">
-          <p>사주해는 전통 명리학 계산 로직과 AI 해석 엔진을 결합해 누구나 쉽게 이해할 수 있는 사주 분석을 제공합니다. 생년월일시를 입력하면 오행 균형, 십신 구조, 일간 강약, 용신 방향을 분석하고 AI가 맞춤 해석을 제공합니다. 무료 사주부터 프리미엄 리포트, 궁합 분석까지 한 번에 이용할 수 있습니다.</p>
-        </div>
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
-      </section>
+      {/* SEO — hidden from view, visible to crawlers */}
+      <h1 className="sr-only">AI 사주팔자 무료 풀이 - 사주해</h1>
+      <div className="sr-only">
+        <p>사주해는 전통 명리학 계산 로직과 AI 해석 엔진을 결합해 누구나 쉽게 이해할 수 있는 사주 분석을 제공합니다. 생년월일시를 입력하면 오행 균형, 십신 구조, 일간 강약, 용신 방향을 분석하고 AI가 맞춤 해석을 제공합니다. 무료 사주부터 프리미엄 리포트, 궁합 분석까지 한 번에 이용할 수 있습니다.</p>
+      </div>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
 
       <HomeClient />
     </>

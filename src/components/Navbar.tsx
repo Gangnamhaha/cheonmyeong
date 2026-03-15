@@ -1,9 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useTheme } from '@/components/ThemeProvider'
 import UserMenu from '@/components/UserMenu'
+import SearchModal from '@/components/SearchModal'
 
 const NAV_LINKS = [
   { href: '/', label: '사주분석' },
@@ -15,8 +16,21 @@ const NAV_LINKS = [
 export default function Navbar() {
   const { theme, toggleTheme, cycleFontSize, fontSizeLabel } = useTheme()
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [searchOpen, setSearchOpen] = useState(false)
+
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault()
+        setSearchOpen(true)
+      }
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [])
 
   return (
+    <>
     <nav
       className="sticky top-0 z-50 backdrop-blur-md theme-transition"
       style={{
@@ -54,6 +68,17 @@ export default function Navbar() {
 
         {/* Right: Controls */}
         <div className="flex items-center gap-2">
+          {/* Search button */}
+          <button
+            onClick={() => setSearchOpen(true)}
+            className="flex h-8 w-8 items-center justify-center rounded-md text-sm transition-opacity hover:opacity-70"
+            style={{ color: 'var(--text-secondary)' }}
+            aria-label="전체 검색"
+            title="검색 (Ctrl+K)"
+          >
+            🔍
+          </button>
+
           {/* Theme toggle */}
           <button
             onClick={toggleTheme}
@@ -124,5 +149,8 @@ export default function Navbar() {
         </div>
       )}
     </nav>
+
+    {searchOpen && <SearchModal onClose={() => setSearchOpen(false)} />}
+    </>
   )
 }
