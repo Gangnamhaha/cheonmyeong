@@ -504,38 +504,22 @@ export default function SajuForm({ onSubmit, loading = false }: SajuFormProps) {
         </div>
       </section>
 
-      {/* ═══ FEATURES SECTION (A3) ═══ */}
-      <section className="px-4 py-12 max-w-md mx-auto relative z-10">
-        <h2
-          className="font-serif-kr text-center text-xl font-bold mb-2"
-          style={{ color: 'var(--text-accent)', opacity: 0, animation: 'fadeIn 0.5s ease-out 0.3s forwards' }}
-        >
-          사주해가 제공하는 기능
-        </h2>
-        <p
-          className="text-center text-xs mb-8 max-w-xs mx-auto leading-relaxed"
-          style={{ color: 'var(--text-muted)', opacity: 0, animation: 'fadeIn 0.5s ease-out 0.5s forwards' }}
-        >
-          전통 명리학 이론과 AI 기술을 결합하여
-          누구나 쉽게 사주를 이해할 수 있도록 도와드립니다
-        </p>
-        <div className="space-y-3">
+      {/* ═══ FEATURES SECTION (A3) — compact grid ═══ */}
+      <section className="px-4 py-6 max-w-md mx-auto relative z-10">
+        <div className="grid grid-cols-3 gap-2">
           {FEATURES.map((f, i) => (
             <div
               key={i}
-              className="feature-card rounded-xl p-4 flex items-start gap-3.5 hover-lift theme-transition"
+              className="feature-card rounded-xl py-3 px-2 text-center hover-lift theme-transition"
               style={{
                 background: 'var(--bg-card)',
                 border: '1px solid var(--border-color)',
                 opacity: 0,
-                animation: `fadeIn 0.4s ease-out ${0.4 + i * 0.08}s forwards`,
+                animation: `fadeIn 0.3s ease-out ${0.2 + i * 0.06}s forwards`,
               }}
             >
-              <span className="text-2xl mt-0.5 flex-shrink-0">{f.icon}</span>
-              <div>
-                <p className="text-sm font-bold mb-0.5" style={{ color: 'var(--text-primary)' }}>{f.title}</p>
-                <p className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>{f.desc}</p>
-              </div>
+              <span className="text-xl">{f.icon}</span>
+              <p className="text-xs font-bold mt-1" style={{ color: 'var(--text-primary)' }}>{f.title}</p>
             </div>
           ))}
         </div>
