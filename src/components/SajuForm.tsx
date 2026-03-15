@@ -5,6 +5,7 @@ import { useTheme } from './ThemeProvider'
 // UserMenu moved to Navbar
 import SajuChat from './SajuChat'
 import SearchModal from './SearchModal'
+import AnimationShowcase from './AnimationShowcase'
 import { useSpeechRecognition } from '@/hooks/useSpeechRecognition'
 
 interface SajuFormData {
@@ -501,6 +502,9 @@ export default function SajuForm({ onSubmit, loading = false }: SajuFormProps) {
           ))}
         </div>
       </section>
+
+      {/* ═══ ANIMATION SHOWCASE ═══ */}
+      <AnimationShowcase />
 
       {/* ═══ FORM SECTION (B3, C5) ═══ */}
       {showForm && (
