@@ -40,8 +40,8 @@ export default function DailyFortuneCard({ stem, branch }: DailyFortuneCardProps
 
   return (
     <div
-      className="rounded-2xl p-5 theme-transition"
-      style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)' }}
+      className="glass-card rounded-2xl p-5 theme-transition"
+      style={{ borderTop: '2px solid var(--accent)' }}
     >
       <div className="flex items-center gap-2 mb-3">
         <span className="text-lg">{'🌅'}</span>
@@ -56,10 +56,33 @@ export default function DailyFortuneCard({ stem, branch }: DailyFortuneCardProps
       </div>
 
       {loading ? (
-        <div className="space-y-2 animate-pulse">
-          <div className="h-3 rounded-full" style={{ background: 'var(--bg-secondary)', width: '90%' }} />
-          <div className="h-3 rounded-full" style={{ background: 'var(--bg-secondary)', width: '70%' }} />
-          <div className="h-3 rounded-full" style={{ background: 'var(--bg-secondary)', width: '80%' }} />
+        <div className="space-y-2.5">
+          <div
+            className="h-3 rounded-full animate-shimmer"
+            style={{
+              background: 'linear-gradient(90deg, var(--bg-secondary) 25%, var(--bg-card-hover) 50%, var(--bg-secondary) 75%)',
+              backgroundSize: '200% 100%',
+              width: '90%',
+            }}
+          />
+          <div
+            className="h-3 rounded-full animate-shimmer"
+            style={{
+              background: 'linear-gradient(90deg, var(--bg-secondary) 25%, var(--bg-card-hover) 50%, var(--bg-secondary) 75%)',
+              backgroundSize: '200% 100%',
+              width: '70%',
+              animationDelay: '0.15s',
+            }}
+          />
+          <div
+            className="h-3 rounded-full animate-shimmer"
+            style={{
+              background: 'linear-gradient(90deg, var(--bg-secondary) 25%, var(--bg-card-hover) 50%, var(--bg-secondary) 75%)',
+              backgroundSize: '200% 100%',
+              width: '80%',
+              animationDelay: '0.3s',
+            }}
+          />
         </div>
       ) : (
         <p
