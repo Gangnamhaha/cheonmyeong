@@ -17,55 +17,58 @@ export default function SajuResultCard({ result }: SajuResultProps) {
 
   return (
     <div>
-      <h2 className="text-center text-lg font-bold text-amber-400 mb-4 tracking-wide">
-        사주팔자 <span className="text-slate-400 text-sm font-normal">(四柱八字)</span>
+      <h2 className="text-center text-lg font-bold mb-4 tracking-wide" style={{ color: 'var(--accent)' }}>
+        사주팔자 <span className="text-sm font-normal" style={{ color: 'var(--text-muted)' }}>(四柱八字)</span>
       </h2>
 
-      {/* rawText */}
-      <p className="text-center text-slate-400 text-sm mb-5">{result.rawText}</p>
+      <p className="text-center text-sm mb-5" style={{ color: 'var(--text-muted)' }}>{result.rawText}</p>
 
-      {/* 4기둥 카드 */}
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {pillars.map((pillar, i) => {
           const color = OHENG_COLORS[pillar.element] ?? '#94a3b8'
-          const isLight = pillar.element === '금' // 금은 흰색이라 텍스트 어둡게
+          const isLight = pillar.element === '금'
           return (
             <div
               key={i}
               data-testid="saju-pillar"
-              className="rounded-xl p-3 flex flex-col items-center gap-1 border border-slate-700"
-              style={{ backgroundColor: color + '22', borderColor: color + '55' }}
+              className="rounded-2xl p-4 flex flex-col items-center gap-1.5"
+              style={{
+                background: `linear-gradient(180deg, ${color}18 0%, ${color}08 100%)`,
+                border: `1px solid ${color}40`,
+                backdropFilter: 'blur(8px)',
+                animation: 'fadeIn 0.4s ease-out forwards',
+                animationDelay: `${i * 0.1}s`,
+                opacity: 0,
+                transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+              }}
             >
-              <span className="text-xs text-slate-400">{PILLAR_LABELS[i]}</span>
-              {/* 천간 */}
+              <span className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>{PILLAR_LABELS[i]}</span>
               <div className="text-center">
                 <div
-                  className="text-2xl font-bold"
-                  style={{ color }}
+                  className="text-3xl font-black"
+                  style={{ color, textShadow: `0 2px 8px ${color}40` }}
                 >
                   {pillar.heavenlyStemHanja}
                 </div>
-                <div className="text-xs text-slate-300">{pillar.heavenlyStem}</div>
+                <div className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>{pillar.heavenlyStem}</div>
               </div>
-              {/* 구분선 */}
-              <div className="w-full h-px bg-slate-700 my-1" />
-              {/* 지지 */}
+              <div className="w-8 h-px my-0.5" style={{ background: 'var(--border-color)' }} />
               <div className="text-center">
                 <div
-                  className="text-2xl font-bold"
-                  style={{ color }}
+                  className="text-3xl font-black"
+                  style={{ color, textShadow: `0 2px 8px ${color}40` }}
                 >
                   {pillar.earthlyBranchHanja}
                 </div>
-                <div className="text-xs text-slate-300">{pillar.earthlyBranch}</div>
+                <div className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>{pillar.earthlyBranch}</div>
               </div>
-              {/* 오행 */}
               <span
-                className="text-xs px-2 py-0.5 rounded-full mt-1"
+                className="text-xs font-bold px-3 py-1 rounded-full mt-1"
                 style={{
-                  backgroundColor: color + '33',
-                  color: isLight ? '#1e293b' : color,
-                  border: `1px solid ${color}55`,
+                  backgroundColor: color + '25',
+                  color: isLight ? 'var(--text-primary)' : color,
+                  border: `1px solid ${color}44`,
+                  boxShadow: `0 2px 8px ${color}30`,
                 }}
               >
                 {pillar.element}

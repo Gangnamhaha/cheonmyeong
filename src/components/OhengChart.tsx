@@ -12,6 +12,14 @@ const OHENG_LABELS: Record<string, string> = {
   수: '水',
 }
 
+const OHENG_ICONS: Record<string, string> = {
+  목: '🌳',
+  화: '🔥',
+  토: '⛰️',
+  금: '⚡',
+  수: '💧',
+}
+
 const OHENG_ORDER = ['목', '화', '토', '금', '수'] as const
 
 export default function OhengChart({ result }: OhengChartProps) {
@@ -19,55 +27,61 @@ export default function OhengChart({ result }: OhengChartProps) {
 
   return (
     <div>
-      <h2 className="text-center text-lg font-bold text-amber-400 mb-4 tracking-wide">
-        오행 분포 <span className="text-slate-400 text-sm font-normal">(五行)</span>
+      <h2 className="text-center text-lg font-bold mb-4 tracking-wide" style={{ color: 'var(--accent)' }}>
+        오행 분포 <span className="text-sm font-normal" style={{ color: 'var(--text-muted)' }}>(五行)</span>
       </h2>
 
-      {/* 바 차트 */}
-      <div className="flex items-end justify-center gap-3 h-32 mb-3">
-        {OHENG_ORDER.map(element => {
+      <div className="flex items-end justify-center gap-3 h-40 mb-4">
+        {OHENG_ORDER.map((element, idx) => {
           const count = result.counts[element] ?? 0
           const heightPct = maxCount > 0 ? (count / maxCount) * 100 : 0
           const color = OHENG_COLORS[element] ?? '#94a3b8'
           const isDominant = element === result.dominant
-          const isWeak = element === result.weak && count === 0
 
           return (
             <div
               key={element}
-              className="flex flex-col items-center gap-1 flex-1"
+              className="flex flex-col items-center gap-1.5 flex-1"
+              style={{
+                animation: 'fadeIn 0.4s ease-out forwards',
+                animationDelay: `${idx * 0.08}s`,
+                opacity: 0,
+              }}
             >
-              {/* 카운트 */}
+              <span className="text-lg">{OHENG_ICONS[element]}</span>
               <span className="text-xs font-bold" style={{ color }}>
                 {count}
               </span>
-              {/* 바 */}
-              <div className="w-full flex items-end justify-center" style={{ height: '80px' }}>
+              <div className="w-full flex items-end justify-center" style={{ height: '90px' }}>
                 <div
                   data-testid="oheng-bar"
-                  className="w-full rounded-t-md transition-all"
+                  className="w-full"
                   style={{
                     height: count === 0 ? '4px' : `${heightPct}%`,
-                    backgroundColor: count === 0 ? '#334155' : color,
-                    opacity: isDominant ? 1 : 0.7,
+                    background: count === 0
+                      ? 'transparent'
+                      : `linear-gradient(180deg, ${color} 0%, ${color}66 100%)`,
+                    borderRadius: '6px 6px 4px 4px',
+                    border: count === 0 ? `2px dashed var(--text-muted)` : 'none',
+                    opacity: isDominant ? 1 : 0.75,
                     minHeight: '4px',
+                    boxShadow: isDominant ? `0 0 14px ${color}50` : 'none',
+                    transition: 'height 0.8s cubic-bezier(0.34, 1.56, 0.64, 1)',
                   }}
                 />
               </div>
-              {/* 라벨 */}
               <div className="text-center">
                 <div className="text-base font-bold" style={{ color }}>
                   {OHENG_LABELS[element]}
                 </div>
-                <div className="text-xs text-slate-400">{element}</div>
+                <div className="text-xs" style={{ color: 'var(--text-muted)' }}>{element}</div>
               </div>
             </div>
           )
         })}
       </div>
 
-      {/* 요약 */}
-      <div className="flex justify-center gap-4 text-xs text-slate-400 mt-2">
+      <div className="flex justify-center gap-4 text-xs mt-2" style={{ color: 'var(--text-muted)' }}>
         <span>
           강한 오행:{' '}
           <span style={{ color: OHENG_COLORS[result.dominant] }} className="font-bold">
@@ -85,10 +99,10 @@ export default function OhengChart({ result }: OhengChartProps) {
           <span
             className={`font-bold ${
               result.balance === '균형'
-                ? 'text-green-400'
+                ? 'text-emerald-400'
                 : result.balance === '결핍'
-                ? 'text-red-400'
-                : 'text-yellow-400'
+                ? 'text-rose-400'
+                : 'text-amber-400'
             }`}
           >
             {result.balance}
