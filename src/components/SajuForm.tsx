@@ -437,13 +437,9 @@ export default function SajuForm({ onSubmit, loading = false }: SajuFormProps) {
           </p>
         </div>
 
-        {/* AI 채팅 */}
+        {/* AI 채팅 + 운명 애니메이션 */}
         <div className="w-full max-w-md mt-6 relative z-10">
           <SajuChat />
-        </div>
-
-        {/* ═══ ANIMATION SHOWCASE (채팅창 아래) ═══ */}
-        <div className="w-full max-w-md mt-4 relative z-10">
           <AnimationShowcase />
         </div>
 
