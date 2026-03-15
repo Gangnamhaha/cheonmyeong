@@ -71,45 +71,48 @@ export const metadata: Metadata = {
 export default function Home() {
   return (
     <>
-      <section className="bg-slate-950 text-slate-100 px-4 py-8 md:py-10">
-        <div className="max-w-4xl mx-auto space-y-5">
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-amber-300">AI 사주팔자 무료 풀이</h1>
-          <p className="text-sm md:text-base leading-relaxed text-slate-200">
-            사주해는 전통 명리학 계산 로직과 AI 해석 엔진을 결합해 누구나 쉽게 이해할 수 있는 사주 분석을 제공합니다. 생년월일시를 입력하면 사주 원국을 기준으로 오행 균형, 십신 구조, 일간 강약, 용신 방향을 빠르게 정리하고 현재 흐름에 맞는 운세 포인트를 확인할 수 있습니다.
-          </p>
-          <p className="text-sm md:text-base leading-relaxed text-slate-300">
-            단순한 길흉 판정보다 실생활에 도움이 되는 해석에 집중해 연애와 인간관계, 직업과 재물, 건강과 생활 루틴까지 연결해 안내합니다. 초보자도 이해하기 쉬운 문장으로 핵심을 설명하고, 이미 명리학을 공부한 사용자에게는 오행과 십신의 상호작용을 중심으로 더 깊이 있는 관점을 제공합니다.
-          </p>
-          <p className="text-sm md:text-base leading-relaxed text-slate-300">
-            또한 대운과 세운의 흐름을 참고해 시기별 의사결정에 필요한 인사이트를 제공하며, 궁합 분석을 통해 두 사람의 에너지 궁합과 보완 지점을 함께 살펴볼 수 있습니다. 무료 사주부터 프리미엄 리포트까지 목적에 맞춰 선택할 수 있어 처음 사주를 접하는 분부터 꾸준히 운세를 관리하는 분까지 폭넓게 활용할 수 있습니다.
+      <section style={{ background: 'var(--bg-secondary)' }} className="px-4 py-6 md:py-8">
+        <div className="max-w-4xl mx-auto space-y-4">
+          <h1 className="text-xl md:text-2xl font-bold tracking-tight" style={{ color: 'var(--accent)' }}>
+            AI 사주팔자 무료 풀이
+          </h1>
+          <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+            생년월일시를 입력하면 오행 균형, 십신 구조, 일간 강약, 용신 방향을 분석하고 AI가 맞춤 해석을 제공합니다.
           </p>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3 pt-1">
-            <Link href="/" className="rounded-lg border border-amber-500/40 bg-slate-900/70 px-3 py-2 text-xs md:text-sm text-amber-200 hover:bg-slate-900">
+          <div className="grid grid-cols-4 gap-2">
+            <Link href="/" className="rounded-lg px-3 py-2 text-xs text-center font-medium transition-all hover:scale-[1.02]" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', color: 'var(--accent)' }}>
               무료 사주
             </Link>
-            <Link href="/gunghap" className="rounded-lg border border-amber-500/40 bg-slate-900/70 px-3 py-2 text-xs md:text-sm text-amber-200 hover:bg-slate-900">
+            <Link href="/gunghap" className="rounded-lg px-3 py-2 text-xs text-center font-medium transition-all hover:scale-[1.02]" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', color: 'var(--accent)' }}>
               궁합 분석
             </Link>
-            <Link href="/fortune/today" className="rounded-lg border border-amber-500/40 bg-slate-900/70 px-3 py-2 text-xs md:text-sm text-amber-200 hover:bg-slate-900">
+            <Link href="/fortune/today" className="rounded-lg px-3 py-2 text-xs text-center font-medium transition-all hover:scale-[1.02]" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', color: 'var(--accent)' }}>
               오늘의 운세
             </Link>
-            <Link href="/pricing" className="rounded-lg border border-amber-500/40 bg-slate-900/70 px-3 py-2 text-xs md:text-sm text-amber-200 hover:bg-slate-900">
+            <Link href="/pricing" className="rounded-lg px-3 py-2 text-xs text-center font-medium transition-all hover:scale-[1.02]" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', color: 'var(--accent)' }}>
               요금제
             </Link>
           </div>
 
           <SocialProof />
 
-          <div className="rounded-xl border border-slate-800 bg-slate-900/50 p-3 md:p-4 space-y-2">
-            <h2 className="text-base md:text-lg font-semibold text-amber-200">자주 묻는 질문</h2>
-            <ul className="space-y-1 text-xs md:text-sm text-slate-300">
-              <li>사주팔자란 무엇인가요?</li>
-              <li>AI 사주 해석은 정확한가요?</li>
-              <li>무료로 사주를 볼 수 있나요?</li>
-              <li>궁합 분석도 가능한가요?</li>
-              <li>사주 해석 비용은 얼마인가요?</li>
-            </ul>
+          {/* SEO content — visually compact, crawlable */}
+          <details className="group">
+            <summary className="text-xs font-medium cursor-pointer list-none flex items-center gap-1" style={{ color: 'var(--text-muted)' }}>
+              <span className="group-open:rotate-90 transition-transform">▶</span> 자주 묻는 질문
+            </summary>
+            <div className="mt-2 rounded-xl p-3 space-y-1.5 text-xs" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', color: 'var(--text-secondary)' }}>
+              <p><strong style={{ color: 'var(--text-primary)' }}>사주팔자란?</strong> 태어난 연월일시의 천간·지지 8자로 성향과 운세를 읽는 전통 명리학입니다.</p>
+              <p><strong style={{ color: 'var(--text-primary)' }}>AI 해석이 정확한가요?</strong> 전통 규칙 기반 계산 + AI 구조화 해석으로 일관된 결과를 제공합니다.</p>
+              <p><strong style={{ color: 'var(--text-primary)' }}>무료인가요?</strong> 기본 분석은 무료, 심화 리포트는 요금제에서 선택할 수 있습니다.</p>
+              <p><strong style={{ color: 'var(--text-primary)' }}>궁합도 되나요?</strong> 두 사람의 생년월일시를 입력하면 오행 궁합과 보완 방향을 분석합니다.</p>
+            </div>
+          </details>
+
+          {/* Hidden SEO text for crawlers — visually collapsed */}
+          <div className="sr-only" aria-hidden="true">
+            <p>사주해는 전통 명리학 계산 로직과 AI 해석 엔진을 결합해 누구나 쉽게 이해할 수 있는 사주 분석을 제공합니다. 단순한 길흉 판정보다 실생활에 도움이 되는 해석에 집중해 연애와 인간관계, 직업과 재물, 건강과 생활 루틴까지 연결해 안내합니다. 대운과 세운의 흐름을 참고해 시기별 의사결정에 필요한 인사이트를 제공하며, 궁합 분석을 통해 두 사람의 에너지 궁합과 보완 지점을 함께 살펴볼 수 있습니다.</p>
           </div>
 
           <script
