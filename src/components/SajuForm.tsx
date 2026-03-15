@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import { useTheme } from './ThemeProvider'
-import UserMenu from './UserMenu'
+// UserMenu moved to Navbar
 import SajuChat from './SajuChat'
 import SearchModal from './SearchModal'
 import { useSpeechRecognition } from '@/hooks/useSpeechRecognition'
@@ -407,36 +407,7 @@ export default function SajuForm({ onSubmit, loading = false }: SajuFormProps) {
         {/* Taegeuk Background */}
         <TaegeukSvg size={320} />
 
-        {/* Top bar: theme toggle + user menu */}
-        <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
-          <UserMenu />
-          <button
-            onClick={() => setShowSearchModal(true)}
-            className="p-2.5 rounded-full hover-scale theme-transition"
-            style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', color: 'var(--text-secondary)' }}
-            aria-label="전체 검색"
-            title="검색 (Ctrl+K)"
-          >
-            🔍
-          </button>
-          <button
-            onClick={cycleFontSize}
-            className="p-2.5 rounded-full hover-scale theme-transition text-xs font-bold"
-            style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', color: 'var(--text-secondary)' }}
-            aria-label="글씨 크기 조절"
-            title="글씨 크기 조절"
-          >
-            {fontSizeLabel}
-          </button>
-          <button
-            onClick={toggleTheme}
-            className="p-2.5 rounded-full hover-scale theme-transition"
-            style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)' }}
-            aria-label="테마 전환"
-          >
-            {theme === 'dark' ? '☀️' : '🌙'}
-          </button>
-        </div>
+        {/* Top bar removed — controls are in Navbar */}
 
         {/* Main Title (B4 - serif font) */}
         <div className="text-center relative z-10 animate-fadeInScale">
@@ -447,14 +418,20 @@ export default function SajuForm({ onSubmit, loading = false }: SajuFormProps) {
             사주해
           </h1>
           <p
-            className="font-serif-kr text-2xl tracking-[0.3em] mb-4"
+            className="font-serif-kr text-2xl tracking-[0.3em] mb-3"
             style={{ color: 'var(--text-secondary)' }}
           >
             AI 사주팔자
           </p>
+          <p
+            className="text-sm font-medium max-w-xs mx-auto leading-relaxed"
+            style={{ color: 'var(--accent)', opacity: 0, animation: 'fadeIn 0.6s ease-out 0.3s forwards' }}
+          >
+            당신의 사주가 음악이 되고, 영상이 됩니다.
+          </p>
 
           {/* D2: Time-based greeting */}
-          <p className="text-sm mt-3 max-w-xs mx-auto leading-relaxed" style={{ color: 'var(--text-muted)' }}>
+          <p className="text-xs mt-3 max-w-xs mx-auto leading-relaxed" style={{ color: 'var(--text-muted)' }}>
             {greeting}
           </p>
         </div>
