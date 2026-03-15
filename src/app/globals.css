@@ -1,3 +1,5 @@
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -7,54 +9,95 @@ html.fontsize-normal { font-size: 16px; }
 html.fontsize-large { font-size: 18px; }
 html.fontsize-xlarge { font-size: 20px; }
 
-/* ─── Theme CSS Variables ─── */
+/* ─── Theme CSS Variables (점신-inspired modernization) ─── */
 :root {
-  --bg-primary: #f5f0e8;
-  --bg-secondary: #ede7d9;
-  --bg-card: #faf7f0;
-  --bg-card-hover: #f0ebe0;
-  --text-primary: #1a1612;
-  --text-secondary: #6b5e4f;
-  --text-muted: #9c8e7c;
-  --text-accent: #b45309;
-  --border-color: #d4c9b8;
-  --border-light: #e8e0d0;
-  --accent: #f59e0b;
-  --accent-hover: #d97706;
-  --accent-text: #1a1612;
-  --card-shadow: 0 2px 8px rgba(0,0,0,0.06);
-  --hero-gradient: radial-gradient(ellipse at 30% 20%, rgba(180,83,9,0.08) 0%, transparent 50%),
-                   radial-gradient(ellipse at 70% 80%, rgba(120,53,15,0.06) 0%, transparent 50%),
-                   linear-gradient(180deg, #f5f0e8 0%, #ede7d9 100%);
+  --bg-primary: #FAF9F7;
+  --bg-secondary: #F1EFE9;
+  --bg-card: #FFFFFF;
+  --bg-card-hover: #F7F5F0;
+  --text-primary: #1A1523;
+  --text-secondary: #5C566B;
+  --text-muted: #9490A0;
+  --text-accent: #A67C2E;
+  --border-color: #E5E1D8;
+  --border-light: #EEEBE4;
+  --accent: #C8963E;
+  --accent-hover: #B5832E;
+  --accent-text: #FFFFFF;
+  --card-shadow: 0 2px 12px rgba(26, 21, 35, 0.06);
+  --glow-accent: rgba(200, 150, 62, 0.15);
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(200, 150, 62, 0.12);
+  --hero-gradient: radial-gradient(ellipse at 30% 20%, rgba(200,150,62,0.06) 0%, transparent 50%),
+                   radial-gradient(ellipse at 70% 80%, rgba(26,21,35,0.04) 0%, transparent 50%),
+                   linear-gradient(180deg, #FAF9F7 0%, #F1EFE9 100%);
 }
 
 .dark {
-  --bg-primary: #0f172a;
-  --bg-secondary: #1e293b;
-  --bg-card: rgba(30, 41, 59, 0.5);
-  --bg-card-hover: rgba(30, 41, 59, 0.8);
-  --text-primary: #f1f5f9;
-  --text-secondary: #94a3b8;
-  --text-muted: #64748b;
-  --text-accent: #fbbf24;
-  --border-color: #334155;
-  --border-light: #1e293b;
-  --accent: #f59e0b;
-  --accent-hover: #fbbf24;
-  --accent-text: #0f172a;
-  --card-shadow: 0 2px 8px rgba(0,0,0,0.3);
-  --hero-gradient: radial-gradient(ellipse at 30% 20%, rgba(99,68,186,0.15) 0%, transparent 50%),
-                   radial-gradient(ellipse at 70% 60%, rgba(30,58,138,0.2) 0%, transparent 50%),
-                   radial-gradient(ellipse at 50% 100%, rgba(88,28,135,0.1) 0%, transparent 40%),
-                   linear-gradient(180deg, #0f172a 0%, #0c0f1d 100%);
+  --bg-primary: #0D0F1A;
+  --bg-secondary: #161929;
+  --bg-card: rgba(22, 25, 50, 0.7);
+  --bg-card-hover: rgba(30, 34, 65, 0.85);
+  --text-primary: #E8E4DC;
+  --text-secondary: #8B8696;
+  --text-muted: #5C566B;
+  --text-accent: #D4A853;
+  --border-color: rgba(212, 168, 83, 0.15);
+  --border-light: rgba(212, 168, 83, 0.08);
+  --accent: #D4A853;
+  --accent-hover: #E5BC6A;
+  --accent-text: #0D0F1A;
+  --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  --glow-accent: rgba(212, 168, 83, 0.12);
+  --glass-bg: rgba(22, 25, 50, 0.6);
+  --glass-border: rgba(212, 168, 83, 0.1);
+  --hero-gradient: radial-gradient(ellipse at 30% 20%, rgba(212,168,83,0.08) 0%, transparent 50%),
+                   radial-gradient(ellipse at 70% 60%, rgba(99,68,186,0.12) 0%, transparent 50%),
+                   radial-gradient(ellipse at 50% 100%, rgba(88,28,135,0.08) 0%, transparent 40%),
+                   linear-gradient(180deg, #0D0F1A 0%, #0A0C15 100%);
 }
 
 body {
   background: var(--bg-primary);
   color: var(--text-primary);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'Pretendard Variable', 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif;
   min-height: 100vh;
   transition: background-color 0.3s ease, color 0.3s ease;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ─── Glass Card (점신-style frosted glass) ─── */
+.glass-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+}
+
+/* ─── Glow Border ─── */
+.glow-border {
+  position: relative;
+  overflow: hidden;
+}
+.glow-border::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: linear-gradient(135deg, var(--accent), transparent 60%);
+  opacity: 0.25;
+  z-index: -1;
+}
+
+/* ─── Premium Card Hover ─── */
+.card-hover {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--card-shadow), 0 8px 24px rgba(0, 0, 0, 0.1);
 }
 
 /* ─── Serif Font for Titles ─── */
