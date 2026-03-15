@@ -29,7 +29,7 @@ import {
 
 type AppState = 'form' | 'result'
 type ResultTab = '사주' | '분석' | '운세' | '해석'
-type ViewMode = 'summary' | 'detail'
+type ViewMode = 'simple' | 'summary' | 'detail'
 type ReportTier = 'basic' | 'pro'
 
 const RESULT_TABS: { key: ResultTab; label: string; icon: string }[] = [
@@ -123,7 +123,7 @@ export default function HomeClient() {
 
   // New state for tabs and view mode
   const [activeTab, setActiveTab] = useState<ResultTab>('사주')
-  const [viewMode, setViewMode] = useState<ViewMode>('detail')
+  const [viewMode, setViewMode] = useState<ViewMode>('simple')
   const resultUrl = resultId ? `https://sajuhae.vercel.app/result/${resultId}` : null
 
   const fetchCheckinStatus = useCallback(async () => {
@@ -278,7 +278,7 @@ export default function HomeClient() {
     setActiveCategory('종합')
     setCategoryCache({})
     setActiveTab('사주')
-    setViewMode('detail')
+    setViewMode('simple')
     setTraditionalResult(null)
     setTraditionalContext('')
     setPremiumDownloadUrls({ basic: null, pro: null })
@@ -767,7 +767,7 @@ export default function HomeClient() {
     setChatHistory([])
     setFollowUpQuestion('')
     setActiveTab('사주')
-    setViewMode('detail')
+    setViewMode('simple')
     setResultId(null)
     setPremiumLoadingTier(null)
     setPremiumDownloadUrls({ basic: null, pro: null })
@@ -840,6 +840,105 @@ export default function HomeClient() {
         >
           상세 보기 →
         </button>
+      </div>
+    )
+  }
+
+  function renderSimple() {
+    if (!fullResult) return null
+    const dayElement = fullResult.saju.dayPillar.element
+    const dayColor = OHENG_COLORS[dayElement] ?? '#94a3b8'
+    const ratingEmoji = fullResult.yearlyFortune.rating === '길' ? '🟢' : fullResult.yearlyFortune.rating === '흉' ? '🔴' : '🟡'
+    const strengthColor = fullResult.ilganStrength.strength === '신강' ? '#3b82f6' : '#f97316'
+
+    return (
+      <div className="animate-fadeIn space-y-4">
+        <div className="rounded-2xl p-6 text-center" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', boxShadow: 'var(--card-shadow)' }}>
+          <div className="mb-4">
+            <div className="text-xs mb-1" style={{ color: 'var(--text-muted)' }}>나의 일간</div>
+            <div className="text-5xl font-black mb-1" style={{ color: dayColor, textShadow: `0 4px 12px ${dayColor}40` }}>
+              {fullResult.saju.dayPillar.heavenlyStemHanja}
+            </div>
+            <div className="text-sm font-bold" style={{ color: dayColor }}>
+              {fullResult.saju.dayPillar.heavenlyStem} · {dayElement}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-3 mb-4">
+            <div className="rounded-xl p-3" style={{ background: 'var(--bg-secondary)' }}>
+              <div className="text-xs mb-1" style={{ color: 'var(--text-muted)' }}>강약</div>
+              <div className="text-lg font-bold" style={{ color: strengthColor }}>
+                {fullResult.ilganStrength.strength}
+              </div>
+            </div>
+            <div className="rounded-xl p-3" style={{ background: 'var(--bg-secondary)' }}>
+              <div className="text-xs mb-1" style={{ color: 'var(--text-muted)' }}>용신</div>
+              <div className="text-lg font-bold" style={{ color: 'var(--text-accent)' }}>
+                {fullResult.yongsin.yongsin}
+              </div>
+            </div>
+            <div className="rounded-xl p-3" style={{ background: 'var(--bg-secondary)' }}>
+              <div className="text-xs mb-1" style={{ color: 'var(--text-muted)' }}>올해 운세</div>
+              <div className="text-lg font-bold">
+                {ratingEmoji} {fullResult.yearlyFortune.rating}
+              </div>
+            </div>
+          </div>
+
+          <div className="mb-4">
+            <div className="text-xs mb-2" style={{ color: 'var(--text-muted)' }}>오행 분포</div>
+            <div className="flex gap-1 h-3 rounded-full overflow-hidden">
+              {(['목', '화', '토', '금', '수'] as const).map(el => {
+                const count = fullResult.oheng.counts[el] ?? 0
+                const color = OHENG_COLORS[el] ?? '#94a3b8'
+                return (
+                  <div
+                    key={el}
+                    style={{
+                      flex: Math.max(count, 0.3),
+                      background: count === 0 ? 'var(--bg-secondary)' : color,
+                      opacity: count === 0 ? 0.3 : 0.85,
+                    }}
+                    title={`${el}: ${count}`}
+                  />
+                )
+              })}
+            </div>
+            <div className="flex justify-between mt-1">
+              {(['목', '화', '토', '금', '수'] as const).map(el => (
+                <span key={el} className="text-xs" style={{ color: OHENG_COLORS[el] ?? '#94a3b8' }}>
+                  {el}{fullResult.oheng.counts[el] ?? 0}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          {aiInterpretation && (
+            <div className="rounded-xl p-3 mb-4" style={{ background: 'var(--bg-secondary)' }}>
+              <div className="text-xs mb-1" style={{ color: 'var(--text-muted)' }}>🤖 AI 한줄 요약</div>
+              <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                {aiInterpretation.slice(0, 120)}{aiInterpretation.length > 120 ? '...' : ''}
+              </p>
+            </div>
+          )}
+        </div>
+
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            onClick={() => setViewMode('detail')}
+            className="py-2.5 rounded-xl text-sm font-medium"
+            style={{ background: 'var(--accent)', color: 'var(--accent-text)' }}
+          >
+            📊 상세 보기
+          </button>
+          <a
+            href="/saju/music"
+            className="py-2.5 rounded-xl text-sm font-medium text-center block"
+            style={{ background: 'var(--bg-secondary)', color: 'var(--text-primary)', border: '1px solid var(--border-color)' }}
+          >
+            🎵 사주 음악
+          </a>
+        </div>
       </div>
     )
   }
@@ -934,17 +1033,42 @@ export default function HomeClient() {
                   <p className="font-serif-kr text-sm tracking-widest" style={{ color: 'var(--text-muted)' }}>AI 사주팔자</p>
                 </div>
                 {/* View Mode Toggle */}
-                <button
-                  onClick={() => setViewMode(viewMode === 'detail' ? 'summary' : 'detail')}
-                  className="px-3 py-1.5 rounded-full text-xs font-medium hover-scale theme-transition"
-                  style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', color: 'var(--text-secondary)' }}
-                >
-                  {viewMode === 'detail' ? '간략' : '상세'}
-                </button>
+                <div className="flex gap-1 rounded-full p-0.5" style={{ background: 'var(--bg-secondary)' }}>
+                  <button
+                    onClick={() => setViewMode('simple')}
+                    className="px-3 py-1.5 rounded-full text-xs font-medium transition-all"
+                    style={{
+                      background: viewMode === 'simple' ? 'var(--accent)' : 'transparent',
+                      color: viewMode === 'simple' ? 'var(--accent-text)' : 'var(--text-muted)',
+                    }}
+                  >
+                    단순
+                  </button>
+                  <button
+                    onClick={() => setViewMode('summary')}
+                    className="px-3 py-1.5 rounded-full text-xs font-medium transition-all"
+                    style={{
+                      background: viewMode === 'summary' ? 'var(--accent)' : 'transparent',
+                      color: viewMode === 'summary' ? 'var(--accent-text)' : 'var(--text-muted)',
+                    }}
+                  >
+                    간략
+                  </button>
+                  <button
+                    onClick={() => setViewMode('detail')}
+                    className="px-3 py-1.5 rounded-full text-xs font-medium transition-all"
+                    style={{
+                      background: viewMode === 'detail' ? 'var(--accent)' : 'transparent',
+                      color: viewMode === 'detail' ? 'var(--accent-text)' : 'var(--text-muted)',
+                    }}
+                  >
+                    상세
+                  </button>
+                </div>
               </div>
             </div>
 
-            {viewMode === 'summary' ? renderSummary() : (
+            {viewMode === 'simple' ? renderSimple() : viewMode === 'summary' ? renderSummary() : (
               <>
                 {/* Tab Bar */}
                 <div className="flex gap-1 mb-6 p-1 rounded-xl" style={{ background: 'var(--bg-secondary)' }}>
