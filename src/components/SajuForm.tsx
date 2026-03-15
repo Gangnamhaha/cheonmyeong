@@ -441,9 +441,11 @@ export default function SajuForm({ onSubmit, loading = false }: SajuFormProps) {
         <div className="w-full max-w-md mt-6 relative z-10">
           <SajuChat />
         </div>
-        <p className="text-xs mt-4 max-w-xs mx-auto text-center leading-relaxed relative z-10" style={{ color: 'var(--text-muted)' }}>
-          사주해 사주앱은 AI가 당신의 사주를 해석하고 질문에 답변을 해주는 앱입니다.
-        </p>
+
+        {/* ═══ ANIMATION SHOWCASE (채팅창 아래) ═══ */}
+        <div className="w-full max-w-md mt-4 relative z-10">
+          <AnimationShowcase />
+        </div>
         {/* D1: Daily quote */}
         <div
           className="mt-8 text-center relative z-10 max-w-sm mx-auto"
@@ -502,9 +504,6 @@ export default function SajuForm({ onSubmit, loading = false }: SajuFormProps) {
           ))}
         </div>
       </section>
-
-      {/* ═══ ANIMATION SHOWCASE ═══ */}
-      <AnimationShowcase />
 
       {/* ═══ FORM SECTION (B3, C5) ═══ */}
       {showForm && (
