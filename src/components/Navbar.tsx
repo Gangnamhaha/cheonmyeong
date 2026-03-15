@@ -150,7 +150,7 @@ export default function Navbar() {
       )}
     </nav>
 
-    {searchOpen && <SearchModal onClose={() => setSearchOpen(false)} />}
+    <SearchModal isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
     </>
   )
 }
