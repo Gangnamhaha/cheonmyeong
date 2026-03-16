@@ -2,6 +2,7 @@
 
 import { useRef, useEffect, useState, lazy, Suspense, useCallback } from 'react'
 import type { FullSajuResult } from '@/lib/saju'
+import { drawSceneTitle, drawScenePillars, drawSceneOheng, drawSceneStrength } from '@/lib/animation-scenes'
 
 const SajuAnimationPlayer = lazy(() => import('./SajuAnimationPlayer'))
 
@@ -30,135 +31,40 @@ const S = [
 
 function Preview({ s }: { s: typeof S[0] }) {
   const ref = useRef<HTMLCanvasElement>(null)
-  const frame = useRef(0)
-  const t = useRef(0)
-  const scene = useRef(0)
+  const sceneRef = useRef(0)
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
-  const draw = useCallback(() => {
+  const drawCurrentScene = useCallback(() => {
     const c = ref.current; if (!c) return
     const ctx = c.getContext('2d'); if (!ctx) return
-    const w = c.width, h = c.height
-    t.current += 0.016
-    const fn = "'Pretendard Variable',sans-serif"
-    const r = s.fr // FullSajuResult
+    const w = 1080, h = 1920 // Real animation resolution
+    const sc = sceneRef.current % 4
 
-    // Switch scene every 4 seconds
-    const sceneIdx = Math.floor(t.current / 4) % 4
-
-    // Base background
-    ctx.fillStyle = '#0a0e1a'; ctx.fillRect(0, 0, w, h)
-    const g = ctx.createRadialGradient(w/2, h*0.4, 10, w/2, h*0.4, w*0.6)
-    g.addColorStop(0, s.ac + '18'); g.addColorStop(1, 'transparent')
-    ctx.fillStyle = g; ctx.fillRect(0, 0, w, h)
-
-    // Floating particles
-    for (let i = 0; i < 8; i++) {
-      const px = (Math.sin(t.current*0.4+i*2.5)*0.4+0.5)*w
-      const py = (Math.cos(t.current*0.3+i*1.8)*0.35+0.5)*h
-      ctx.beginPath(); ctx.arc(px, py, 1+Math.sin(t.current+i)*0.5, 0, Math.PI*2)
-      ctx.fillStyle = s.ac+'30'; ctx.fill()
-    }
-
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
-
-    if (sceneIdx === 0) {
-      // Scene 0: Title
-      ctx.fillStyle = '#fbbf24'; ctx.font = `bold 22px ${fn}`
-      ctx.fillText('사주해', w/2, h*0.3)
-      ctx.fillStyle = '#94a3b8'; ctx.font = `12px ${fn}`
-      ctx.fillText('AI 사주분석', w/2, h*0.43)
-      ctx.fillStyle = '#cbd5e1'; ctx.font = `11px ${fn}`
-      ctx.fillText(`${s.nm} · ${s.fd.year}년 ${s.fd.month}월 ${s.fd.day}일`, w/2, h*0.56)
-      // Sparkles
-      for (let i = 0; i < 5; i++) {
-        const sx = w*0.2 + i*w*0.15, sy = h*0.72 + Math.sin(t.current*2+i)*4
-        ctx.beginPath(); ctx.arc(sx, sy, 2, 0, Math.PI*2)
-        ctx.fillStyle = '#fbbf2488'; ctx.fill()
-      }
-    } else if (sceneIdx === 1) {
-      // Scene 1: 4 Pillars
-      ctx.fillStyle = '#f8fafc'; ctx.font = `bold 12px ${fn}`
-      ctx.fillText('사주팔자', w/2, h*0.12)
-      const pw = w*0.2, gap = 4, startX = (w-pw*4-gap*3)/2
-      const labels = ['시주','일주','월주','년주']
-      const pillars = [r.saju.hourPillar, r.saju.dayPillar, r.saju.monthPillar, r.saju.yearPillar]
-      pillars.forEach((p: {heavenlyStemHanja?:string;heavenlyStem:string;earthlyBranchHanja?:string;earthlyBranch:string;element:string}, i: number) => {
-        const x = startX+i*(pw+gap), y = h*0.2
-        const ec = EC[p.element] ?? '#94a3b8'
-        ctx.fillStyle = ec+'15'; ctx.beginPath(); ctx.roundRect(x, y, pw, h*0.6, 4); ctx.fill()
-        ctx.strokeStyle = ec+'40'; ctx.lineWidth = 0.5; ctx.stroke()
-        ctx.fillStyle = '#94a3b8'; ctx.font = `8px ${fn}`; ctx.fillText(labels[i], x+pw/2, y+10)
-        ctx.fillStyle = ec; ctx.font = `bold 16px ${fn}`
-        ctx.fillText(p.heavenlyStemHanja??p.heavenlyStem, x+pw/2, y+h*0.18)
-        ctx.fillText(p.earthlyBranchHanja??p.earthlyBranch, x+pw/2, y+h*0.38)
-        ctx.fillStyle = ec+'cc'; ctx.font = `bold 8px ${fn}`
-        ctx.fillText(p.element, x+pw/2, y+h*0.52)
-      })
-    } else if (sceneIdx === 2) {
-      // Scene 2: Oheng chart
-      ctx.fillStyle = '#f8fafc'; ctx.font = `bold 12px ${fn}`
-      ctx.fillText('오행의 조화', w/2, h*0.12)
-      const order = ['목','화','토','금','수'] as const
-      const icons: Record<string,string> = {'목':'🌳','화':'🔥','토':'⛰️','금':'⚡','수':'💧'}
-      const maxV = Math.max(...Object.values(r.oheng.counts), 1)
-      order.forEach((el, i) => {
-        const cnt = (r.oheng.counts as Record<string,number>)[el] ?? 0
-        const ec = EC[el] ?? '#94a3b8'
-        const bw = (cnt/maxV) * w * 0.5
-        const by = h*0.22 + i*h*0.14
-        ctx.fillStyle = ec+'20'; ctx.beginPath(); ctx.roundRect(w*0.22, by, w*0.55, h*0.1, 4); ctx.fill()
-        ctx.fillStyle = ec; ctx.beginPath(); ctx.roundRect(w*0.22, by, Math.max(bw,8), h*0.1, 4); ctx.fill()
-        ctx.font = `10px ${fn}`; ctx.fillStyle = ec; ctx.textAlign = 'left'
-        ctx.fillText(`${icons[el]} ${el}`, w*0.04, by+h*0.055)
-        ctx.textAlign = 'center'; ctx.fillStyle = '#e2e8f0'; ctx.font = `bold 9px ${fn}`
-        ctx.fillText(String(cnt), w*0.22+Math.max(bw,8)+12, by+h*0.055)
-      })
-      ctx.textAlign = 'center'
-      const bc = r.oheng.balance==='균형'?'#4ade80':r.oheng.balance==='편중'?'#fbbf24':'#f87171'
-      ctx.fillStyle = bc; ctx.font = `bold 10px ${fn}`
-      ctx.fillText(r.oheng.balance, w/2, h*0.95)
-    } else {
-      // Scene 3: Strength + Yongsin
-      ctx.fillStyle = '#f8fafc'; ctx.font = `bold 12px ${fn}`
-      ctx.fillText('일간 강약 · 용신', w/2, h*0.12)
-      const sc = r.ilganStrength.strength==='신강'?'#3b82f6':'#f97316'
-      // Strength circle
-      ctx.beginPath(); ctx.arc(w*0.3, h*0.5, 30, 0, Math.PI*2)
-      ctx.strokeStyle = '#334155'; ctx.lineWidth = 4; ctx.stroke()
-      const total = r.ilganStrength.details.support+r.ilganStrength.details.opposition
-      const pct = total>0?r.ilganStrength.details.support/total:0.5
-      ctx.beginPath(); ctx.arc(w*0.3, h*0.5, 30, -Math.PI/2, -Math.PI/2+Math.PI*2*pct)
-      ctx.strokeStyle = sc; ctx.lineWidth = 4; ctx.lineCap = 'round'; ctx.stroke()
-      ctx.fillStyle = sc; ctx.font = `bold 14px ${fn}`
-      ctx.fillText(r.ilganStrength.strength, w*0.3, h*0.5)
-      // Yongsin
-      const ye = r.yongsin.yongsin as string
-      const yc = EC[ye] ?? '#f8fafc'
-      const yh: Record<string,string> = {'목':'木','화':'火','토':'土','금':'金','수':'水'}
-      ctx.fillStyle = yc; ctx.font = `bold 28px ${fn}`
-      ctx.fillText(yh[ye]??ye, w*0.7, h*0.48)
-      ctx.font = `12px ${fn}`; ctx.fillText(ye, w*0.7, h*0.62)
-      ctx.fillStyle = '#cbd5e1'; ctx.font = `9px ${fn}`
-      ctx.fillText(`희신: ${r.yongsin.huisin}`, w*0.7, h*0.74)
-    }
-
-    // Letterbox + scene indicator
-    ctx.fillStyle = '#000'; ctx.fillRect(0,0,w,3); ctx.fillRect(0,h-3,w,3)
-    // Scene dots
-    for (let i = 0; i < 4; i++) {
-      ctx.beginPath(); ctx.arc(w/2-12+i*8, h-8, 2, 0, Math.PI*2)
-      ctx.fillStyle = i===sceneIdx ? s.ac : '#333'; ctx.fill()
-    }
-
-    frame.current = requestAnimationFrame(draw)
+    if (sc === 0) drawSceneTitle(ctx, w, h, s.nm, s.fd.year, s.fd.month, s.fd.day, s.fd.gender)
+    else if (sc === 1) drawScenePillars(ctx, w, h, s.fr)
+    else if (sc === 2) drawSceneOheng(ctx, w, h, s.fr)
+    else drawSceneStrength(ctx, w, h, s.fr)
   }, [s])
 
   useEffect(() => {
-    const c = ref.current; if (!c) return; c.width = 360; c.height = 200; t.current = 0; draw()
-    return () => cancelAnimationFrame(frame.current)
-  }, [draw])
+    const c = ref.current; if (!c) return
+    c.width = 1080; c.height = 1920
+    sceneRef.current = 0
+    drawCurrentScene()
+    timerRef.current = setInterval(() => {
+      sceneRef.current += 1
+      drawCurrentScene()
+    }, 4000)
+    return () => { if (timerRef.current) clearInterval(timerRef.current) }
+  }, [drawCurrentScene])
 
-  return <canvas ref={ref} className="w-full h-full rounded-xl" style={{ display: 'block' }} />
+  return (
+    <canvas
+      ref={ref}
+      className="w-full rounded-xl"
+      style={{ display: 'block', aspectRatio: '9/16', maxHeight: '300px', objectFit: 'contain' }}
+    />
+  )
 }
 
 export default function AnimationShowcase() {
