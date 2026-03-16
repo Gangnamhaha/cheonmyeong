@@ -3,7 +3,7 @@
 import { useRef, useEffect, useState, lazy, Suspense, useCallback } from 'react'
 import type { FullSajuResult } from '@/lib/saju'
 
-const SajuAnimationPlayer = lazy(() => import('./SajuAnimationPlayer'))
+const SajuMoviePlayer = lazy(() => import('./SajuMoviePlayer'))
 
 const EC: Record<string, string> = { '목': '#4ade80', '화': '#f87171', '토': '#fbbf24', '금': '#e2e8f0', '수': '#60a5fa' }
 
@@ -116,7 +116,7 @@ export default function AnimationShowcase() {
       </div>
       {play && (
         <Suspense fallback={null}>
-          <SajuAnimationPlayer fullResult={a.fr} formData={a.fd} traditionalResult={null} aiInterpretation={null} onClose={() => { setPlay(false); setAuto(true) }} />
+          <SajuMoviePlayer fullResult={a.fr} formData={a.fd} traditionalResult={null} aiInterpretation={null} onClose={() => { setPlay(false); setAuto(true) }} />
         </Suspense>
       )}
     </>
