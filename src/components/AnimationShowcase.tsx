@@ -31,32 +31,79 @@ const S = [
 
 function Preview({ s }: { s: typeof S[0] }) {
   const ref = useRef<HTMLCanvasElement>(null)
-  const sceneRef = useRef(0)
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
-
-  const drawCurrentScene = useCallback(() => {
-    const c = ref.current; if (!c) return
-    const ctx = c.getContext('2d'); if (!ctx) return
-    const w = 1080, h = 1920 // Real animation resolution
-    const sc = sceneRef.current % 4
-
-    if (sc === 0) drawSceneTitle(ctx, w, h, s.nm, s.fd.year, s.fd.month, s.fd.day, s.fd.gender)
-    else if (sc === 1) drawScenePillars(ctx, w, h, s.fr)
-    else if (sc === 2) drawSceneOheng(ctx, w, h, s.fr)
-    else drawSceneStrength(ctx, w, h, s.fr)
-  }, [s])
+  const frameRef = useRef(0)
+  const timeRef = useRef(0)
 
   useEffect(() => {
     const c = ref.current; if (!c) return
+    const ctx = c.getContext('2d'); if (!ctx) return
     c.width = 1080; c.height = 1920
-    sceneRef.current = 0
-    drawCurrentScene()
-    timerRef.current = setInterval(() => {
-      sceneRef.current += 1
-      drawCurrentScene()
-    }, 4000)
-    return () => { if (timerRef.current) clearInterval(timerRef.current) }
-  }, [drawCurrentScene])
+    const W = 1080, H = 1920
+    let running = true
+    timeRef.current = 0
+
+    // Particles
+    const particles = Array.from({ length: 40 }, () => ({
+      x: Math.random() * W, y: Math.random() * H,
+      vx: (Math.random() - 0.5) * 2, vy: -Math.random() * 1.5 - 0.3,
+      r: Math.random() * 3 + 1, alpha: Math.random() * 0.5 + 0.2,
+    }))
+
+    function draw() {
+      if (!running) return
+      timeRef.current += 1 / 60
+      const t = timeRef.current
+      const sceneDur = 5
+      const sceneIdx = Math.floor(t / sceneDur) % 4
+      const sceneT = (t % sceneDur) / sceneDur // 0~1 within scene
+
+      // Draw the scene
+      if (sceneIdx === 0) drawSceneTitle(ctx, W, H, s.nm, s.fd.year, s.fd.month, s.fd.day, s.fd.gender)
+      else if (sceneIdx === 1) drawScenePillars(ctx, W, H, s.fr)
+      else if (sceneIdx === 2) drawSceneOheng(ctx, W, H, s.fr)
+      else drawSceneStrength(ctx, W, H, s.fr)
+
+      // Animated particles overlay
+      ctx.save()
+      for (const p of particles) {
+        p.x += p.vx; p.y += p.vy
+        if (p.y < -10) { p.y = H + 10; p.x = Math.random() * W }
+        if (p.x < -10) p.x = W + 10; if (p.x > W + 10) p.x = -10
+        ctx.beginPath()
+        ctx.arc(p.x, p.y, p.r + Math.sin(t * 2 + p.x * 0.01) * 0.5, 0, Math.PI * 2)
+        ctx.fillStyle = `rgba(251, 191, 36, ${p.alpha * (0.5 + Math.sin(t * 1.5 + p.y * 0.005) * 0.3)})`
+        ctx.fill()
+      }
+      ctx.restore()
+
+      // Fade transition at scene boundaries
+      if (sceneT < 0.08) {
+        const fadeIn = sceneT / 0.08
+        ctx.fillStyle = `rgba(15, 23, 42, ${1 - fadeIn})`
+        ctx.fillRect(0, 0, W, H)
+      } else if (sceneT > 0.92) {
+        const fadeOut = (sceneT - 0.92) / 0.08
+        ctx.fillStyle = `rgba(15, 23, 42, ${fadeOut})`
+        ctx.fillRect(0, 0, W, H)
+      }
+
+      // Scene indicator dots
+      for (let i = 0; i < 4; i++) {
+        ctx.beginPath()
+        ctx.arc(W / 2 - 45 + i * 30, H - 60, 8, 0, Math.PI * 2)
+        ctx.fillStyle = i === sceneIdx ? '#fbbf24' : 'rgba(255,255,255,0.15)'
+        ctx.fill()
+      }
+
+      // Letterbox
+      ctx.fillStyle = '#000'
+      ctx.fillRect(0, 0, W, 20); ctx.fillRect(0, H - 20, W, 20)
+
+      frameRef.current = requestAnimationFrame(draw)
+    }
+    draw()
+    return () => { running = false; cancelAnimationFrame(frameRef.current) }
+  }, [s])
 
   return (
     <canvas
