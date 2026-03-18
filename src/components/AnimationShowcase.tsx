@@ -1,7 +1,8 @@
 'use client'
 
-import { useRef, useEffect, useState, lazy, Suspense, useCallback } from 'react'
+import { useRef, useEffect, useState, lazy, Suspense } from 'react'
 import type { FullSajuResult } from '@/lib/saju'
+import lottie from 'lottie-web'
 const SajuAnimationPlayer = lazy(() => import('./SajuAnimationPlayer'))
 
 const EC: Record<string, string> = { '목': '#4ade80', '화': '#f87171', '토': '#fbbf24', '금': '#e2e8f0', '수': '#60a5fa' }
@@ -127,6 +128,26 @@ function Preview({ s }: { s: typeof S[0] }) {
       }
       ctx.restore()
 
+      // === #5: Wave / 물결 효과 (하단) ===
+      ctx.save()
+      for (let wave = 0; wave < 3; wave++) {
+        ctx.beginPath()
+        const waveY = H * 0.82 + wave * 35
+        const amp = 20 + wave * 8
+        const freq = 0.008 - wave * 0.001
+        const speed = t * (0.8 + wave * 0.3)
+        ctx.moveTo(0, waveY)
+        for (let x = 0; x <= W; x += 4) {
+          ctx.lineTo(x, waveY + Math.sin(x * freq + speed) * amp)
+        }
+        ctx.lineTo(W, H)
+        ctx.lineTo(0, H)
+        ctx.closePath()
+        ctx.fillStyle = mood.glow + (12 - wave * 3).toString(16).padStart(2, '0')
+        ctx.fill()
+      }
+      ctx.restore()
+
       // Typewriter text — current scene line
       const lineText = scenes[sceneIdx]
       const charCount = Math.min(Math.floor(sceneT * lineText.length * 2), lineText.length)
@@ -135,32 +156,53 @@ function Preview({ s }: { s: typeof S[0] }) {
       ctx.textAlign = 'center'
       ctx.textBaseline = 'middle'
 
-      // Main text
-      ctx.fillStyle = mood.text
+      // === #6: Neon glow text effect ===
+      ctx.save()
       ctx.font = `bold 58px ${font}`
+      // Outer glow layers
+      ctx.shadowColor = mood.glow
+      ctx.shadowBlur = 40
+      ctx.fillStyle = mood.text
       ctx.fillText(visibleText, W / 2, H * 0.45)
+      // Second glow pass for stronger effect
+      ctx.shadowBlur = 20
+      ctx.fillText(visibleText, W / 2, H * 0.45)
+      ctx.shadowBlur = 0
+      ctx.restore()
 
-      // Cursor blink
+      // Cursor blink with glow
       if (charCount < lineText.length && Math.sin(t * 6) > 0) {
         const textW = ctx.measureText(visibleText).width
+        ctx.save()
+        ctx.shadowColor = mood.glow
+        ctx.shadowBlur = 15
         ctx.fillStyle = mood.text
         ctx.fillRect(W / 2 + textW / 2 + 8, H * 0.45 - 25, 3, 50)
+        ctx.restore()
       }
 
-      // Sub info — name and saju
-      ctx.fillStyle = mood.text + '66'
-      ctx.font = `28px ${font}`
-      ctx.fillText(`${s.nm}님의 사주 이야기`, W / 2, H * 0.58)
-
-      // 4 pillars mini display
-      ctx.font = `bold 36px ${font}`
+      // Sub info with subtle glow
+      ctx.save()
+      ctx.shadowColor = mood.glow
+      ctx.shadowBlur = 8
       ctx.fillStyle = mood.text + '88'
-      ctx.fillText(s.p.join('  '), W / 2, H * 0.66)
+      ctx.font = `28px ${font}`
+      ctx.fillText(`${s.nm}님의 사주 이야기`, W / 2, H * 0.56)
+      ctx.restore()
+
+      // 4 pillars with neon
+      ctx.save()
+      ctx.shadowColor = mood.glow
+      ctx.shadowBlur = 12
+      ctx.font = `bold 40px ${font}`
+      ctx.fillStyle = mood.text + 'aa'
+      ctx.fillText(s.p.join('  '), W / 2, H * 0.65)
+      ctx.restore()
 
       // Bottom info
       ctx.fillStyle = mood.text + '44'
       ctx.font = `24px ${font}`
-      ctx.fillText(`${s.st} · 용신 ${s.y} · ${s.fd.year}.${s.fd.month}.${s.fd.day}`, W / 2, H * 0.78)
+      ctx.fillText(`${s.st} · 용신 ${s.y} · ${s.fd.year}.${s.fd.month}.${s.fd.day}`, W / 2, H * 0.74)
 
       // Fade transition
       if (sceneT < 0.06) {
@@ -195,12 +237,35 @@ function Preview({ s }: { s: typeof S[0] }) {
     return () => { running = false; cancelAnimationFrame(frameRef.current); observer.disconnect() }
   }, [s])
 
+  // Lottie overlay
+  const lottieRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (!lottieRef.current) return
+    const anim = lottie.loadAnimation({
+      container: lottieRef.current,
+      renderer: 'svg',
+      loop: true,
+      autoplay: true,
+      path: 'https://lottie.host/b5e1a9e3-2b0e-4e7c-8a5f-5c7b5e8f9a1e/sparkle-stars.json',
+    })
+    // Fallback: if Lottie JSON fails to load, just skip (no error)
+    anim.addEventListener('data_failed', () => anim.destroy())
+    return () => anim.destroy()
+  }, [s])
+
   return (
-    <canvas
-      ref={ref}
-      className="w-full rounded-xl"
-      style={{ display: 'block', aspectRatio: '9/16', maxHeight: '300px', objectFit: 'contain' }}
-    />
+    <div className="relative w-full rounded-xl overflow-hidden" style={{ aspectRatio: '9/16', maxHeight: '300px' }}>
+      <canvas
+        ref={ref}
+        className="w-full h-full"
+        style={{ display: 'block' }}
+      />
+      <div
+        ref={lottieRef}
+        className="absolute inset-0 pointer-events-none opacity-30"
+        style={{ mixBlendMode: 'screen' }}
+      />
+    </div>
   )
 }
 
