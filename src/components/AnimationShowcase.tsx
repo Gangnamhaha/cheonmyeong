@@ -297,12 +297,12 @@ function Preview({ s }: { s: typeof S[0] }) {
 }
 
 const GENRES = [
-  { icon: '🔮', name: '신비로운 운명', mood: 'Mystical', desc: '보라빛 우주 속 깊은 지혜', color: '#a78bfa' },
-  { icon: '🎭', name: '극적인 전환', mood: 'Dramatic', desc: '황금빛 열정의 서사시', color: '#f59e0b' },
-  { icon: '🌅', name: '따뜻한 인연', mood: 'Warm', desc: '오렌지빛 대지의 온기', color: '#fb923c' },
-  { icon: '⚔️', name: '강렬한 의지', mood: 'Intense', desc: '붉은 불꽃의 각오', color: '#ef4444' },
-  { icon: '🌿', name: '고요한 성장', mood: 'Serene', desc: '청록빛 숲의 생명력', color: '#2dd4bf' },
-  { icon: '✨', name: '희망의 빛', mood: 'Hopeful', desc: '새벽빛 균형의 조화', color: '#fbbf24' },
+  { icon: '🔮', name: 'Mystical', mood: '신비', desc: '깊은 물의 운명 · 수(水)', color: '#a78bfa' },
+  { icon: '🎭', name: 'Dramatic', mood: '극적', desc: '불꽃의 운명 · 화(火)', color: '#f59e0b' },
+  { icon: '🌅', name: 'Warm', mood: '따뜻', desc: '대지의 운명 · 토(土)', color: '#fb923c' },
+  { icon: '⚔️', name: 'Intense', mood: '강렬', desc: '강철의 운명 · 금(金)', color: '#ef4444' },
+  { icon: '🌿', name: 'Serene', mood: '고요', desc: '숲의 운명 · 목(木)', color: '#2dd4bf' },
+  { icon: '✨', name: 'Hopeful', mood: '희망', desc: '균형의 운명 · 조화', color: '#fbbf24' },
 ]
 
 export default function AnimationShowcase() {
@@ -324,7 +324,7 @@ export default function AnimationShowcase() {
       <div className="mt-3 rounded-2xl overflow-hidden" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)' }}>
         <div className="px-3 pt-3 pb-1 flex items-center justify-between">
           <span className="text-xs font-bold" style={{ color: 'var(--accent)' }}>🎬 운명 애니메이션</span>
-          <span className="text-[10px] font-medium" style={{ color: GENRES[idx].color }}>{GENRES[idx].icon} {GENRES[idx].mood}</span>
+          <span className="text-[10px] font-medium" style={{ color: GENRES[idx].color }}>{GENRES[idx].icon} {GENRES[idx].name} · {GENRES[idx].mood}</span>
         </div>
         <div className="w-full px-3 pb-2 cursor-pointer" onClick={() => { setAuto(false); setPlay(true) }}>
           <div className="rounded-xl overflow-hidden" style={{ boxShadow: `0 2px 16px ${a.ac}20`, border: `1px solid ${a.ac}25` }}>
@@ -348,6 +348,7 @@ export default function AnimationShowcase() {
             >
               <span className="text-lg block">{g.icon}</span>
               <p className="text-[10px] font-bold mt-1" style={{ color: i === idx ? g.color : 'var(--text-primary)' }}>{g.name}</p>
+              <p className="text-[9px] font-medium" style={{ color: i === idx ? g.color + 'cc' : 'var(--text-secondary)' }}>{g.mood}</p>
               <p className="text-[8px] mt-0.5" style={{ color: 'var(--text-muted)' }}>{g.desc}</p>
             </button>
           ))}
