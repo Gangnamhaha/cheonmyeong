@@ -244,7 +244,6 @@ export default function SajuForm({ onSubmit, loading = false }: SajuFormProps) {
 
       <HeroSection greeting={greeting} theme={theme} onScrollDown={handleScrollDown} totalCount={totalCount}>
           <AnimationShowcase />
-          <SajuChat />
       </HeroSection>
 
       {showForm && (
@@ -366,6 +365,10 @@ export default function SajuForm({ onSubmit, loading = false }: SajuFormProps) {
           </div>
         </section>
       )}
+
+      <section className="px-4 pb-4 max-w-md mx-auto relative z-10">
+        <SajuChat />
+      </section>
 
       <section className="px-4 pb-8 max-w-md mx-auto relative z-10">
         <a
