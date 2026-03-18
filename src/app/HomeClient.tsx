@@ -22,6 +22,7 @@ import SajuAnimationPlayer from '@/components/SajuAnimationPlayer'
 import SajuMoviePlayer from '@/components/SajuMoviePlayer'
 import ShareCard from '@/components/ShareCard'
 import AnalysisLoading from '@/components/AnalysisLoading'
+import ErrorRetry from '@/components/ErrorRetry'
 import { useSpeechRecognition } from '@/hooks/useSpeechRecognition'
 import {
   getTraditionalInterpretation,
@@ -89,6 +90,7 @@ export default function HomeClient() {
   const [aiLoading, setAiLoading] = useState(false)
   const [aiError, setAiError] = useState<string | null>(null)
   const [calcError, setCalcError] = useState<string | null>(null)
+  const [apiError, setApiError] = useState<string | null>(null)
   const [activeCategory, setActiveCategory] = useState<AiCategory>('종합')
   const [categoryCache, setCategoryCache] = useState<Partial<Record<AiCategory, string>>>({})
   const abortRef = useRef<AbortController | null>(null)
@@ -275,6 +277,7 @@ export default function HomeClient() {
   async function handleFormSubmit(data: FormData) {
     setLoading(true)
     setCalcError(null)
+    setApiError(null)
     setAiInterpretation(null)
     setAiError(null)
     setActiveCategory('종합')
@@ -320,15 +323,25 @@ export default function HomeClient() {
           if (typeof saveData.id === 'string') {
             setResultId(saveData.id)
           }
+        } else {
+          const saveData = await saveRes.json().catch(() => null)
+          setApiError((saveData && typeof saveData.error === 'string' && saveData.error) || '서버 연결에 실패했습니다')
         }
-      } catch {
-        // 저장 실패 시에도 사용자 분석 흐름 유지
+      } catch (err) {
+        setApiError(err instanceof Error ? err.message : '서버 연결에 실패했습니다')
       }
     } catch (err) {
+      setApiError(err instanceof Error ? err.message : '서버 연결에 실패했습니다')
       setCalcError(err instanceof Error ? err.message : '사주 계산 중 오류가 발생했습니다.')
     } finally {
       setLoading(false)
     }
+  }
+
+  function handleRetry() {
+    if (!formData || loading) return
+    setApiError(null)
+    handleFormSubmit(formData)
   }
 
   async function handleFollowUp() {
@@ -1009,6 +1022,12 @@ export default function HomeClient() {
         )}
 
         {loading && <AnalysisLoading />}
+
+        {apiError && !loading && (
+          <div className="mx-4 mb-8">
+            <ErrorRetry error={apiError} onRetry={handleRetry} />
+          </div>
+        )}
 
         {appState === 'result' && fullResult && (
           <div className="animate-fadeIn py-8 px-4" ref={resultRef}>
