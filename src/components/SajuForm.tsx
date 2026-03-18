@@ -247,26 +247,6 @@ export default function SajuForm({ onSubmit, loading = false }: SajuFormProps) {
           <SajuChat />
       </HeroSection>
 
-      <section className="px-4 py-6 max-w-md mx-auto relative z-10">
-        <div className="grid grid-cols-3 gap-2">
-          {FEATURES.map((f, i) => (
-            <div
-              key={i}
-              className="feature-card rounded-xl py-3 px-2 text-center hover-lift theme-transition"
-              style={{
-                background: 'var(--bg-card)',
-                border: '1px solid var(--border-color)',
-                opacity: 0,
-                animation: `fadeIn 0.3s ease-out ${0.2 + i * 0.06}s forwards`,
-              }}
-            >
-              <span className="text-xl">{f.icon}</span>
-              <p className="text-xs font-bold mt-1" style={{ color: 'var(--text-primary)' }}>{f.title}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
       {showForm && (
         <section className="px-4 pb-8 max-w-md mx-auto relative z-10" id="saju-form-card">
           <div
@@ -402,6 +382,26 @@ export default function SajuForm({ onSubmit, loading = false }: SajuFormProps) {
             두 사람의 사주를 비교하고 AI가 궁합을 풀어드려요
           </p>
         </a>
+      </section>
+
+      <section className="px-4 py-6 max-w-md mx-auto relative z-10">
+        <div className="grid grid-cols-3 gap-2">
+          {FEATURES.map((f, i) => (
+            <div
+              key={i}
+              className="feature-card rounded-xl py-3 px-2 text-center hover-lift theme-transition"
+              style={{
+                background: 'var(--bg-card)',
+                border: '1px solid var(--border-color)',
+                opacity: 0,
+                animation: `fadeIn 0.3s ease-out ${0.2 + i * 0.06}s forwards`,
+              }}
+            >
+              <span className="text-xl">{f.icon}</span>
+              <p className="text-xs font-bold mt-1" style={{ color: 'var(--text-primary)' }}>{f.title}</p>
+            </div>
+          ))}
+        </div>
       </section>
 
       <HistoryPanel history={history} onLoadHistory={handleHistoryClick} />
