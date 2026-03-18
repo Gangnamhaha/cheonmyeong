@@ -20,6 +20,7 @@ import { shareSajuResult } from '@/lib/kakao'
 import { calculateFullSaju, FullSajuResult } from '@/lib/saju'
 import SajuAnimationPlayer from '@/components/SajuAnimationPlayer'
 import SajuMoviePlayer from '@/components/SajuMoviePlayer'
+import AnalysisLoading from '@/components/AnalysisLoading'
 import { useSpeechRecognition } from '@/hooks/useSpeechRecognition'
 import {
   getTraditionalInterpretation,
@@ -1005,6 +1006,8 @@ export default function HomeClient() {
             )}
           </>
         )}
+
+        {loading && <AnalysisLoading />}
 
         {appState === 'result' && fullResult && (
           <div className="animate-fadeIn py-8 px-4" ref={resultRef}>
