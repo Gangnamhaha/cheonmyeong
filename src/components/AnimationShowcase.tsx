@@ -2,8 +2,6 @@
 
 import { useRef, useEffect, useState, lazy, Suspense, useCallback } from 'react'
 import type { FullSajuResult } from '@/lib/saju'
-import { drawSceneTitle, drawScenePillars, drawSceneOheng, drawSceneStrength, drawSceneFortune, drawSceneMessage, drawSceneEnding } from '@/lib/animation-scenes'
-
 const SajuAnimationPlayer = lazy(() => import('./SajuAnimationPlayer'))
 
 const EC: Record<string, string> = { '목': '#4ade80', '화': '#f87171', '토': '#fbbf24', '금': '#e2e8f0', '수': '#60a5fa' }
@@ -29,6 +27,26 @@ const S = [
     fr: { saju: { yearPillar: { heavenlyStem: '병', heavenlyStemHanja: '丙', earthlyBranch: '자', earthlyBranchHanja: '子', element: '화' }, monthPillar: { heavenlyStem: '을', heavenlyStemHanja: '乙', earthlyBranch: '미', earthlyBranchHanja: '未', element: '목' }, dayPillar: { heavenlyStem: '경', heavenlyStemHanja: '庚', earthlyBranch: '진', earthlyBranchHanja: '辰', element: '금' }, hourPillar: { heavenlyStem: '임', heavenlyStemHanja: '壬', earthlyBranch: '오', earthlyBranchHanja: '午', element: '수' }, rawText: '丙子 乙未 庚辰 壬午' }, oheng: { counts: { '목':1,'화':2,'토':2,'금':1,'수':2 }, dominant: '화', weak: '목', balance: '균형' as const }, ilganStrength: { strength: '신약' as const, score: -2, details: { support: 3, opposition: 5, monthBranchElement: '토', monthBranchHelps: true } }, yongsin: { yongsin: '토', huisin: '금', reason: '', favorable: ['토','금'], unfavorable: ['목','수'] }, sipsin: { yearStem: '편관', yearBranch: '정재', monthStem: '정재', monthBranch: '정인', dayBranch: '편인', hourStem: '식신', hourBranch: '편관', summary: { '비겁':0,'겁재':0,'식신':1,'상관':0,'편재':0,'정재':2,'편관':2,'정관':0,'편인':1,'정인':1 } }, daeun: { startAge: 3, cycles: [{ age: 3, stem: '병', branch: '신', element: '화' }] }, yearlyFortune: { stem: '병', branch: '오', element: '화', sipsin: '편관', rating: '평' as const, description: '변화와 성장의 해' }, monthlyFortune: { stem: '기', branch: '해', element: '토', sipsin: '정인', rating: '길' as const, description: '지혜가 빛나는 달' } } as unknown as FullSajuResult },
 ]
 
+// Movie scene texts per genre
+const MOVIE_SCENES: Record<string, string[]> = {
+  mystical: ['깊은 물의 흐름 속에', '은하의 운명이 펼쳐집니다', '수(水)의 지혜가', '당신을 이끕니다', '신비로운 별빛 아래', '운명의 강이 흐릅니다'],
+  dramatic: ['불꽃처럼 타오르는', '태양의 운명이 시작됩니다', '화(火)의 열정이', '세상을 비춥니다', '극적인 전환의 순간', '새로운 길이 열립니다'],
+  warm: ['대지의 포근한 품에서', '하늘의 운명이 자라납니다', '토(土)의 온기가', '인연을 감싸줍니다', '따뜻한 햇살 아래', '사랑이 꽃피웁니다'],
+  intense: ['강철의 의지로', '강철의 운명이 단련됩니다', '금(金)의 결단이', '길을 열어줍니다', '강렬한 각오 속에', '승리가 기다립니다'],
+  serene: ['고요한 숲속에서', '숲의 운명이 뿌리내립니다', '목(木)의 생명력이', '하늘을 향합니다', '푸른 잎사귀 사이로', '성장의 빛이 비칩니다'],
+  hopeful: ['새벽빛이 밝아오며', '별의 운명이 조화를 이룹니다', '균형의 기운이', '미래를 밝혀줍니다', '희망의 빛 속에서', '새로운 시작입니다'],
+}
+
+// Mood gradient colors
+const MOOD_COLORS: Record<string, { bg1: string; bg2: string; glow: string; text: string }> = {
+  mystical: { bg1: '#0a0520', bg2: '#1a0a3a', glow: '#a78bfa', text: '#c4b5fd' },
+  dramatic: { bg1: '#1a0a05', bg2: '#2a1005', glow: '#f59e0b', text: '#fbbf24' },
+  warm: { bg1: '#1a0f05', bg2: '#2a1a0a', glow: '#fb923c', text: '#fdba74' },
+  intense: { bg1: '#1a0505', bg2: '#2a0a0a', glow: '#ef4444', text: '#fca5a5' },
+  serene: { bg1: '#051a0f', bg2: '#0a2a1a', glow: '#2dd4bf', text: '#5eead4' },
+  hopeful: { bg1: '#0f0f1a', bg2: '#1a1a2a', glow: '#fbbf24', text: '#fde68a' },
+}
+
 function Preview({ s }: { s: typeof S[0] }) {
   const ref = useRef<HTMLCanvasElement>(null)
   const frameRef = useRef(0)
@@ -45,15 +63,18 @@ function Preview({ s }: { s: typeof S[0] }) {
     let visible = true
     timeRef.current = 0
 
-    // Pause when off-screen to save CPU/memory
     const observer = new IntersectionObserver(([entry]) => { visible = entry.isIntersecting }, { threshold: 0.1 })
     observer.observe(c)
 
-    // Particles
-    const particles = Array.from({ length: 40 }, () => ({
+    const mood = MOOD_COLORS[s.m] ?? MOOD_COLORS.mystical
+    const scenes = MOVIE_SCENES[s.m] ?? MOVIE_SCENES.mystical
+    const font = "'Pretendard Variable', sans-serif"
+
+    // Particles in mood color
+    const particles = Array.from({ length: 50 }, () => ({
       x: Math.random() * W, y: Math.random() * H,
-      vx: (Math.random() - 0.5) * 2, vy: -Math.random() * 1.5 - 0.3,
-      r: Math.random() * 3 + 1, alpha: Math.random() * 0.5 + 0.2,
+      vx: (Math.random() - 0.5) * 1.5, vy: -Math.random() * 1.2 - 0.2,
+      r: Math.random() * 3 + 0.5, alpha: Math.random() * 0.4 + 0.1,
     }))
 
     function draw() {
@@ -61,59 +82,112 @@ function Preview({ s }: { s: typeof S[0] }) {
       if (!visible) { frameRef.current = requestAnimationFrame(draw); return }
       timeRef.current += 1 / 60
       const t = timeRef.current
-      // 7 scenes with durations matching SajuAnimationPlayer: 8,11,8,10,10,12,8 = 67s total
-      const durations = [8, 11, 8, 10, 10, 12, 8]
-      const totalDur = 67
-      const loopT = t % totalDur
-      let elapsed = 0, sceneIdx = 0
-      for (let i = 0; i < 7; i++) { if (loopT >= elapsed && loopT < elapsed + durations[i]) { sceneIdx = i; break }; elapsed += durations[i] }
-      const sceneStart = elapsed
-      const sceneT = (loopT - sceneStart) / durations[sceneIdx]
 
-      // Draw the 7 scenes (identical to SajuAnimationPlayer)
-      if (sceneIdx === 0) drawSceneTitle(ctx, W, H, s.nm, s.fd.year, s.fd.month, s.fd.day, s.fd.gender)
-      else if (sceneIdx === 1) drawScenePillars(ctx, W, H, s.fr)
-      else if (sceneIdx === 2) drawSceneOheng(ctx, W, H, s.fr)
-      else if (sceneIdx === 3) drawSceneStrength(ctx, W, H, s.fr)
-      else if (sceneIdx === 4) drawSceneFortune(ctx, W, H, s.fr)
-      else if (sceneIdx === 5) drawSceneMessage(ctx, W, H, s.fr)
-      else drawSceneEnding(ctx, W, H)
+      // 6 text scenes, 5s each = 30s loop
+      const sceneDur = 5
+      const sceneIdx = Math.floor(t / sceneDur) % 6
+      const sceneT = (t % sceneDur) / sceneDur
 
-      // Animated particles overlay
+      // Mood gradient background
+      const grad = ctx.createLinearGradient(0, 0, W, H)
+      grad.addColorStop(0, mood.bg1)
+      grad.addColorStop(1, mood.bg2)
+      ctx.fillStyle = grad
+      ctx.fillRect(0, 0, W, H)
+
+      // Animated radial glow (breathing)
+      const glowSize = W * 0.4 + Math.sin(t * 0.5) * W * 0.08
+      const g = ctx.createRadialGradient(W / 2, H * 0.4, 30, W / 2, H * 0.4, glowSize)
+      g.addColorStop(0, mood.glow + '30')
+      g.addColorStop(0.5, mood.glow + '10')
+      g.addColorStop(1, 'transparent')
+      ctx.fillStyle = g
+      ctx.fillRect(0, 0, W, H)
+
+      // Second glow (lower)
+      const g2 = ctx.createRadialGradient(W * 0.3, H * 0.7, 20, W * 0.3, H * 0.7, W * 0.3)
+      g2.addColorStop(0, mood.glow + '15')
+      g2.addColorStop(1, 'transparent')
+      ctx.fillStyle = g2
+      ctx.fillRect(0, 0, W, H)
+
+      // Floating particles
       ctx.save()
       for (const p of particles) {
-        p.x += p.vx; p.y += p.vy
+        p.x += p.vx
+        p.y += p.vy
         if (p.y < -10) { p.y = H + 10; p.x = Math.random() * W }
-        if (p.x < -10) p.x = W + 10; if (p.x > W + 10) p.x = -10
+        if (p.x < -10) p.x = W + 10
+        if (p.x > W + 10) p.x = -10
+        const flicker = 0.5 + Math.sin(t * 1.5 + p.x * 0.01) * 0.3
         ctx.beginPath()
-        ctx.arc(p.x, p.y, p.r + Math.sin(t * 2 + p.x * 0.01) * 0.5, 0, Math.PI * 2)
-        ctx.fillStyle = `rgba(251, 191, 36, ${p.alpha * (0.5 + Math.sin(t * 1.5 + p.y * 0.005) * 0.3)})`
+        ctx.arc(p.x, p.y, p.r + Math.sin(t * 2 + p.y * 0.005) * 0.5, 0, Math.PI * 2)
+        ctx.fillStyle = mood.glow + Math.floor(p.alpha * flicker * 255).toString(16).padStart(2, '0')
         ctx.fill()
       }
       ctx.restore()
 
-      // Fade transition at scene boundaries
-      if (sceneT < 0.08) {
-        const fadeIn = sceneT / 0.08
-        ctx.fillStyle = `rgba(15, 23, 42, ${1 - fadeIn})`
+      // Typewriter text — current scene line
+      const lineText = scenes[sceneIdx]
+      const charCount = Math.min(Math.floor(sceneT * lineText.length * 2), lineText.length)
+      const visibleText = lineText.slice(0, charCount)
+
+      ctx.textAlign = 'center'
+      ctx.textBaseline = 'middle'
+
+      // Main text
+      ctx.fillStyle = mood.text
+      ctx.font = `bold 58px ${font}`
+      ctx.fillText(visibleText, W / 2, H * 0.45)
+
+      // Cursor blink
+      if (charCount < lineText.length && Math.sin(t * 6) > 0) {
+        const textW = ctx.measureText(visibleText).width
+        ctx.fillStyle = mood.text
+        ctx.fillRect(W / 2 + textW / 2 + 8, H * 0.45 - 25, 3, 50)
+      }
+
+      // Sub info — name and saju
+      ctx.fillStyle = mood.text + '66'
+      ctx.font = `28px ${font}`
+      ctx.fillText(`${s.nm}님의 사주 이야기`, W / 2, H * 0.58)
+
+      // 4 pillars mini display
+      ctx.font = `bold 36px ${font}`
+      ctx.fillStyle = mood.text + '88'
+      ctx.fillText(s.p.join('  '), W / 2, H * 0.66)
+
+      // Bottom info
+      ctx.fillStyle = mood.text + '44'
+      ctx.font = `24px ${font}`
+      ctx.fillText(`${s.st} · 용신 ${s.y} · ${s.fd.year}.${s.fd.month}.${s.fd.day}`, W / 2, H * 0.78)
+
+      // Fade transition
+      if (sceneT < 0.06) {
+        ctx.fillStyle = `rgba(0,0,0,${1 - sceneT / 0.06})`
         ctx.fillRect(0, 0, W, H)
-      } else if (sceneT > 0.92) {
-        const fadeOut = (sceneT - 0.92) / 0.08
-        ctx.fillStyle = `rgba(15, 23, 42, ${fadeOut})`
+      } else if (sceneT > 0.94) {
+        ctx.fillStyle = `rgba(0,0,0,${(sceneT - 0.94) / 0.06})`
         ctx.fillRect(0, 0, W, H)
       }
 
-      // Scene indicator dots (7 scenes)
-      for (let i = 0; i < 7; i++) {
+      // Scene dots
+      for (let i = 0; i < 6; i++) {
         ctx.beginPath()
-        ctx.arc(W / 2 - 75 + i * 25, H - 60, 7, 0, Math.PI * 2)
-        ctx.fillStyle = i === sceneIdx ? '#fbbf24' : 'rgba(255,255,255,0.15)'
+        ctx.arc(W / 2 - 62 + i * 25, H - 70, 6, 0, Math.PI * 2)
+        ctx.fillStyle = i === sceneIdx ? mood.glow : 'rgba(255,255,255,0.12)'
         ctx.fill()
       }
 
       // Letterbox
       ctx.fillStyle = '#000'
-      ctx.fillRect(0, 0, W, 20); ctx.fillRect(0, H - 20, W, 20)
+      ctx.fillRect(0, 0, W, 24)
+      ctx.fillRect(0, H - 24, W, 24)
+
+      // Brand
+      ctx.fillStyle = mood.glow + '55'
+      ctx.font = `20px ${font}`
+      ctx.fillText('사주해 sajuhae.vercel.app', W / 2, H - 48)
 
       frameRef.current = requestAnimationFrame(draw)
     }
