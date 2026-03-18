@@ -40,7 +40,12 @@ function Preview({ s }: { s: typeof S[0] }) {
     c.width = 1080; c.height = 1920
     const W = 1080, H = 1920
     let running = true
+    let visible = true
     timeRef.current = 0
+
+    // Pause when off-screen to save CPU/memory
+    const observer = new IntersectionObserver(([entry]) => { visible = entry.isIntersecting }, { threshold: 0.1 })
+    observer.observe(c)
 
     // Particles
     const particles = Array.from({ length: 40 }, () => ({
@@ -51,6 +56,7 @@ function Preview({ s }: { s: typeof S[0] }) {
 
     function draw() {
       if (!running) return
+      if (!visible) { frameRef.current = requestAnimationFrame(draw); return }
       timeRef.current += 1 / 60
       const t = timeRef.current
       const sceneDur = 5
@@ -102,7 +108,7 @@ function Preview({ s }: { s: typeof S[0] }) {
       frameRef.current = requestAnimationFrame(draw)
     }
     draw()
-    return () => { running = false; cancelAnimationFrame(frameRef.current) }
+    return () => { running = false; cancelAnimationFrame(frameRef.current); observer.disconnect() }
   }, [s])
 
   return (
