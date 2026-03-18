@@ -2,7 +2,7 @@
 
 import { useRef, useEffect, useState, lazy, Suspense, useCallback } from 'react'
 import type { FullSajuResult } from '@/lib/saju'
-import { drawSceneTitle, drawScenePillars, drawSceneOheng, drawSceneStrength } from '@/lib/animation-scenes'
+import { drawSceneTitle, drawScenePillars, drawSceneOheng, drawSceneStrength, drawSceneFortune, drawSceneMessage, drawSceneEnding } from '@/lib/animation-scenes'
 
 const SajuAnimationPlayer = lazy(() => import('./SajuAnimationPlayer'))
 
@@ -61,15 +61,23 @@ function Preview({ s }: { s: typeof S[0] }) {
       if (!visible) { frameRef.current = requestAnimationFrame(draw); return }
       timeRef.current += 1 / 60
       const t = timeRef.current
-      const sceneDur = 5
-      const sceneIdx = Math.floor(t / sceneDur) % 4
-      const sceneT = (t % sceneDur) / sceneDur // 0~1 within scene
+      // 7 scenes with durations matching SajuAnimationPlayer: 8,11,8,10,10,12,8 = 67s total
+      const durations = [8, 11, 8, 10, 10, 12, 8]
+      const totalDur = 67
+      const loopT = t % totalDur
+      let elapsed = 0, sceneIdx = 0
+      for (let i = 0; i < 7; i++) { if (loopT >= elapsed && loopT < elapsed + durations[i]) { sceneIdx = i; break }; elapsed += durations[i] }
+      const sceneStart = elapsed
+      const sceneT = (loopT - sceneStart) / durations[sceneIdx]
 
-      // Draw the scene
+      // Draw the 7 scenes (identical to SajuAnimationPlayer)
       if (sceneIdx === 0) drawSceneTitle(ctx, W, H, s.nm, s.fd.year, s.fd.month, s.fd.day, s.fd.gender)
       else if (sceneIdx === 1) drawScenePillars(ctx, W, H, s.fr)
       else if (sceneIdx === 2) drawSceneOheng(ctx, W, H, s.fr)
-      else drawSceneStrength(ctx, W, H, s.fr)
+      else if (sceneIdx === 3) drawSceneStrength(ctx, W, H, s.fr)
+      else if (sceneIdx === 4) drawSceneFortune(ctx, W, H, s.fr)
+      else if (sceneIdx === 5) drawSceneMessage(ctx, W, H, s.fr)
+      else drawSceneEnding(ctx, W, H)
 
       // Animated particles overlay
       ctx.save()
@@ -95,10 +103,10 @@ function Preview({ s }: { s: typeof S[0] }) {
         ctx.fillRect(0, 0, W, H)
       }
 
-      // Scene indicator dots
-      for (let i = 0; i < 4; i++) {
+      // Scene indicator dots (7 scenes)
+      for (let i = 0; i < 7; i++) {
         ctx.beginPath()
-        ctx.arc(W / 2 - 45 + i * 30, H - 60, 8, 0, Math.PI * 2)
+        ctx.arc(W / 2 - 75 + i * 25, H - 60, 7, 0, Math.PI * 2)
         ctx.fillStyle = i === sceneIdx ? '#fbbf24' : 'rgba(255,255,255,0.15)'
         ctx.fill()
       }
@@ -122,13 +130,13 @@ function Preview({ s }: { s: typeof S[0] }) {
   )
 }
 
-const SCENARIOS = [
-  { label: '🔮 수의 신비로운 운명', desc: '깊은 물처럼 지혜로운 은하의 사주' },
-  { label: '🎭 화의 극적인 전환', desc: '태양처럼 빛나는 열정의 사주' },
-  { label: '🌅 토의 따뜻한 인연', desc: '대지처럼 포근한 하늘의 사주' },
-  { label: '⚔️ 금의 강렬한 의지', desc: '강철처럼 단단한 운명의 사주' },
-  { label: '🌿 목의 고요한 성장', desc: '숲처럼 생명력 넘치는 사주' },
-  { label: '✨ 균형 잡힌 희망', desc: '오행이 조화를 이룬 별의 사주' },
+const GENRES = [
+  { icon: '🔮', name: '신비로운 운명', mood: 'Mystical', desc: '보라빛 우주 속 깊은 지혜', color: '#a78bfa' },
+  { icon: '🎭', name: '극적인 전환', mood: 'Dramatic', desc: '황금빛 열정의 서사시', color: '#f59e0b' },
+  { icon: '🌅', name: '따뜻한 인연', mood: 'Warm', desc: '오렌지빛 대지의 온기', color: '#fb923c' },
+  { icon: '⚔️', name: '강렬한 의지', mood: 'Intense', desc: '붉은 불꽃의 각오', color: '#ef4444' },
+  { icon: '🌿', name: '고요한 성장', mood: 'Serene', desc: '청록빛 숲의 생명력', color: '#2dd4bf' },
+  { icon: '✨', name: '희망의 빛', mood: 'Hopeful', desc: '새벽빛 균형의 조화', color: '#fbbf24' },
 ]
 
 export default function AnimationShowcase() {
@@ -139,7 +147,7 @@ export default function AnimationShowcase() {
   // Auto-cycle through 6 samples every 20 seconds (4 scenes × 5s each)
   useEffect(() => {
     if (!auto) return
-    const id = setInterval(() => setIdx(p => (p + 1) % 6), 20000)
+    const id = setInterval(() => setIdx(p => (p + 1) % 6), 67000)
     return () => clearInterval(id)
   }, [auto])
 
@@ -150,7 +158,7 @@ export default function AnimationShowcase() {
       <div className="mt-3 rounded-2xl overflow-hidden" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)' }}>
         <div className="px-3 pt-3 pb-1 flex items-center justify-between">
           <span className="text-xs font-bold" style={{ color: 'var(--accent)' }}>🎬 운명 애니메이션</span>
-          <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>{SCENARIOS[idx].desc}</span>
+          <span className="text-[10px] font-medium" style={{ color: GENRES[idx].color }}>{GENRES[idx].icon} {GENRES[idx].mood}</span>
         </div>
         <div className="w-full px-3 pb-2 cursor-pointer" onClick={() => { setAuto(false); setPlay(true) }}>
           <div className="rounded-xl overflow-hidden" style={{ boxShadow: `0 2px 16px ${a.ac}20`, border: `1px solid ${a.ac}25` }}>
@@ -158,31 +166,23 @@ export default function AnimationShowcase() {
           </div>
         </div>
 
-        {/* 6 scenario buttons */}
-        <div className="px-3 pb-3 space-y-1">
-          {SCENARIOS.map((sc, i) => (
+        {/* 6 genre cards */}
+        <div className="px-3 pb-3 grid grid-cols-3 gap-2">
+          {GENRES.map((g, i) => (
             <button
               key={i}
-              onClick={() => { setIdx(i); setAuto(false); setTimeout(() => setAuto(true), 25000) }}
-              className="w-full flex items-center gap-2 rounded-lg px-3 py-2 text-left transition-all"
+              onClick={() => { setIdx(i); setAuto(false); setTimeout(() => setAuto(true), 70000) }}
+              className="rounded-xl p-2.5 text-center transition-all"
               style={{
-                background: i === idx ? S[i].ac + '15' : 'transparent',
-                border: i === idx ? `1px solid ${S[i].ac}40` : '1px solid transparent',
-                opacity: i === idx ? 1 : 0.6,
+                background: i === idx ? g.color + '18' : 'var(--bg-secondary)',
+                border: i === idx ? `1.5px solid ${g.color}60` : '1px solid var(--border-color)',
+                boxShadow: i === idx ? `0 2px 12px ${g.color}20` : 'none',
+                transform: i === idx ? 'scale(1.03)' : 'scale(1)',
               }}
             >
-              <span className="text-sm flex-shrink-0">{sc.label.split(' ')[0]}</span>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs font-bold truncate" style={{ color: i === idx ? S[i].ac : 'var(--text-secondary)' }}>
-                  {sc.label.slice(sc.label.indexOf(' ') + 1)}
-                </p>
-                <p className="text-[10px] truncate" style={{ color: 'var(--text-muted)' }}>{sc.desc}</p>
-              </div>
-              {i === idx && (
-                <span className="text-[10px] flex-shrink-0 px-1.5 py-0.5 rounded-full" style={{ background: S[i].ac + '25', color: S[i].ac }}>
-                  재생 중
-                </span>
-              )}
+              <span className="text-lg block">{g.icon}</span>
+              <p className="text-[10px] font-bold mt-1" style={{ color: i === idx ? g.color : 'var(--text-primary)' }}>{g.name}</p>
+              <p className="text-[8px] mt-0.5" style={{ color: 'var(--text-muted)' }}>{g.desc}</p>
             </button>
           ))}
         </div>
