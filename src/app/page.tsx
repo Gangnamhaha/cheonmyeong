@@ -1,7 +1,5 @@
 import type { Metadata } from 'next'
-import dynamic from 'next/dynamic'
-
-const HomeClient = dynamic(() => import('./HomeClient'), { ssr: false })
+import HomeClient from './HomeClient'
 
 const faqSchema = {
   '@context': 'https://schema.org',

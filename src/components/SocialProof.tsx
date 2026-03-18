@@ -21,10 +21,10 @@ const ACTIONS = [
 ]
 
 const ACTIVITY_POOL: ActivityItem[] = Array.from({ length: 15 }, (_, i) => ({
-  city: CITIES[Math.floor(Math.random() * CITIES.length)],
-  name: SURNAMES[Math.floor(Math.random() * SURNAMES.length)] + '○○',
-  action: ACTIONS[Math.floor(Math.random() * ACTIONS.length)],
-  timeAgo: `${Math.floor(Math.random() * 50) + 1}분 전`,
+  city: CITIES[i % CITIES.length],
+  name: `${SURNAMES[i % SURNAMES.length]}○○`,
+  action: ACTIONS[i % ACTIONS.length],
+  timeAgo: `${(i % 50) + 1}분 전`,
 }))
 
 export default function SocialProof() {

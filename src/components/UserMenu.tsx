@@ -24,6 +24,11 @@ export default function UserMenu() {
   const [credits, setCredits] = useState<CreditInfo | null>(null)
   const [referral, setReferral] = useState<ReferralInfo | null>(null)
   const [menuOpen, setMenuOpen] = useState(false)
+  const [isHydrated, setIsHydrated] = useState(false)
+
+  useEffect(() => {
+    setIsHydrated(true)
+  }, [])
 
   useEffect(() => {
     fetchCredits()
@@ -66,7 +71,7 @@ export default function UserMenu() {
     }
   }
 
-  if (status === 'loading') {
+  if (!isHydrated || status === 'loading') {
     return (
       <div className="h-9 w-20 rounded-full animate-pulse" style={{ background: 'var(--bg-secondary)' }} />
     )

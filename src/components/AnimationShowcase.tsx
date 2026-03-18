@@ -36,7 +36,9 @@ function Preview({ s }: { s: typeof S[0] }) {
 
   useEffect(() => {
     const c = ref.current; if (!c) return
-    const ctx = c.getContext('2d'); if (!ctx) return
+    const context = c.getContext('2d')
+    if (context === null) return
+    const ctx: CanvasRenderingContext2D = context
     c.width = 1080; c.height = 1920
     const W = 1080, H = 1920
     let running = true
