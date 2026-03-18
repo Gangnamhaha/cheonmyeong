@@ -122,14 +122,24 @@ function Preview({ s }: { s: typeof S[0] }) {
   )
 }
 
+const SCENARIOS = [
+  { label: '🔮 수의 신비로운 운명', desc: '깊은 물처럼 지혜로운 은하의 사주' },
+  { label: '🎭 화의 극적인 전환', desc: '태양처럼 빛나는 열정의 사주' },
+  { label: '🌅 토의 따뜻한 인연', desc: '대지처럼 포근한 하늘의 사주' },
+  { label: '⚔️ 금의 강렬한 의지', desc: '강철처럼 단단한 운명의 사주' },
+  { label: '🌿 목의 고요한 성장', desc: '숲처럼 생명력 넘치는 사주' },
+  { label: '✨ 균형 잡힌 희망', desc: '오행이 조화를 이룬 별의 사주' },
+]
+
 export default function AnimationShowcase() {
   const [idx, setIdx] = useState(0)
   const [auto, setAuto] = useState(true)
   const [play, setPlay] = useState(false)
 
+  // Auto-cycle through 6 samples every 20 seconds (4 scenes × 5s each)
   useEffect(() => {
     if (!auto) return
-    const id = setInterval(() => setIdx(p => (p+1)%6), 4000)
+    const id = setInterval(() => setIdx(p => (p + 1) % 6), 20000)
     return () => clearInterval(id)
   }, [auto])
 
@@ -140,20 +150,39 @@ export default function AnimationShowcase() {
       <div className="mt-3 rounded-2xl overflow-hidden" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)' }}>
         <div className="px-3 pt-3 pb-1 flex items-center justify-between">
           <span className="text-xs font-bold" style={{ color: 'var(--accent)' }}>🎬 운명 애니메이션</span>
-          <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>{idx+1}/6</span>
+          <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>{SCENARIOS[idx].desc}</span>
         </div>
         <div className="w-full px-3 pb-2 cursor-pointer" onClick={() => { setAuto(false); setPlay(true) }}>
           <div className="rounded-xl overflow-hidden" style={{ boxShadow: `0 2px 16px ${a.ac}20`, border: `1px solid ${a.ac}25` }}>
             <Preview s={a} />
           </div>
         </div>
-        <div className="px-3 pb-3 grid grid-cols-6 gap-1.5">
-          {S.map((x, i) => (
-            <button key={x.m} onClick={() => { setIdx(i); setAuto(false); setTimeout(() => setAuto(true), 6000) }}
-              className="rounded-lg py-1.5 transition-all text-center"
-              style={{ background: i===idx ? x.ac+'20' : 'var(--bg-secondary)', border: i===idx ? `1.5px solid ${x.ac}` : '1px solid transparent', opacity: i===idx ? 1 : 0.6 }}>
-              <span className="text-xs">{x.i}</span>
-              <p className="text-[7px] font-bold mt-0.5" style={{ color: i===idx ? x.ac : 'var(--text-muted)' }}>{x.d}</p>
+
+        {/* 6 scenario buttons */}
+        <div className="px-3 pb-3 space-y-1">
+          {SCENARIOS.map((sc, i) => (
+            <button
+              key={i}
+              onClick={() => { setIdx(i); setAuto(false); setTimeout(() => setAuto(true), 25000) }}
+              className="w-full flex items-center gap-2 rounded-lg px-3 py-2 text-left transition-all"
+              style={{
+                background: i === idx ? S[i].ac + '15' : 'transparent',
+                border: i === idx ? `1px solid ${S[i].ac}40` : '1px solid transparent',
+                opacity: i === idx ? 1 : 0.6,
+              }}
+            >
+              <span className="text-sm flex-shrink-0">{sc.label.split(' ')[0]}</span>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-bold truncate" style={{ color: i === idx ? S[i].ac : 'var(--text-secondary)' }}>
+                  {sc.label.slice(sc.label.indexOf(' ') + 1)}
+                </p>
+                <p className="text-[10px] truncate" style={{ color: 'var(--text-muted)' }}>{sc.desc}</p>
+              </div>
+              {i === idx && (
+                <span className="text-[10px] flex-shrink-0 px-1.5 py-0.5 rounded-full" style={{ background: S[i].ac + '25', color: S[i].ac }}>
+                  재생 중
+                </span>
+              )}
             </button>
           ))}
         </div>
