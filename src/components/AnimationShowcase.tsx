@@ -48,16 +48,16 @@ const MOOD_COLORS: Record<string, { bg1: string; bg2: string; glow: string; text
   hopeful: { bg1: '#0f0f1a', bg2: '#1a1a2a', glow: '#fbbf24', text: '#fde68a' },
 }
 
-const VIDEO_MAP: Record<string, string> = {
-  mystical: '/videos/sample-1.webm',
-  dramatic: '/videos/sample-2.webm',
-  warm: '/videos/sample-3.webm',
-  intense: '/videos/sample-4.webm',
-  serene: '/videos/sample-5.webm',
+const VIDEO_MAP: Record<number, string> = {
+  0: '/videos/scene-1.webm',  // 클래식 운명극
+  1: '/videos/scene-2.webm',  // 로맨스
+  2: '/videos/scene-3.webm',  // 성장서사
+  3: '/videos/scene-4.webm',  // 모험
+  4: '/videos/scene-5.webm',  // 판타지
 }
 
-function Preview({ s }: { s: typeof S[0] }) {
-  const videoSrc = VIDEO_MAP[s.m]
+function Preview({ s, index }: { s: typeof S[0]; index: number }) {
+  const videoSrc = VIDEO_MAP[index]
 
   // If video exists, use <video> tag
   if (videoSrc) {
@@ -328,7 +328,7 @@ export default function AnimationShowcase() {
         </div>
         <div className="w-full px-3 pb-2 cursor-pointer" onClick={() => { setAuto(false); setPlay(true) }}>
           <div className="rounded-xl overflow-hidden" style={{ boxShadow: `0 2px 16px ${a.ac}20`, border: `1px solid ${a.ac}25` }}>
-            <Preview s={a} />
+            <Preview s={a} index={idx} />
           </div>
         </div>
 
