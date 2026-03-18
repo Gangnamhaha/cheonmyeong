@@ -390,9 +390,10 @@ export default function SajuForm({ onSubmit, loading = false }: SajuFormProps) {
       <section className="px-4 py-6 max-w-md mx-auto relative z-10">
         <div className="grid grid-cols-3 gap-2">
           {FEATURES.map((f, i) => (
-            <div
+            <a
               key={i}
-              className="feature-card rounded-xl py-3 px-2 text-center hover-lift theme-transition"
+              href={f.href}
+              className="feature-card rounded-xl py-3 px-2 text-center hover-lift theme-transition block"
               style={{
                 background: 'var(--bg-card)',
                 border: '1px solid var(--border-color)',
@@ -402,7 +403,7 @@ export default function SajuForm({ onSubmit, loading = false }: SajuFormProps) {
             >
               <span className="text-xl">{f.icon}</span>
               <p className="text-xs font-bold mt-1" style={{ color: 'var(--text-primary)' }}>{f.title}</p>
-            </div>
+            </a>
           ))}
         </div>
       </section>
