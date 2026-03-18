@@ -243,8 +243,8 @@ export default function SajuForm({ onSubmit, loading = false }: SajuFormProps) {
       </div>
 
       <HeroSection greeting={greeting} theme={theme} onScrollDown={handleScrollDown} totalCount={totalCount}>
-        <SajuChat />
-        <AnimationShowcase />
+          <AnimationShowcase />
+          <SajuChat />
       </HeroSection>
 
       <section className="px-4 py-6 max-w-md mx-auto relative z-10">
