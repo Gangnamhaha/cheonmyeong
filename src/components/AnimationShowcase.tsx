@@ -297,12 +297,12 @@ function Preview({ s }: { s: typeof S[0] }) {
 }
 
 const GENRES = [
-  { icon: '🔮', name: 'Mystical', mood: '신비', desc: '깊은 물의 운명 · 수(水)', color: '#a78bfa' },
-  { icon: '🎭', name: 'Dramatic', mood: '극적', desc: '불꽃의 운명 · 화(火)', color: '#f59e0b' },
-  { icon: '🌅', name: 'Warm', mood: '따뜻', desc: '대지의 운명 · 토(土)', color: '#fb923c' },
-  { icon: '⚔️', name: 'Intense', mood: '강렬', desc: '강철의 운명 · 금(金)', color: '#ef4444' },
-  { icon: '🌿', name: 'Serene', mood: '고요', desc: '숲의 운명 · 목(木)', color: '#2dd4bf' },
-  { icon: '✨', name: 'Hopeful', mood: '희망', desc: '균형의 운명 · 조화', color: '#fbbf24' },
+  { icon: '🎭', name: '클래식 운명극', mood: 'Classic', desc: '운명의 수레바퀴가 돌아간다', color: '#a78bfa' },
+  { icon: '💕', name: '로맨스', mood: 'Romance', desc: '사랑과 인연의 이야기', color: '#f472b6' },
+  { icon: '🌱', name: '성장서사', mood: 'Growth', desc: '시련을 넘어 피어나는 꽃', color: '#4ade80' },
+  { icon: '⚔️', name: '모험', mood: 'Adventure', desc: '미지의 세계로 떠나는 여정', color: '#f59e0b' },
+  { icon: '🔮', name: '판타지', mood: 'Fantasy', desc: '신비로운 마법의 세계', color: '#60a5fa' },
+  { icon: '🏯', name: '시대극', mood: 'Historical', desc: '역사 속 운명의 서사', color: '#ef4444' },
 ]
 
 export default function AnimationShowcase() {
