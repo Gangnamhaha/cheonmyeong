@@ -64,4 +64,6 @@ export const ko = {
   },
 } as const
 
-export type Locale = typeof ko
+// Use a deep string-valued version for cross-locale compatibility
+type DeepStringify<T> = { [K in keyof T]: T[K] extends string ? string : DeepStringify<T[K]> }
+export type Locale = DeepStringify<typeof ko>
