@@ -1,11 +1,31 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, type CSSProperties, type FormEvent } from 'react'
 import { useTheme } from './ThemeProvider'
-// UserMenu moved to Navbar
 import SajuChat from './SajuChat'
 import SearchModal from './SearchModal'
 import AnimationShowcase from './AnimationShowcase'
+import HeroSection from './HeroSection'
+import QuickForm from './QuickForm'
+import DetailForm from './DetailForm'
+import HistoryPanel, { type HistoryEntry } from './HistoryPanel'
+import {
+  YEARS,
+  MONTHS,
+  HOURS,
+  MINUTES,
+  QUOTES,
+  FEATURES,
+  STARS,
+  getDaysInMonth,
+  parseBirthDateTime,
+  getGreeting,
+  getDailyQuote,
+  getHistory,
+  saveHistory,
+  getAnalysisCount,
+  incrementAnalysisCount,
+} from './sajuFormUtils'
 import { useSpeechRecognition } from '@/hooks/useSpeechRecognition'
 
 interface SajuFormData {
@@ -25,186 +45,6 @@ interface SajuFormProps {
   loading?: boolean
 }
 
-interface HistoryEntry {
-  year: number
-  month: number
-  day: number
-  hour: number
-  gender: 'male' | 'female'
-  date: string
-  dayPillar?: string
-}
-
-// ─── Constants ───
-const YEARS = Array.from({ length: 151 }, (_, i) => 1900 + i)
-const MONTHS = Array.from({ length: 12 }, (_, i) => i + 1)
-const HOURS = Array.from({ length: 24 }, (_, i) => i)
-const MINUTES = [0, 15, 30, 45]
-
-function getDaysInMonth(year: number, month: number): number {
-  return new Date(year, month, 0).getDate()
-}
-
-// ─── Speech date parser ───
-function parseBirthDateTime(text: string) {
-  const result: {
-    year?: number; month?: number; day?: number
-    hour?: number; minute?: number
-    gender?: 'male' | 'female'
-    calendarType?: 'solar' | 'lunar'
-  } = {}
-  const s = text.replace(/\s+/g, ' ').trim()
-
-  // Year (4-digit or 2-digit)
-  const y4 = s.match(/(\d{4})\s*년/)
-  if (y4) {
-    const y = parseInt(y4[1])
-    if (y >= 1900 && y <= 2050) result.year = y
-  } else {
-    const y2 = s.match(/(\d{2})\s*년/)
-    if (y2) {
-      let y = parseInt(y2[1])
-      y += y < 50 ? 2000 : 1900
-      if (y >= 1900 && y <= 2050) result.year = y
-    }
-  }
-
-  // Month
-  const mm = s.match(/(\d{1,2})\s*월/)
-  if (mm) { const m = parseInt(mm[1]); if (m >= 1 && m <= 12) result.month = m }
-
-  // Day
-  const dd = s.match(/(\d{1,2})\s*일/)
-  if (dd) { const d = parseInt(dd[1]); if (d >= 1 && d <= 31) result.day = d }
-
-  // Hour
-  const hh = s.match(/(\d{1,2})\s*시/)
-  if (hh) { const h = parseInt(hh[1]); if (h >= 0 && h <= 23) result.hour = h }
-
-  // Minute (round to nearest 15 — form only accepts 0, 15, 30, 45)
-  const mi = s.match(/(\d{1,2})\s*분/)
-  if (mi) {
-    const m = parseInt(mi[1])
-    const rounded = Math.round(m / 15) * 15
-    result.minute = rounded >= 60 ? 0 : rounded
-  }
-
-  // Gender
-  if (/남자|남성/.test(s)) result.gender = 'male'
-  else if (/여자|여성/.test(s)) result.gender = 'female'
-
-  // Calendar type
-  if (/음력/.test(s)) result.calendarType = 'lunar'
-  else if (/양력/.test(s)) result.calendarType = 'solar'
-
-  return result
-}
-
-// ─── Starfield ───
-function generateStars(count: number) {
-  const stars = []
-  for (let i = 0; i < count; i++) {
-    stars.push({
-      x: (i * 7919 + 13) % 100,
-      y: (i * 6271 + 37) % 100,
-      size: (i % 7 === 0 ? 'large' : 'small') as 'small' | 'large',
-      duration: 2 + (i % 5) * 0.8,
-      delay: (i % 8) * 0.5,
-    })
-  }
-  return stars
-}
-const STARS = generateStars(60)
-
-// ─── Greeting by time ───
-function getGreeting(): string {
-  const h = new Date().getHours()
-  if (h >= 5 && h < 9) return '상쾌한 아침, 오늘의 운명을 살펴볼까요?'
-  if (h >= 9 && h < 12) return '좋은 오전이에요. 사주해가 기다리고 있어요.'
-  if (h >= 12 && h < 14) return '점심 시간, 잠깐 운세를 들여다볼까요?'
-  if (h >= 14 && h < 18) return '오후의 여유, 사주로 내일을 준비하세요.'
-  if (h >= 18 && h < 21) return '해 질 녘, 별빛 아래 운명을 읽어봅니다.'
-  return 'AI 해석을 읽으신 후 직접 채팅창에서 물어보실 수 있어요!'
-}
-
-// ─── Daily quote (D1) ───
-const QUOTES = [
-  { text: '命은 하늘이 주고, 運은 내가 만든다.', hanja: '天命人運' },
-  { text: '음양이 조화로우면 만사형통이라.', hanja: '陰陽調和' },
-  { text: '오행의 균형이 곧 삶의 균형이니라.', hanja: '五行均衡' },
-  { text: '사주를 알면 때를 알고, 때를 알면 길이 보인다.', hanja: '知時見路' },
-  { text: '용신을 얻으면 흉이 길로 변하나니.', hanja: '得用化吉' },
-  { text: '대운이 바뀌면 인생도 바뀌느니라.', hanja: '運轉乾坤' },
-  { text: '천간은 하늘의 뜻, 지지는 땅의 이치라.', hanja: '天意地理' },
-  { text: '십신의 조화 속에 인연의 비밀이 있느니라.', hanja: '十神秘緣' },
-  { text: '재물은 오행의 흐름을 따라 온다.', hanja: '財隨行流' },
-  { text: '신강하면 나아가고, 신약하면 기다려라.', hanja: '强進弱待' },
-  { text: '희신이 도우면 어려움도 기회가 되리라.', hanja: '喜助轉機' },
-  { text: '궁합은 서로의 부족함을 채우는 것이니라.', hanja: '合補不足' },
-]
-
-function getDailyQuote() {
-  const day = Math.floor(Date.now() / (24 * 60 * 60 * 1000))
-  return QUOTES[day % QUOTES.length]
-}
-
-// ─── Feature cards (A3) ───
-const FEATURES = [
-  { icon: '🏛️', title: '사주팔자 분석', desc: '생년월일시를 기반으로 천간·지지 팔자를 정밀 계산합니다' },
-  { icon: '🤖', title: 'AI 맞춤 해석', desc: '명리학 전문 AI가 당신의 사주를 성격, 연애, 직업, 재물 등 카테고리별로 풀어드립니다' },
-  { icon: '📊', title: '오행·십신·용신', desc: '오행 분포도, 십신 관계도, 용신 분석까지 한눈에 확인하세요' },
-  { icon: '🌟', title: '대운·세운·월운', desc: '10년 대운의 흐름과 올해 세운, 이달의 월운을 분석합니다' },
-  { icon: '💬', title: 'AI 사주 상담', desc: '사주에 대해 궁금한 점을 AI 전문가에게 자유롭게 질문하세요' },
-  { icon: '💑', title: '궁합 분석', desc: '두 사람의 사주를 비교하고 AI가 궁합을 풀어드립니다' },
-]
-
-// ─── Taegeuk SVG (B1) ───
-function TaegeukSvg({ size = 280 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 200 200" className="hero-taegeuk animate-rotateSlow">
-      <circle cx="100" cy="100" r="95" fill="none" stroke="currentColor" strokeWidth="1.5" opacity="0.3" />
-      <path d="M100,5 A95,95 0 0,1 100,195 A47.5,47.5 0 0,1 100,100 A47.5,47.5 0 0,0 100,5" fill="currentColor" opacity="0.15" />
-      <path d="M100,195 A95,95 0 0,1 100,5 A47.5,47.5 0 0,1 100,100 A47.5,47.5 0 0,0 100,195" fill="currentColor" opacity="0.06" />
-      <circle cx="100" cy="52.5" r="12" fill="currentColor" opacity="0.08" />
-      <circle cx="100" cy="147.5" r="12" fill="currentColor" opacity="0.18" />
-    </svg>
-  )
-}
-
-// ─── LocalStorage helpers ───
-function getHistory(): HistoryEntry[] {
-  if (typeof window === 'undefined') return []
-  try {
-    const raw = localStorage.getItem('sajuhae-history')
-    return raw ? JSON.parse(raw) : []
-  } catch { return [] }
-}
-
-function saveHistory(entry: HistoryEntry) {
-  try {
-    const existing = getHistory()
-    const updated = [entry, ...existing.filter(e =>
-      !(e.year === entry.year && e.month === entry.month && e.day === entry.day && e.hour === entry.hour)
-    )].slice(0, 5)
-    localStorage.setItem('sajuhae-history', JSON.stringify(updated))
-  } catch { /* ignore */ }
-}
-
-function getAnalysisCount(): number {
-  if (typeof window === 'undefined') return 0
-  try {
-    return parseInt(localStorage.getItem('sajuhae-count') || '0', 10)
-  } catch { return 0 }
-}
-
-function incrementAnalysisCount() {
-  try {
-    const count = getAnalysisCount() + 1
-    localStorage.setItem('sajuhae-count', String(count))
-  } catch { /* ignore */ }
-}
-
-// ─── Component ───
 export default function SajuForm({ onSubmit, loading = false }: SajuFormProps) {
   const { theme, toggleTheme, cycleFontSize, fontSizeLabel } = useTheme()
   const [year, setYear] = useState(1990)
@@ -222,6 +62,7 @@ export default function SajuForm({ onSubmit, loading = false }: SajuFormProps) {
   const [quickMode, setQuickMode] = useState(false)
   const [showSearchModal, setShowSearchModal] = useState(false)
   const [name, setName] = useState('')
+
   const {
     isListening: isNameListening,
     transcript: nameTranscript,
@@ -231,6 +72,7 @@ export default function SajuForm({ onSubmit, loading = false }: SajuFormProps) {
     stopListening: stopNameListening,
     resetTranscript: resetNameTranscript,
   } = useSpeechRecognition()
+
   const {
     isListening: isDateListening,
     transcript: dateTranscript,
@@ -243,21 +85,23 @@ export default function SajuForm({ onSubmit, loading = false }: SajuFormProps) {
 
   const daysInMonth = getDaysInMonth(year, month)
   const days = useMemo(() => Array.from({ length: daysInMonth }, (_, i) => i + 1), [daysInMonth])
-  const yearOptions = YEARS.map(y => <option key={y} value={y}>{y}</option>)
-  const monthOptions = MONTHS.map(m => <option key={m} value={m}>{m}</option>)
-  const dayOptions = days.map(d => <option key={d} value={d}>{d}</option>)
+  const quickYearOptions = YEARS.map(y => <option key={y} value={y}>{y}</option>)
+  const quickMonthOptions = MONTHS.map(m => <option key={m} value={m}>{m}</option>)
+  const quickDayOptions = days.map(d => <option key={d} value={d}>{d}</option>)
+  const detailYearOptions = YEARS.map(y => <option key={y} value={y}>{y}년</option>)
+  const detailMonthOptions = MONTHS.map(m => <option key={m} value={m}>{m}월</option>)
+  const detailDayOptions = days.map(d => <option key={d} value={d}>{d}일</option>)
+  const hourOptions = HOURS.map(h => <option key={h} value={h}>{h}시</option>)
+  const minuteOptions = MINUTES.map(m => <option key={m} value={m}>{m}분</option>)
 
-  // Hydration-safe: defer time-dependent values to client
   const [greeting, setGreeting] = useState('사주팔자로 당신의 운명을 알아보세요')
   const [dailyQuote, setDailyQuote] = useState(QUOTES[0])
 
   useEffect(() => {
-    // Set time-dependent values on client only (prevents hydration mismatch)
     setGreeting(getGreeting())
     setDailyQuote(getDailyQuote())
     setHistory(getHistory())
     setTotalCount(getAnalysisCount())
-    // Auto-show form after hero delay
     const timer = setTimeout(() => setShowForm(true), 200)
     return () => clearTimeout(timer)
   }, [])
@@ -281,7 +125,6 @@ export default function SajuForm({ onSubmit, loading = false }: SajuFormProps) {
     }
   }, [nameInterimTranscript, nameTranscript])
 
-  // Parse date/time from speech
   useEffect(() => {
     const text = `${dateTranscript} ${dateInterimTranscript}`.trim()
     if (!text) return
@@ -290,7 +133,10 @@ export default function SajuForm({ onSubmit, loading = false }: SajuFormProps) {
     if (parsed.year !== undefined) setYear(parsed.year)
     if (parsed.month !== undefined) setMonth(parsed.month)
     if (parsed.day !== undefined) setDay(parsed.day)
-    if (parsed.hour !== undefined) { setHour(parsed.hour); setUnknownTime(false) }
+    if (parsed.hour !== undefined) {
+      setHour(parsed.hour)
+      setUnknownTime(false)
+    }
     if (parsed.minute !== undefined) setMinute(parsed.minute)
     if (parsed.gender) setGender(parsed.gender)
     if (parsed.calendarType) {
@@ -300,13 +146,12 @@ export default function SajuForm({ onSubmit, loading = false }: SajuFormProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dateTranscript, dateInterimTranscript])
 
-  // Clamp day when year/month change
   useEffect(() => {
     const maxDay = getDaysInMonth(year, month)
     if (day > maxDay) setDay(maxDay)
   }, [year, month, day])
 
-  function handleSubmit(e: React.FormEvent) {
+  function handleSubmit(e: FormEvent) {
     e.preventDefault()
     const useQuickDefaults = quickMode
     const submitUnknownTime = useQuickDefaults ? false : unknownTime
@@ -347,7 +192,10 @@ export default function SajuForm({ onSubmit, loading = false }: SajuFormProps) {
     setHour(entry.hour)
     setGender(entry.gender)
     setShowForm(true)
-    // Scroll to form
+    document.getElementById('saju-form-card')?.scrollIntoView({ behavior: 'smooth' })
+  }
+
+  function handleScrollDown() {
     document.getElementById('saju-form-card')?.scrollIntoView({ behavior: 'smooth' })
   }
 
@@ -356,7 +204,6 @@ export default function SajuForm({ onSubmit, loading = false }: SajuFormProps) {
       stopNameListening()
       return
     }
-    // Browser allows only one recognition session at a time
     if (isDateListening) stopDateListening()
     resetNameTranscript()
     startNameListening()
@@ -373,20 +220,12 @@ export default function SajuForm({ onSubmit, loading = false }: SajuFormProps) {
   }
 
   const selectClass =
-    'w-full rounded-lg px-3 py-2.5 focus:outline-none focus:ring-1 transition-colors theme-transition text-sm'
-      + ' bg-[var(--bg-secondary)] border border-[var(--border-color)] text-[var(--text-primary)]'
-      + ' focus:border-[var(--accent)] focus:ring-[var(--accent)]'
-
-  const toggleBtnClass = (active: boolean) =>
-    `flex-1 py-2 text-sm font-medium transition-all ${
-      active
-        ? 'bg-[var(--accent)] text-[var(--accent-text)]'
-        : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-[var(--bg-card-hover)]'
-    }`
+    'w-full rounded-lg px-3 py-2.5 focus:outline-none focus:ring-1 transition-colors theme-transition text-sm' +
+    ' bg-[var(--bg-secondary)] border border-[var(--border-color)] text-[var(--text-primary)]' +
+    ' focus:border-[var(--accent)] focus:ring-[var(--accent)]'
 
   return (
     <div className="min-h-screen relative" style={{ background: 'var(--bg-primary)' }}>
-      {/* Starfield Background */}
       <div className="starfield">
         {STARS.map((star, i) => (
           <div
@@ -398,73 +237,16 @@ export default function SajuForm({ onSubmit, loading = false }: SajuFormProps) {
               '--duration': `${star.duration}s`,
               '--delay': `${star.delay}s`,
               color: theme === 'dark' ? 'rgba(251, 191, 36, 0.6)' : 'rgba(180, 83, 9, 0.3)',
-            } as React.CSSProperties}
+            } as CSSProperties}
           />
         ))}
       </div>
 
-      {/* ═══ HERO SECTION (A1, B1, B2, D2, D3) ═══ */}
-      <section className="hero-bg min-h-[85vh] flex flex-col items-center justify-center px-4 relative">
-        {/* Taegeuk Background */}
-        <TaegeukSvg size={320} />
+      <HeroSection greeting={greeting} theme={theme} onScrollDown={handleScrollDown} totalCount={totalCount}>
+        <SajuChat />
+        <AnimationShowcase />
+      </HeroSection>
 
-        {/* Top bar removed — controls are in Navbar */}
-
-        {/* Main Title (B4 - serif font) */}
-        <div className="text-center relative z-10 animate-fadeInScale">
-          <h1
-            className="font-serif-kr text-6xl font-black mb-2 tracking-tight"
-            style={{ color: 'var(--text-accent)' }}
-          >
-            사주해
-          </h1>
-          <p
-            className="font-serif-kr text-2xl tracking-[0.3em] mb-3"
-            style={{ color: 'var(--text-secondary)' }}
-          >
-            AI 사주팔자
-          </p>
-          <p
-            className="text-sm font-medium max-w-xs mx-auto leading-relaxed"
-            style={{ color: 'var(--accent)', opacity: 0, animation: 'fadeIn 0.6s ease-out 0.3s forwards' }}
-          >
-            당신의 사주가 음악이 되고, 영상이 됩니다.
-          </p>
-
-          {/* D2: Time-based greeting */}
-          <p className="text-xs mt-3 max-w-xs mx-auto leading-relaxed" style={{ color: 'var(--text-muted)' }}>
-            {greeting}
-          </p>
-        </div>
-
-        {/* AI 채팅 + 운명 애니메이션 */}
-        <div className="w-full max-w-md mt-6 relative z-10">
-          <SajuChat />
-          <AnimationShowcase />
-        </div>
-
-
-        {/* C4: Usage stats */}
-        {totalCount > 0 && (
-          <div
-            className="mt-6 text-center relative z-10"
-            style={{ opacity: 0, animation: 'fadeIn 0.5s ease-out 0.7s forwards' }}
-          >
-            <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-              지금까지{' '}
-              <span className="stat-number font-bold text-sm">{totalCount.toLocaleString()}</span>
-              회 분석 완료
-            </p>
-          </div>
-        )}
-
-        {/* Scroll Arrow */}
-        <div className="scroll-arrow text-2xl" style={{ color: 'var(--text-muted)' }}>
-          ↓
-        </div>
-      </section>
-
-      {/* ═══ FEATURES SECTION (A3) — compact grid ═══ */}
       <section className="px-4 py-6 max-w-md mx-auto relative z-10">
         <div className="grid grid-cols-3 gap-2">
           {FEATURES.map((f, i) => (
@@ -485,7 +267,6 @@ export default function SajuForm({ onSubmit, loading = false }: SajuFormProps) {
         </div>
       </section>
 
-      {/* ═══ FORM SECTION (B3, C5) ═══ */}
       {showForm && (
         <section className="px-4 pb-8 max-w-md mx-auto relative z-10" id="saju-form-card">
           <div
@@ -551,240 +332,61 @@ export default function SajuForm({ onSubmit, loading = false }: SajuFormProps) {
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {quickMode ? (
-                <div className="space-y-3 animate-fadeIn">
-                  <p className="text-center text-xs" style={{ color: 'var(--text-muted)' }}>
-                    생년월일과 성별만 입력하면 바로 사주를 분석해 드려요
-                  </p>
-                  <div className="flex gap-2 items-center justify-center flex-wrap">
-                    <select
-                      value={year}
-                      onChange={e => setYear(Number(e.target.value))}
-                      className="rounded-lg px-2 py-2 text-sm"
-                      style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }}
-                      disabled={loading}
-                    >
-                      {yearOptions}
-                    </select>
-                    <span style={{ color: 'var(--text-muted)' }}>년</span>
-                    <select
-                      value={month}
-                      onChange={e => {
-                        const m = Number(e.target.value)
-                        setMonth(m)
-                        const maxDay = getDaysInMonth(year, m)
-                        if (day > maxDay) setDay(maxDay)
-                      }}
-                      className="rounded-lg px-2 py-2 text-sm"
-                      style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }}
-                      disabled={loading}
-                    >
-                      {monthOptions}
-                    </select>
-                    <span style={{ color: 'var(--text-muted)' }}>월</span>
-                    <select
-                      value={day}
-                      onChange={e => setDay(Number(e.target.value))}
-                      className="rounded-lg px-2 py-2 text-sm"
-                      style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }}
-                      disabled={loading}
-                    >
-                      {dayOptions}
-                    </select>
-                    <span style={{ color: 'var(--text-muted)' }}>일</span>
-                  </div>
-                  <div className="flex gap-2 justify-center">
-                    <button
-                      type="button"
-                      onClick={() => setGender('male')}
-                      className="px-4 py-2 rounded-lg text-sm font-medium transition-all"
-                      style={{
-                        background: gender === 'male' ? 'var(--accent)' : 'var(--bg-secondary)',
-                        color: gender === 'male' ? 'var(--accent-text)' : 'var(--text-secondary)',
-                        border: '1px solid var(--border-color)',
-                      }}
-                    >
-                      👨 남성
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setGender('female')}
-                      className="px-4 py-2 rounded-lg text-sm font-medium transition-all"
-                      style={{
-                        background: gender === 'female' ? 'var(--accent)' : 'var(--bg-secondary)',
-                        color: gender === 'female' ? 'var(--accent-text)' : 'var(--text-secondary)',
-                        border: '1px solid var(--border-color)',
-                      }}
-                    >
-                      👩 여성
-                    </button>
-                  </div>
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="w-full py-3 rounded-xl text-sm font-bold transition-all hover:scale-[1.02] active:scale-[0.98] disabled:cursor-not-allowed"
-                    style={{
-                      background: loading ? 'var(--bg-secondary)' : 'var(--accent)',
-                      color: loading ? 'var(--text-muted)' : 'var(--accent-text)',
-                    }}
-                  >
-                    {loading ? '분석 중...' : '⚡ 바로 분석하기'}
-                  </button>
-                  <p className="text-center text-xs" style={{ color: 'var(--text-muted)' }}>
-                    * 시간 미입력 시 12시 기준으로 분석됩니다
-                  </p>
-                </div>
-              ) : (
-                <>
-                  {/* 양력/음력 토글 */}
-                  <div className="flex rounded-lg overflow-hidden border border-[var(--border-color)] mb-4 form-section">
-                    <button type="button" onClick={() => { setCalendarType('solar'); setIsLeapMonth(false) }} className={toggleBtnClass(calendarType === 'solar')}>
-                      양력 (陽曆)
-                    </button>
-                    <button type="button" onClick={() => setCalendarType('lunar')} className={toggleBtnClass(calendarType === 'lunar')}>
-                      음력 (陰曆)
-                    </button>
-                  </div>
-
-                  {calendarType === 'lunar' && (
-                    <label className="flex items-center gap-2 mb-4 cursor-pointer form-section">
-                      <input type="checkbox" checked={isLeapMonth} onChange={e => setIsLeapMonth(e.target.checked)}
-                        className="w-4 h-4 rounded" style={{ accentColor: 'var(--accent)' }} disabled={loading} />
-                      <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>윤달 (閏月)</span>
-                    </label>
-                  )}
-
-                  {/* 성별 선택 */}
-                  <div className="flex rounded-lg overflow-hidden border border-[var(--border-color)] mb-4 form-section">
-                    <button type="button" onClick={() => setGender('male')} className={toggleBtnClass(gender === 'male')}>
-                      남성 (男)
-                    </button>
-                    <button type="button" onClick={() => setGender('female')} className={toggleBtnClass(gender === 'female')}>
-                      여성 (女)
-                    </button>
-                  </div>
-
-                  {/* 이름 입력 */}
-                  <div className="mb-4 form-section">
-                    <label className="block text-xs mb-1 font-medium" style={{ color: 'var(--text-secondary)' }}>이름</label>
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="text"
-                        value={name}
-                        onChange={e => setName(e.target.value)}
-                        placeholder="이름을 입력해 주세요 (선택)"
-                        className={selectClass}
-                        disabled={loading}
-                        maxLength={20}
-                      />
-                      {isNameSpeechSupported && (
-                        <button
-                          type="button"
-                          onClick={handleNameMicToggle}
-                          disabled={loading}
-                          className={`h-10 w-10 rounded-lg text-sm transition-all theme-transition ${isNameListening ? 'animate-pulse' : 'hover-scale'} disabled:opacity-40 disabled:cursor-not-allowed`}
-                          style={{
-                            background: isNameListening ? 'rgba(239, 68, 68, 0.18)' : 'var(--bg-secondary)',
-                            border: `1px solid ${isNameListening ? 'rgba(239, 68, 68, 0.4)' : 'var(--border-color)'}`,
-                            color: isNameListening ? '#ef4444' : 'var(--text-muted)',
-                          }}
-                          aria-label={isNameListening ? '이름 음성 입력 중지' : '이름 음성 입력'}
-                          title={isNameListening ? '음성 입력 중지' : '음성으로 이름 입력'}
-                        >
-                          🎤
-                        </button>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* 연도 */}
-                  <div className="form-section">
-                    <label className="block text-xs mb-1 font-medium" style={{ color: 'var(--text-secondary)' }}>연도 (年)</label>
-                    <select value={year} onChange={e => setYear(Number(e.target.value))} className={selectClass} disabled={loading}>
-                      {YEARS.map(y => <option key={y} value={y}>{y}년</option>)}
-                    </select>
-                  </div>
-
-                  {/* 월 / 일 */}
-                  <div className="grid grid-cols-2 gap-3 form-section">
-                    <div>
-                      <label className="block text-xs mb-1 font-medium" style={{ color: 'var(--text-secondary)' }}>월 (月)</label>
-                      <select value={month} onChange={e => {
-                        const m = Number(e.target.value); setMonth(m)
-                        const maxDay = getDaysInMonth(year, m)
-                        if (day > maxDay) setDay(maxDay)
-                      }} className={selectClass} disabled={loading}>
-                        {MONTHS.map(m => <option key={m} value={m}>{m}월</option>)}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-xs mb-1 font-medium" style={{ color: 'var(--text-secondary)' }}>일 (日)</label>
-                      <select value={day} onChange={e => setDay(Number(e.target.value))} className={selectClass} disabled={loading}>
-                        {days.map(d => <option key={d} value={d}>{d}일</option>)}
-                      </select>
-                    </div>
-                  </div>
-
-                  {/* C5: 시간 모름 옵션 */}
-                  <div className="form-section">
-                    <label className="flex items-center gap-2 cursor-pointer mb-2">
-                      <input type="checkbox" checked={unknownTime} onChange={e => setUnknownTime(e.target.checked)}
-                        className="w-4 h-4 rounded" style={{ accentColor: 'var(--accent)' }} disabled={loading} />
-                      <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>태어난 시간을 모릅니다</span>
-                    </label>
-                    {unknownTime && (
-                      <p className="text-xs px-2 py-1.5 rounded-lg mb-1" style={{ color: 'var(--text-muted)', background: 'var(--bg-secondary)' }}>
-                        💡 시간 미상 시 자시(子時, 0시) 기준으로 분석합니다
-                      </p>
-                    )}
-                  </div>
-
-                  {/* 시 / 분 (시간 모름이 아닐 때만) */}
-                  {!unknownTime && (
-                    <div className="grid grid-cols-2 gap-3 form-section">
-                      <div>
-                        <label className="block text-xs mb-1 font-medium" style={{ color: 'var(--text-secondary)' }}>시 (時)</label>
-                        <select value={hour} onChange={e => setHour(Number(e.target.value))} className={selectClass} disabled={loading}>
-                          {HOURS.map(h => <option key={h} value={h}>{h}시</option>)}
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-xs mb-1 font-medium" style={{ color: 'var(--text-secondary)' }}>분 (分)</label>
-                        <select value={minute} onChange={e => setMinute(Number(e.target.value))} className={selectClass} disabled={loading}>
-                          {MINUTES.map(m => <option key={m} value={m}>{m}분</option>)}
-                        </select>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* 제출 버튼 */}
-                  <div className="form-section">
-                    <button type="submit" disabled={loading}
-                      className="w-full mt-2 font-bold py-3.5 px-6 rounded-xl transition-all text-base tracking-wide hover-scale disabled:cursor-not-allowed"
-                      style={{
-                        background: loading ? 'var(--bg-secondary)' : 'var(--accent)',
-                        color: loading ? 'var(--text-muted)' : 'var(--accent-text)',
-                      }}
-                    >
-                      {loading ? (
-                        <span className="flex items-center justify-center gap-3">
-                          <div className="yin-yang" style={{ width: '24px', height: '24px' }} />
-                          분석 중...
-                        </span>
-                      ) : (
-                        '✨ 사주 풀이 보기'
-                      )}
-                    </button>
-                  </div>
-                </>
-              )}
-            </form>
+            {quickMode ? (
+              <QuickForm
+                year={year}
+                month={month}
+                day={day}
+                gender={gender}
+                setYear={setYear}
+                setMonth={setMonth}
+                setDay={setDay}
+                setGender={setGender}
+                onSubmit={handleSubmit}
+                loading={loading}
+                yearOptions={quickYearOptions}
+                monthOptions={quickMonthOptions}
+                dayOptions={quickDayOptions}
+              />
+            ) : (
+              <DetailForm
+                name={name}
+                setName={setName}
+                year={year}
+                month={month}
+                day={day}
+                hour={hour}
+                minute={minute}
+                calendarType={calendarType}
+                isLeapMonth={isLeapMonth}
+                gender={gender}
+                unknownTime={unknownTime}
+                setYear={setYear}
+                setMonth={setMonth}
+                setDay={setDay}
+                setHour={setHour}
+                setMinute={setMinute}
+                setCalendarType={setCalendarType}
+                setIsLeapMonth={setIsLeapMonth}
+                setGender={setGender}
+                setUnknownTime={setUnknownTime}
+                onSubmit={handleSubmit}
+                loading={loading}
+                isNameListening={isNameListening}
+                isNameSpeechSupported={isNameSpeechSupported}
+                onNameMicToggle={handleNameMicToggle}
+                yearOptions={detailYearOptions}
+                monthOptions={detailMonthOptions}
+                dayOptions={detailDayOptions}
+                hourOptions={hourOptions}
+                minuteOptions={minuteOptions}
+                selectClass={selectClass}
+              />
+            )}
           </div>
         </section>
       )}
 
-      {/* ═══ GUNGHAP PROMO (C3) ═══ */}
       <section className="px-4 pb-8 max-w-md mx-auto relative z-10">
         <a
           href="/gunghap"
@@ -802,35 +404,7 @@ export default function SajuForm({ onSubmit, loading = false }: SajuFormProps) {
         </a>
       </section>
 
-      {/* ═══ HISTORY SECTION (C2) ═══ */}
-      {history.length > 0 && (
-        <section className="px-4 pb-8 max-w-md mx-auto relative z-10">
-          <h3 className="text-sm font-bold mb-3" style={{ color: 'var(--text-secondary)' }}>
-            📋 최근 분석 기록
-          </h3>
-          <div className="space-y-2">
-            {history.map((entry, i) => (
-              <button
-                key={i}
-                className="history-card w-full text-left flex items-center justify-between"
-                onClick={() => handleHistoryClick(entry)}
-              >
-                <div>
-                  <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
-                    {entry.year}.{String(entry.month).padStart(2, '0')}.{String(entry.day).padStart(2, '0')}
-                  </span>
-                  <span className="text-xs ml-2" style={{ color: 'var(--text-muted)' }}>
-                    {entry.hour}시 · {entry.gender === 'male' ? '남' : '여'}
-                  </span>
-                </div>
-                <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                  {entry.date}
-                </span>
-              </button>
-            ))}
-          </div>
-        </section>
-      )}
+      <HistoryPanel history={history} onLoadHistory={handleHistoryClick} />
 
       <SearchModal isOpen={showSearchModal} onClose={() => setShowSearchModal(false)} />
     </div>
