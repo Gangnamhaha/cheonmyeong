@@ -20,6 +20,7 @@ import { shareSajuResult } from '@/lib/kakao'
 import { calculateFullSaju, FullSajuResult } from '@/lib/saju'
 import SajuAnimationPlayer from '@/components/SajuAnimationPlayer'
 import SajuMoviePlayer from '@/components/SajuMoviePlayer'
+import ShareCard from '@/components/ShareCard'
 import AnalysisLoading from '@/components/AnalysisLoading'
 import { useSpeechRecognition } from '@/hooks/useSpeechRecognition'
 import {
@@ -1312,6 +1313,8 @@ export default function HomeClient() {
             >
               💑 궁합 보기
             </a>
+
+            <ShareCard fullResult={fullResult} name={formData?.name || ''} />
 
             {/* 나의 사주 음악 버튼 */}
             <a
