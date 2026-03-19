@@ -51,7 +51,7 @@ export default function HeroSection({
           당신의 사주가 음악이 되고, 영상이 됩니다.
         </p>
 
-        <p className="text-xs mt-3 max-w-xs mx-auto leading-relaxed" style={{ color: 'var(--text-muted)' }}>
+        <p className="text-xs mt-3 max-w-xs mx-auto leading-relaxed" style={{ color: 'var(--text-muted)' }} suppressHydrationWarning>
           {greeting}
         </p>
       </div>
@@ -63,7 +63,7 @@ export default function HeroSection({
           className="mt-6 text-center relative z-10"
           style={{ opacity: 0, animation: 'fadeIn 0.5s ease-out 0.7s forwards' }}
         >
-          <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+          <p className="text-xs" style={{ color: 'var(--text-muted)' }} suppressHydrationWarning>
             지금까지{' '}
             <span className="stat-number font-bold text-sm">{totalCount.toLocaleString()}</span>
             회 분석 완료

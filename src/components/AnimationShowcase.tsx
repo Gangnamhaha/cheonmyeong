@@ -2,7 +2,7 @@
 
 import { useRef, useEffect, useState, lazy, Suspense } from 'react'
 import type { FullSajuResult } from '@/lib/saju'
-import lottie from 'lottie-web'
+// lottie removed (404 error on sparkle-stars.json)
 const SajuAnimationPlayer = lazy(() => import('./SajuAnimationPlayer'))
 
 const EC: Record<string, string> = { '목': '#4ade80', '화': '#f87171', '토': '#fbbf24', '금': '#e2e8f0', '수': '#60a5fa' }
@@ -264,33 +264,12 @@ function Preview({ s, index }: { s: typeof S[0]; index: number }) {
     return () => { running = false; cancelAnimationFrame(frameRef.current); observer.disconnect() }
   }, [s])
 
-  // Lottie overlay
-  const lottieRef = useRef<HTMLDivElement>(null)
-  useEffect(() => {
-    if (!lottieRef.current) return
-    const anim = lottie.loadAnimation({
-      container: lottieRef.current,
-      renderer: 'svg',
-      loop: true,
-      autoplay: true,
-      path: 'https://lottie.host/b5e1a9e3-2b0e-4e7c-8a5f-5c7b5e8f9a1e/sparkle-stars.json',
-    })
-    // Fallback: if Lottie JSON fails to load, just skip (no error)
-    anim.addEventListener('data_failed', () => anim.destroy())
-    return () => anim.destroy()
-  }, [s])
-
   return (
     <div className="relative w-full rounded-xl overflow-hidden" style={{ aspectRatio: '9/16', maxHeight: '300px' }}>
       <canvas
         ref={ref}
         className="w-full h-full"
         style={{ display: 'block' }}
-      />
-      <div
-        ref={lottieRef}
-        className="absolute inset-0 pointer-events-none opacity-30"
-        style={{ mixBlendMode: 'screen' }}
       />
     </div>
   )
