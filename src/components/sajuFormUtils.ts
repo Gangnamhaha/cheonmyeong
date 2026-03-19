@@ -119,6 +119,7 @@ export const FEATURES = [
   { icon: '📊', title: '오행·십신·용신', desc: '오행 분포도, 십신 관계도, 용신 분석까지 한눈에 확인하세요', href: '/guide/oheng' },
   { icon: '🌟', title: '대운·세운·월운', desc: '10년 대운의 흐름과 올해 세운, 이달의 월운을 분석합니다', href: '/fortune/today' },
   { icon: '💬', title: 'AI 사주 상담', desc: '사주에 대해 궁금한 점을 AI 전문가에게 자유롭게 질문하세요', href: '/saju/free' },
+  { icon: '💑', title: '궁합 분석', desc: '두 사람의 사주를 비교하고 AI가 궁합을 풀어드립니다', href: '/gunghap' },
 ]
 
 export function getHistory(): HistoryEntry[] {
