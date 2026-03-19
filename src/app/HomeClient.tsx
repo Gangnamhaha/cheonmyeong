@@ -208,6 +208,9 @@ export default function HomeClient() {
     const controller = new AbortController()
     abortRef.current = controller
 
+    // 30-second timeout
+    const timeoutId = setTimeout(() => controller.abort(), 30000)
+
     setAiLoading(true)
     setAiError(null)
     setAiInterpretation(null)
@@ -216,6 +219,7 @@ export default function HomeClient() {
       const res = await fetch('/api/interpret', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        signal: controller.signal,
         body: JSON.stringify({
           saju: result.saju,
           oheng: result.oheng,
@@ -260,9 +264,14 @@ export default function HomeClient() {
       // Cache result
       setCategoryCache(prev => ({ ...prev, [category]: accumulated }))
     } catch (err) {
-      if (err instanceof DOMException && err.name === 'AbortError') return
+      clearTimeout(timeoutId)
+      if (err instanceof DOMException && err.name === 'AbortError') {
+        setAiError('요청 시간이 초과되었습니다. 다시 시도해 주세요.')
+        return
+      }
       setAiError('네트워크 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.')
     } finally {
+      clearTimeout(timeoutId)
       setAiLoading(false)
     }
   }, [categoryCache, traditionalContext, traditionalResult, formData])
@@ -1021,7 +1030,7 @@ export default function HomeClient() {
           </>
         )}
 
-        {loading && <AnalysisLoading />}
+        {loading && <AnalysisLoading onCancel={() => { abortRef.current?.abort(); setLoading(false) }} />}
 
         {apiError && !loading && (
           <div className="mx-4 mb-8">

@@ -97,11 +97,25 @@ export default function SajuForm({ onSubmit, loading = false }: SajuFormProps) {
   const [greeting, setGreeting] = useState('사주팔자로 당신의 운명을 알아보세요')
   const [dailyQuote, setDailyQuote] = useState(QUOTES[0])
 
+  const [formError, setFormError] = useState('')
+
   useEffect(() => {
     setGreeting(getGreeting())
     setDailyQuote(getDailyQuote())
     setHistory(getHistory())
     setTotalCount(getAnalysisCount())
+    // Restore last input
+    try {
+      const saved = localStorage.getItem('sajuhae-lastInput')
+      if (saved) {
+        const d = JSON.parse(saved)
+        if (d.year) setYear(d.year)
+        if (d.month) setMonth(d.month)
+        if (d.day) setDay(d.day)
+        if (d.hour !== undefined) setHour(d.hour)
+        if (d.gender) setGender(d.gender)
+      }
+    } catch {}
     const timer = setTimeout(() => setShowForm(true), 200)
     return () => clearTimeout(timer)
   }, [])
@@ -153,6 +167,14 @@ export default function SajuForm({ onSubmit, loading = false }: SajuFormProps) {
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault()
+    setFormError('')
+    // Validation
+    const now = new Date()
+    const inputDate = new Date(year, month - 1, day)
+    if (inputDate > now) { setFormError('미래 날짜는 입력할 수 없습니다.'); return }
+    if (year < 1900 || year > 2050) { setFormError('연도는 1900~2050 사이여야 합니다.'); return }
+    // Save last input
+    try { localStorage.setItem('sajuhae-lastInput', JSON.stringify({ year, month, day, hour, gender })) } catch {}
     const useQuickDefaults = quickMode
     const submitUnknownTime = useQuickDefaults ? false : unknownTime
     const submitHour = useQuickDefaults ? 12 : hour
@@ -361,6 +383,9 @@ export default function SajuForm({ onSubmit, loading = false }: SajuFormProps) {
                 minuteOptions={minuteOptions}
                 selectClass={selectClass}
               />
+            )}
+            {formError && (
+              <p className="text-xs text-center mt-2 text-red-400">{formError}</p>
             )}
           </div>
         </section>

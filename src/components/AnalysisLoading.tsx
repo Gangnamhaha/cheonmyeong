@@ -9,7 +9,11 @@ const STEPS = [
   { icon: '🤖', label: 'AI 해석 생성 중', desc: 'AI가 맞춤 해석을 작성합니다' },
 ]
 
-export default function AnalysisLoading() {
+interface AnalysisLoadingProps {
+  onCancel?: () => void
+}
+
+export default function AnalysisLoading({ onCancel }: AnalysisLoadingProps) {
   const [currentStep, setCurrentStep] = useState(0)
 
   useEffect(() => {
@@ -67,6 +71,16 @@ export default function AnalysisLoading() {
         <div className="h-3 rounded-full animate-pulse" style={{ background: 'var(--bg-secondary)', width: '60%' }} />
         <div className="h-3 rounded-full animate-pulse" style={{ background: 'var(--bg-secondary)', width: '70%' }} />
       </div>
+
+      {onCancel && (
+        <button
+          onClick={onCancel}
+          className="mt-4 mx-auto block text-xs px-4 py-2 rounded-lg transition-all hover:opacity-80"
+          style={{ color: 'var(--text-muted)', border: '1px solid var(--border-color)' }}
+        >
+          취소
+        </button>
+      )}
     </div>
   )
 }
