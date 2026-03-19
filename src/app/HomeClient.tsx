@@ -234,7 +234,6 @@ export default function HomeClient() {
           traditionalResult: traditionalResult || undefined,
           formData: formData || undefined,
         }),
-        signal: controller.signal,
       })
 
       if (!res.ok) {
