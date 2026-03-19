@@ -42,6 +42,8 @@ export default function ThemeProvider({ children }: { children: React.ReactNode 
     const storedTheme = localStorage.getItem('sajuhae-theme') as Theme | null
     if (storedTheme === 'light' || storedTheme === 'dark') {
       setTheme(storedTheme)
+    } else if (window.matchMedia?.('(prefers-color-scheme: light)').matches) {
+      setTheme('light')
     }
     const storedFontSize = localStorage.getItem('sajuhae-fontsize') as FontSize | null
     if (storedFontSize && FONT_SIZE_ORDER.includes(storedFontSize)) {

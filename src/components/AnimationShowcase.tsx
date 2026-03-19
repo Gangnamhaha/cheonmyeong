@@ -58,9 +58,10 @@ const VIDEO_MAP: Record<number, string> = {
 
 function Preview({ s, index }: { s: typeof S[0]; index: number }) {
   const videoSrc = VIDEO_MAP[index]
+  const [videoFailed, setVideoFailed] = useState(false)
 
-  // If video exists, use <video> tag
-  if (videoSrc) {
+  // If video exists and hasn't failed (iOS Safari WebM fallback)
+  if (videoSrc && !videoFailed) {
     return (
       <div className="relative w-full rounded-xl overflow-hidden" style={{ aspectRatio: '9/16', maxHeight: '300px' }}>
         <video
@@ -70,6 +71,7 @@ function Preview({ s, index }: { s: typeof S[0]; index: number }) {
           muted
           playsInline
           className="w-full h-full object-cover"
+          onError={() => setVideoFailed(true)}
         />
       </div>
     )
