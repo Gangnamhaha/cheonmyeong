@@ -1328,59 +1328,41 @@ export default function HomeClient() {
               </>
             )}
 
-            {/* 궁합 링크 */}
-            <a
-              href="/gunghap"
-              className="block w-full text-center font-medium py-3 px-6 rounded-lg transition-colors text-sm mt-8 hover-lift"
-              style={{
-                background: 'rgba(236,72,153,0.1)',
-                color: '#f472b6',
-                border: '1px solid rgba(236,72,153,0.3)',
-              }}
-            >
-              💑 궁합 보기
-            </a>
-
-            <ShareCard fullResult={fullResult} name={formData?.name || ''} />
-
-            {/* 나의 사주 음악 버튼 */}
-            <a
-              href="/saju/music"
-              className="block w-full mt-4 font-bold py-3.5 px-4 rounded-xl text-sm text-center transition-all hover:scale-[1.02] active:scale-[0.98]"
-              style={{
-                background: 'linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%)',
-                color: '#f8fafc',
-                boxShadow: '0 4px 14px rgba(6, 182, 212, 0.3)',
-              }}
-            >
-              🎵 나의 사주 음악 듣기
-            </a>
-
-            {/* 운명 스토리 보기 버튼 */}
-            <button
-              onClick={() => setShowAnimation(true)}
-              className="w-full mt-2 font-bold py-3.5 px-4 rounded-xl text-sm transition-all hover:scale-[1.02] active:scale-[0.98]"
-              style={{
-                background: 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)',
-                color: '#1e293b',
-                boxShadow: '0 4px 14px rgba(251, 191, 36, 0.3)',
-              }}
-            >
-              ✨ 운명 스토리 보기
-            </button>
-
-            {/* 운명 애니메이션 보기 버튼 */}
-            <button
-              onClick={() => setShowMovie(true)}
-              className="w-full mt-2 font-bold py-3.5 px-4 rounded-xl text-sm transition-all hover:scale-[1.02] active:scale-[0.98]"
-              style={{
-                background: 'linear-gradient(135deg, #a855f7 0%, #6366f1 100%)',
-                color: '#f8fafc',
-                boxShadow: '0 4px 14px rgba(168, 85, 247, 0.3)',
-              }}
-            >
-              🎬 운명 애니메이션 보기
-            </button>
+            {/* ═══ 액션 버튼 (2열 그리드) ═══ */}
+            <div className="mt-6 space-y-2">
+              <p className="text-xs font-bold mb-2" style={{ color: 'var(--text-muted)' }}>더 알아보기</p>
+              <div className="grid grid-cols-2 gap-2">
+                <a
+                  href="/saju/music"
+                  className="flex items-center justify-center gap-1.5 py-3 rounded-xl text-xs font-bold transition-all hover:scale-[1.02] active:scale-[0.98]"
+                  style={{ background: 'linear-gradient(135deg, #06b6d4, #3b82f6)', color: '#f8fafc' }}
+                >
+                  🎵 사주 음악
+                </a>
+                <button
+                  onClick={() => setShowMovie(true)}
+                  className="flex items-center justify-center gap-1.5 py-3 rounded-xl text-xs font-bold transition-all hover:scale-[1.02] active:scale-[0.98]"
+                  style={{ background: 'linear-gradient(135deg, #a855f7, #6366f1)', color: '#f8fafc' }}
+                >
+                  🎬 운명 애니메이션
+                </button>
+                <button
+                  onClick={() => setShowAnimation(true)}
+                  className="flex items-center justify-center gap-1.5 py-3 rounded-xl text-xs font-bold transition-all hover:scale-[1.02] active:scale-[0.98]"
+                  style={{ background: 'linear-gradient(135deg, #fbbf24, #f59e0b)', color: '#1e293b' }}
+                >
+                  ✨ 운명 스토리
+                </button>
+                <a
+                  href="/gunghap"
+                  className="flex items-center justify-center gap-1.5 py-3 rounded-xl text-xs font-bold transition-all hover:scale-[1.02] active:scale-[0.98]"
+                  style={{ background: 'rgba(236,72,153,0.15)', color: '#f472b6', border: '1px solid rgba(236,72,153,0.3)' }}
+                >
+                  💑 궁합 보기
+                </a>
+              </div>
+              <ShareCard fullResult={fullResult} name={formData?.name || ''} />
+            </div>
 
             {/* 다운로드 + 공유 + 다시보기 버튼 */}
             <div className="grid grid-cols-2 gap-3 mt-3">
