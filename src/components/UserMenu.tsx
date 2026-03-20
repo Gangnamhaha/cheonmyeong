@@ -1,7 +1,7 @@
 'use client'
 
 import { useSession, signIn, signOut } from 'next-auth/react'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { shareReferralInvite } from '@/lib/kakao'
 
 interface CreditInfo {
@@ -25,6 +25,29 @@ export default function UserMenu() {
   const [referral, setReferral] = useState<ReferralInfo | null>(null)
   const [menuOpen, setMenuOpen] = useState(false)
   const [isHydrated, setIsHydrated] = useState(false)
+
+  // Auto-refresh session when screen unlocks / tab becomes visible
+  useEffect(() => {
+    function handleVisibilityChange() {
+      if (document.visibilityState === 'visible' && status === 'authenticated') {
+        // Trigger session refresh by fetching session
+        fetch('/api/auth/session').catch(() => {})
+      }
+    }
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
+  }, [status])
+
+  const handleLogout = useCallback(() => {
+    // Clear activity data on logout
+    try {
+      localStorage.removeItem('sajuhae-history')
+      localStorage.removeItem('sajuhae-lastInput')
+      localStorage.removeItem('sajuhae-count')
+    } catch {}
+    signOut({ callbackUrl: '/' })
+    setMenuOpen(false)
+  }, [])
 
   useEffect(() => {
     setIsHydrated(true)
@@ -313,7 +336,7 @@ export default function UserMenu() {
               ✨ 크레딧 충전하기
             </a>
             <button
-              onClick={() => { signOut(); setMenuOpen(false) }}
+              onClick={handleLogout}
               className="block w-full text-left px-4 py-2.5 text-sm hover:opacity-80 transition-opacity"
               style={{ color: 'var(--text-muted)' }}
             >
