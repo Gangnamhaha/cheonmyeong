@@ -23,6 +23,17 @@ interface ParsedPaymentData {
   plan: PlanKey
 }
 
+function parsePlanFromPayStylePaymentId(paymentId: string): PlanKey | null {
+  // paymentId format from /api/portone: pay-${plan}-${shortId}
+  if (!paymentId.startsWith('pay-')) return null
+  const rest = paymentId.slice('pay-'.length)
+  const lastDash = rest.lastIndexOf('-')
+  if (lastDash <= 0) return null
+  const planCandidate = rest.slice(0, lastDash)
+  if (!(planCandidate in PLANS)) return null
+  return planCandidate as PlanKey
+}
+
 /**
  * Parse V2 paymentId format: payment__${plan}__${userToken}__${timestamp}
  */
@@ -96,6 +107,14 @@ export async function POST(req: NextRequest) {
       parseCustomData(payment.customData)
     if (!parsedData) {
       return NextResponse.json({ error: 'paymentId 또는 customData 파싱 실패' }, { status: 400 })
+    }
+
+    const planFromPaymentId = parsePlanFromPayStylePaymentId(paymentId)
+    if (planFromPaymentId && planFromPaymentId !== parsedData.plan) {
+      return NextResponse.json(
+        { error: '결제 요금제 정보가 일치하지 않습니다.' },
+        { status: 400 },
+      )
     }
 
     // Verify payment amount matches plan
