@@ -333,7 +333,11 @@ export default function GunghapPage() {
       })
 
       if (!verifyRes.ok) {
-        setPremiumError('결제 검증에 실패했습니다. 다시 시도해 주세요.')
+        const verifyData = await verifyRes.json().catch(() => null)
+        setPremiumError(
+          (verifyData && typeof verifyData.error === 'string' && verifyData.error) ||
+            '결제 검증에 실패했습니다. 다시 시도해 주세요.',
+        )
         return
       }
 

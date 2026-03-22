@@ -161,7 +161,11 @@ function PricingContent() {
         fetchSubscription()
         window.history.replaceState({}, '', '/pricing')
       } else {
-        showToast('결제 검증에 실패했습니다. 고객센터에 문의해 주세요.')
+        const verifyData = await verifyRes.json().catch(() => null)
+        showToast(
+          (verifyData && typeof verifyData.error === 'string' && verifyData.error) ||
+            '결제 검증에 실패했습니다. 고객센터에 문의해 주세요.',
+        )
       }
     } catch {
       showToast('결제 검증 중 오류가 발생했습니다.')
