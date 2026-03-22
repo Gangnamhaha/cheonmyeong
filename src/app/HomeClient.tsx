@@ -17,7 +17,7 @@ import DailyFortuneCard from '@/components/DailyFortuneCard'
 import { useTheme } from '@/components/ThemeProvider'
 import { trackAnalysis, trackPurchase, trackShare } from '@/lib/analytics'
 import { shareSajuResult } from '@/lib/kakao'
-import { calculateFullSaju, FullSajuResult } from '@/lib/saju'
+import { FullSajuResult } from '@/lib/saju'
 import SajuAnimationPlayer from '@/components/SajuAnimationPlayer'
 import SajuMoviePlayer from '@/components/SajuMoviePlayer'
 import ShareCard from '@/components/ShareCard'
@@ -195,12 +195,16 @@ export default function HomeClient() {
     try {
       const creditRes = await fetch('/api/credits', { method: 'POST' })
       if (!creditRes.ok) {
-        const creditData = await creditRes.json()
-        setAiError(creditData.error ?? '크레딧이 부족합니다.')
+        const creditData = await creditRes.json().catch(() => null)
+        setAiError(
+          (creditData && typeof creditData.error === 'string' && creditData.error) ||
+            '크레딧이 부족합니다.',
+        )
         return
       }
     } catch {
-      // Credit check failed, proceed anyway (graceful degradation)
+      setAiError('크레딧 확인 중 네트워크 오류가 발생했습니다. 다시 시도해 주세요.')
+      return
     }
 
     // Abort previous request
@@ -237,8 +241,28 @@ export default function HomeClient() {
       })
 
       if (!res.ok) {
-        const data = await res.json()
-        setAiError(data.error ?? 'AI 해석 중 오류가 발생했습니다.')
+        const contentType = res.headers.get('content-type') ?? ''
+        if (contentType.includes('application/json')) {
+          const data = await res.json().catch(() => null)
+          setAiError(
+            (data && typeof data.error === 'string' && data.error) ||
+              'AI 해석 중 오류가 발생했습니다.',
+          )
+          return
+        }
+        const text = await res.text().catch(() => '')
+        setAiError(text || 'AI 해석 중 오류가 발생했습니다.')
+        return
+      }
+
+      const okContentType = res.headers.get('content-type') ?? ''
+      if (!okContentType.includes('text/plain')) {
+        // Unexpected success payload (e.g. JSON)
+        const data = await res.json().catch(() => null)
+        setAiError(
+          (data && typeof data.error === 'string' && data.error) ||
+            'AI 응답 형식이 올바르지 않습니다. 잠시 후 다시 시도해 주세요.',
+        )
         return
       }
 
@@ -300,10 +324,33 @@ export default function HomeClient() {
     setResultId(null)
 
     try {
-      const result = calculateFullSaju(
-        data.year, data.month, data.day, data.hour, data.minute,
-        data.calendarType, data.isLeapMonth, data.gender,
-      )
+      const calcRes = await fetch('/api/saju/calculate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          year: data.year,
+          month: data.month,
+          day: data.day,
+          hour: data.hour,
+          minute: data.minute,
+          calendarType: data.calendarType,
+          isLeapMonth: data.isLeapMonth,
+          gender: data.gender,
+        }),
+      })
+
+      const calcData = await calcRes.json().catch(() => null)
+      if (!calcRes.ok) {
+        const msg =
+          calcData && typeof calcData.error === 'string'
+            ? calcData.error
+            : '사주 계산에 실패했습니다.'
+        setApiError(msg)
+        setCalcError(msg)
+        return
+      }
+
+      const result = calcData as FullSajuResult
 
       const traditional = getTraditionalInterpretation(result, data.gender)
       const context = toTraditionalContextText(traditional, 500)
