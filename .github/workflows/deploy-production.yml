@@ -1,14 +1,16 @@
 name: Deploy (production)
 
 on:
-  push:
-    branches:
-      - master
+  workflow_run:
+    workflows: ['CI']
+    branches: [master]
+    types:
+      - completed
   workflow_dispatch:
 
 jobs:
   deploy:
-    if: ${{ secrets.VERCEL_TOKEN != '' && secrets.VERCEL_PROJECT_ID != '' && secrets.VERCEL_TEAM_ID != '' && secrets.VERCEL_PROJECT_NAME != '' }}
+    if: ${{ (github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success') && secrets.VERCEL_TOKEN != '' && secrets.VERCEL_PROJECT_ID != '' && secrets.VERCEL_TEAM_ID != '' && secrets.VERCEL_PROJECT_NAME != '' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
