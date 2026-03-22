@@ -58,6 +58,7 @@ const parseCustomData = (customData?: string): ParsedPaymentData | null => {
 }
 
 export async function POST(req: NextRequest) {
+  let lockKey: string | null = null
   try {
     const body = await req.json()
     // V2: paymentId from frontend verify or PortOne server webhook
@@ -73,6 +74,13 @@ export async function POST(req: NextRequest) {
     if (idempotencyRedis) {
       const already = await idempotencyRedis.get(`payment:done:${paymentId}`)
       if (already) {
+        return NextResponse.json({ received: true, duplicate: true })
+      }
+
+      // Prevent concurrent processing of the same paymentId
+      lockKey = `payment:lock:${paymentId}`
+      const locked = await idempotencyRedis.set(lockKey, '1', { nx: true, ex: 600 })
+      if (!locked) {
         return NextResponse.json({ received: true, duplicate: true })
       }
     }
@@ -112,10 +120,6 @@ export async function POST(req: NextRequest) {
       return res
     }
 
-    // Mark processed (idempotency) + record to DB
-    if (idempotencyRedis) {
-      await idempotencyRedis.set(`payment:done:${paymentId}`, '1', { ex: 86400 * 30 })
-    }
     const supabase = getSupabase()
 
     const getReceiptTarget = async (): Promise<{ email: string | null; name: string }> => {
@@ -214,6 +218,11 @@ export async function POST(req: NextRequest) {
         console.error('Receipt email send failed:', emailError)
       }
 
+      if (idempotencyRedis) {
+        await idempotencyRedis.set(`payment:done:${paymentId}`, '1', { ex: 86400 * 30 })
+        if (lockKey) await idempotencyRedis.del(lockKey)
+      }
+
       return buildResponse({ received: true, type: 'subscription' })
     }
 
@@ -230,6 +239,11 @@ export async function POST(req: NextRequest) {
         console.error('Receipt email send failed:', emailError)
       }
 
+      if (idempotencyRedis) {
+        await idempotencyRedis.set(`payment:done:${paymentId}`, '1', { ex: 86400 * 30 })
+        if (lockKey) await idempotencyRedis.del(lockKey)
+      }
+
       return buildResponse({ received: true, type: 'report' })
     }
 
@@ -241,9 +255,22 @@ export async function POST(req: NextRequest) {
       console.error('Receipt email send failed:', emailError)
     }
 
+    if (idempotencyRedis) {
+      await idempotencyRedis.set(`payment:done:${paymentId}`, '1', { ex: 86400 * 30 })
+      if (lockKey) await idempotencyRedis.del(lockKey)
+    }
+
     return buildResponse({ received: true, type: 'onetime' })
   } catch (error) {
     console.error('PortOne webhook handling error:', error)
     return NextResponse.json({ error: 'PortOne webhook 처리 중 오류가 발생했습니다.' }, { status: 500 })
+  } finally {
+    if (idempotencyRedis && lockKey) {
+      try {
+        await idempotencyRedis.del(lockKey)
+      } catch {
+        // ignore
+      }
+    }
   }
 }
