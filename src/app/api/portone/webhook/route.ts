@@ -63,6 +63,7 @@ export async function POST(req: NextRequest) {
     // V2: paymentId from frontend verify or PortOne server webhook
     const paymentId = (body.paymentId ?? body.data?.paymentId) as string | undefined
     const isGuest = body.isGuest === true
+    const customDataFromBody = (body.customData ?? body.data?.customData) as string | undefined
 
     if (!paymentId) {
       return NextResponse.json({ error: 'paymentId가 필요합니다.' }, { status: 400 })
@@ -81,7 +82,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ received: true, ignored: true, status: payment.status })
     }
 
-    const parsedData = parsePaymentId(payment.id) ?? parseCustomData(payment.customData)
+    const parsedData =
+      parsePaymentId(payment.id) ??
+      parseCustomData(customDataFromBody) ??
+      parseCustomData(payment.customData)
     if (!parsedData) {
       return NextResponse.json({ error: 'paymentId 또는 customData 파싱 실패' }, { status: 400 })
     }
