@@ -5,6 +5,11 @@ import { PLANS, refillSubscriptionCredits, type SubscriptionPlanKey } from '@/li
 import { createSubscription, getSubscription, updateSubscription } from '@/lib/subscription'
 import { payWithBillingKey } from '@/lib/portone'
 import { getSupabase } from '@/lib/db'
+import { Redis } from '@upstash/redis'
+
+const _redisUrl = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL
+const _redisToken = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN
+const idempotencyRedis = _redisUrl && _redisToken ? new Redis({ url: _redisUrl, token: _redisToken }) : null
 
 /**
  * POST /api/portone/billing/pay
@@ -34,11 +39,36 @@ export async function POST(req: NextRequest) {
   const userId = (session.user as Record<string, unknown>).id as string
   const planInfo = PLANS[plan]
 
+  const idempotencyKey = `billing:first:${userId}:${plan}:${billingKey}`
+  let lockKey: string | null = null
+
   // Generate paymentId for the first charge
   const shortId = Date.now().toString(36) + Math.random().toString(36).slice(2, 6)
   const paymentId = `sub-${plan}-${shortId}`
 
   try {
+    // Idempotency: skip duplicate retries and prevent concurrent double charge
+    if (idempotencyRedis) {
+      const already = await idempotencyRedis.get(`billing:done:${idempotencyKey}`)
+      if (already) {
+        return NextResponse.json({
+          success: true,
+          duplicate: true,
+          plan,
+        })
+      }
+
+      lockKey = `billing:lock:${idempotencyKey}`
+      const locked = await idempotencyRedis.set(lockKey, '1', { nx: true, ex: 300 })
+      if (!locked) {
+        return NextResponse.json({
+          success: true,
+          duplicate: true,
+          plan,
+        })
+      }
+    }
+
     // Execute first payment with billingKey
     const payment = await payWithBillingKey({
       paymentId,
@@ -106,6 +136,11 @@ export async function POST(req: NextRequest) {
     // Refill credits
     await refillSubscriptionCredits(userId, plan)
 
+    if (idempotencyRedis) {
+      await idempotencyRedis.set(`billing:done:${idempotencyKey}`, '1', { ex: 600 })
+      if (lockKey) await idempotencyRedis.del(lockKey)
+    }
+
     return NextResponse.json({
       success: true,
       paymentId,
@@ -118,5 +153,13 @@ export async function POST(req: NextRequest) {
       { error: error instanceof Error ? error.message : '결제 처리 중 오류가 발생했습니다.' },
       { status: 500 }
     )
+  } finally {
+    if (idempotencyRedis && lockKey) {
+      try {
+        await idempotencyRedis.del(lockKey)
+      } catch {
+        // ignore
+      }
+    }
   }
 }
