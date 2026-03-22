@@ -60,29 +60,14 @@ function Preview({ s, index }: { s: typeof S[0]; index: number }) {
   const videoSrc = VIDEO_MAP[index]
   const [videoFailed, setVideoFailed] = useState(false)
 
-  // If video exists and hasn't failed (iOS Safari WebM fallback)
-  if (videoSrc && !videoFailed) {
-    return (
-      <div className="relative w-full rounded-xl overflow-hidden" style={{ aspectRatio: '9/16', maxHeight: '300px' }}>
-        <video
-          src={videoSrc}
-          autoPlay
-          loop
-          muted
-          playsInline
-          className="w-full h-full object-cover"
-          onError={() => setVideoFailed(true)}
-        />
-      </div>
-    )
-  }
-
-  // Fallback: Canvas animation for genres without video
   const ref = useRef<HTMLCanvasElement>(null)
   const frameRef = useRef(0)
   const timeRef = useRef(0)
 
+  const shouldUseCanvas = !videoSrc || videoFailed
+
   useEffect(() => {
+    if (!shouldUseCanvas) return
     const c = ref.current; if (!c) return
     const context = c.getContext('2d')
     if (context === null) return
@@ -264,15 +249,28 @@ function Preview({ s, index }: { s: typeof S[0]; index: number }) {
     }
     draw()
     return () => { running = false; cancelAnimationFrame(frameRef.current); observer.disconnect() }
-  }, [s])
+  }, [s, shouldUseCanvas])
 
   return (
     <div className="relative w-full rounded-xl overflow-hidden" style={{ aspectRatio: '9/16', maxHeight: '300px' }}>
-      <canvas
-        ref={ref}
-        className="w-full h-full"
-        style={{ display: 'block' }}
-      />
+      {!shouldUseCanvas && (
+        <video
+          src={videoSrc}
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="w-full h-full object-cover"
+          onError={() => setVideoFailed(true)}
+        />
+      )}
+      {shouldUseCanvas && (
+        <canvas
+          ref={ref}
+          className="w-full h-full"
+          style={{ display: 'block' }}
+        />
+      )}
     </div>
   )
 }
