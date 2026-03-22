@@ -83,7 +83,7 @@ export async function POST(req: NextRequest) {
     }
 
     const parsedData =
-      parsePaymentId(payment.id) ??
+      parsePaymentId(paymentId) ??
       parseCustomData(customDataFromBody) ??
       parseCustomData(payment.customData)
     if (!parsedData) {
