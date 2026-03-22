@@ -25,6 +25,24 @@ function getClientIp(req: NextRequest): string {
   return req.ip ?? '127.0.0.1'
 }
 
+function getOpenAIErrorStatus(err: unknown): number | null {
+  if (!err || typeof err !== 'object') return null
+  const maybe = err as Record<string, unknown>
+  return typeof maybe.status === 'number' ? maybe.status : null
+}
+
+function getOpenAIErrorCode(err: unknown): string | null {
+  if (!err || typeof err !== 'object') return null
+  const maybe = err as Record<string, unknown>
+  if (typeof maybe.code === 'string') return maybe.code
+  const inner = maybe.error
+  if (inner && typeof inner === 'object') {
+    const innerObj = inner as Record<string, unknown>
+    if (typeof innerObj.code === 'string') return innerObj.code
+  }
+  return null
+}
+
 const SYSTEM_PROMPT = `당신은 20년 경력의 한국 명리학(사주팔자) 전문가입니다.
 사주, 오행, 음양, 십신, 용신, 대운, 궁합 등 명리학 전반에 대한 질문에 답변합니다.
 
@@ -52,6 +70,12 @@ export async function POST(req: NextRequest) {
   if (!apiKey) {
     return NextResponse.json(
       { error: 'AI 서비스가 준비되지 않았습니다.' },
+      { status: 500 },
+    )
+  }
+  if (!apiKey.startsWith('sk-')) {
+    return NextResponse.json(
+      { error: 'OpenAI API 키 형식이 올바르지 않습니다.' },
       { status: 500 },
     )
   }
@@ -102,8 +126,8 @@ export async function POST(req: NextRequest) {
               }
               // Accumulate token usage from stream
               if (chunk.usage) {
-                totalInputTokens = chunk.usage.prompt_tokens || 0
-                totalOutputTokens = chunk.usage.completion_tokens || 0
+                totalInputTokens += chunk.usage.prompt_tokens || 0
+                totalOutputTokens += chunk.usage.completion_tokens || 0
               }
             }
             
@@ -136,6 +160,23 @@ export async function POST(req: NextRequest) {
     )
   } catch (err) {
     console.error('Ask API error:', err)
+    const status = getOpenAIErrorStatus(err)
+    const code = getOpenAIErrorCode(err)
+
+    if (status === 401 || code === 'invalid_api_key') {
+      return NextResponse.json(
+        { error: 'OpenAI API 키가 올바르지 않습니다. 관리자에게 문의해 주세요.' },
+        { status: 401 },
+      )
+    }
+
+    if (status === 429) {
+      return NextResponse.json(
+        { error: 'AI 요청이 많아 일시적으로 지연되고 있습니다. 잠시 후 다시 시도해 주세요.' },
+        { status: 429 },
+      )
+    }
+
     return NextResponse.json(
       { error: 'AI 응답 중 오류가 발생했습니다.' },
       { status: 500 },
