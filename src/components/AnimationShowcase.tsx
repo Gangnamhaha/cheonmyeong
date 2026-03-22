@@ -67,6 +67,10 @@ function Preview({ s, index }: { s: typeof S[0]; index: number }) {
   const shouldUseCanvas = !videoSrc || videoFailed
 
   useEffect(() => {
+    setVideoFailed(false)
+  }, [index])
+
+  useEffect(() => {
     if (!shouldUseCanvas) return
     const c = ref.current; if (!c) return
     const context = c.getContext('2d')
@@ -288,6 +292,15 @@ export default function AnimationShowcase() {
   const [idx, setIdx] = useState(0)
   const [auto, setAuto] = useState(true)
   const [play, setPlay] = useState(false)
+  const resumeAutoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (resumeAutoTimerRef.current) {
+        clearTimeout(resumeAutoTimerRef.current)
+      }
+    }
+  }, [])
 
   // Auto-cycle through 6 samples every 20 seconds (4 scenes × 5s each)
   useEffect(() => {
@@ -316,7 +329,17 @@ export default function AnimationShowcase() {
           {GENRES.map((g, i) => (
             <button
               key={i}
-              onClick={() => { setIdx(i); setAuto(false); setTimeout(() => setAuto(true), 70000) }}
+              onClick={() => {
+                setIdx(i)
+                setAuto(false)
+                if (resumeAutoTimerRef.current) {
+                  clearTimeout(resumeAutoTimerRef.current)
+                }
+                resumeAutoTimerRef.current = setTimeout(() => {
+                  setAuto(true)
+                  resumeAutoTimerRef.current = null
+                }, 70000)
+              }}
               className="rounded-xl p-2.5 text-center transition-all"
               style={{
                 background: i === idx ? g.color + '18' : 'var(--bg-secondary)',
