@@ -64,7 +64,8 @@ function lunarToSolarSafe(
 ): { year: number; month: number; day: number } {
   // 음력 날짜 근처의 양력 날짜를 탐색하여 역변환
   const baseDate = new Date(lunarYear, lunarMonth - 1, lunarDay)
-  for (let offset = -15; offset <= 45; offset++) {
+  // 음력↔양력 변환은 연말/연초 경계에서 offset이 커질 수 있어 여유 범위를 둡니다.
+  for (let offset = -90; offset <= 90; offset++) {
     const testDate = new Date(baseDate.getTime() + offset * 86400000)
     const sy = testDate.getFullYear()
     const sm = testDate.getMonth() + 1
