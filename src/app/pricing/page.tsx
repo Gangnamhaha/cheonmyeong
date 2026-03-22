@@ -143,12 +143,16 @@ function PricingContent() {
   }
 
   // Verify payment (called after V2 SDK success or mobile redirect)
-  async function verifyPayment(paymentId: string, isGuest = false) {
+  async function verifyPayment(paymentId: string, isGuest = false, customData?: string) {
     try {
       const verifyRes = await fetch('/api/portone/webhook', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ paymentId, isGuest }),
+        body: JSON.stringify({
+          paymentId,
+          isGuest,
+          ...(customData ? { customData } : {}),
+        }),
       })
       if (verifyRes.ok) {
         showToast('결제가 완료되었습니다! 🎉', 5000)
@@ -201,6 +205,8 @@ function PricingContent() {
 
       const data = await res.json()
 
+      const customData = JSON.stringify({ userId: data.userId, plan: planKey })
+
       // 2. Check V2 SDK loaded
       if (!window.PortOne) {
         showToast('결제 모듈을 로딩 중입니다. 잠시 후 다시 시도해 주세요.')
@@ -222,7 +228,7 @@ function PricingContent() {
           email: session?.user?.email || guestEmail.trim() || undefined,
           fullName: session?.user?.name || undefined,
         },
-        customData: JSON.stringify({ userId: data.userId, plan: planKey }),
+        customData,
       }
 
       // Add easyPay provider for KakaoPay
@@ -242,7 +248,7 @@ function PricingContent() {
       }
 
       // 5. Verify on server
-      await verifyPayment(data.paymentId, isGuest)
+      await verifyPayment(data.paymentId, isGuest, customData)
     } catch {
       showToast('네트워크 오류가 발생했습니다.')
     } finally {

@@ -780,7 +780,11 @@ export default function HomeClient() {
       const verifyRes = await fetch('/api/portone/webhook', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ paymentId: paymentData.paymentId, isGuest }),
+        body: JSON.stringify({
+          paymentId: paymentData.paymentId,
+          isGuest,
+          customData: JSON.stringify({ userId: paymentData.userId, plan }),
+        }),
       })
 
       if (!verifyRes.ok) {
