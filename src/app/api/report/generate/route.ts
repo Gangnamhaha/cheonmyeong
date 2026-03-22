@@ -397,7 +397,6 @@ export async function POST(req: NextRequest) {
         report_content: interpretations,
         status: 'completed',
         amount: expectedAmount,
-        tier,
       })
       .select('id')
       .single()

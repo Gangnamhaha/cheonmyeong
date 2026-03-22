@@ -25,7 +25,7 @@ export async function GET(_: Request, { params }: { params: { id: string } }) {
 
   const { data, error } = await supabase
     .from('premium_reports')
-    .select('id, form_data, saju_data, report_content, tier')
+    .select('id, form_data, saju_data, report_content')
     .eq('id', params.id)
     .single()
 
@@ -36,7 +36,7 @@ export async function GET(_: Request, { params }: { params: { id: string } }) {
   const interpretations = (data.report_content ?? {}) as Partial<Record<ProCategory | GunghapCategory, string>>
   const formData = (data.form_data ?? {}) as Record<string, unknown>
   const sajuData = data.saju_data
-  const reportTier = data.tier === 'gunghap' || formData.reportTier === 'gunghap'
+  const reportTier = formData.reportTier === 'gunghap'
     ? 'gunghap'
     : formData.reportTier === 'pro'
       ? 'pro'
