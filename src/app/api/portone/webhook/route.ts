@@ -217,6 +217,22 @@ export async function POST(req: NextRequest) {
       return buildResponse({ received: true, type: 'subscription' })
     }
 
+    const isReportPurchase =
+      (parsedData.plan === 'premium_report' ||
+        parsedData.plan === 'premium_report_pro' ||
+        parsedData.plan === 'gunghap_premium') &&
+      planInfo.credits === 0
+
+    if (isReportPurchase) {
+      try {
+        await sendReceipt()
+      } catch (emailError) {
+        console.error('Receipt email send failed:', emailError)
+      }
+
+      return buildResponse({ received: true, type: 'report' })
+    }
+
     await addCredits(parsedData.userId, parsedData.plan as OnetimePlanKey)
 
     try {
