@@ -17,7 +17,7 @@ const idempotencyRedis = _redisUrl && _redisToken ? new Redis({ url: _redisUrl, 
  * it sends billingKey + plan here to:
  * 1. Store billingKey in subscription record
  * 2. Execute first payment via billingKey
- * 3. Create/update subscription + refill credits
+ * 3. Create/update subscription + issue monthly usage pass
  */
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions)
@@ -133,7 +133,7 @@ export async function POST(req: NextRequest) {
       })
     }
 
-    // Refill credits
+    // Issue monthly usage pass
     await refillSubscriptionCredits(userId, plan)
 
     if (idempotencyRedis) {

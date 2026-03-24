@@ -107,7 +107,7 @@ function PricingContent() {
   useEffect(() => {
     if (success && planParam) {
       const plan = PLANS[planParam as PlanKey]
-      if (plan) showToast(`${plan.name} 크레딧 ${plan.credits}회가 충전되었습니다! 🎉`, 5000)
+      if (plan) showToast(`${plan.name} 이용권 ${plan.credits}회가 지급되었습니다! 🎉`, 5000)
     }
     if (cancelled) showToast('결제가 취소되었습니다.')
   }, [success, cancelled, planParam, showToast])
@@ -346,7 +346,7 @@ function PricingContent() {
         amount: PLANS[planKey].price,
       })
 
-      showToast('구독이 시작되었습니다! 크레딧이 충전되었습니다.', 5000)
+      showToast('구독이 시작되었습니다! 이용권이 지급되었습니다.', 5000)
       fetchSubscription()
     } catch {
       showToast('네트워크 오류가 발생했습니다.')
@@ -357,7 +357,7 @@ function PricingContent() {
 
   // Subscription cancel
   async function handleCancelSubscription() {
-    if (!confirm('정말 구독을 취소하시겠습니까? 현재 기간 종료 후 크레딧이 갱신되지 않습니다.')) return
+    if (!confirm('정말 구독을 취소하시겠습니까? 현재 기간 종료 후 이용권이 갱신되지 않습니다.')) return
     setCancelingSubscription(true)
     try {
       const res = await fetch('/api/subscription', {
@@ -414,12 +414,12 @@ function PricingContent() {
             요금제
           </h1>
           <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-            AI 사주 해석 크레딧을 충전하세요
+            AI 사주 해석 이용권을 구매하세요
           </p>
           {credits && credits.remaining > 0 && (
             <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-full"
               style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)' }}>
-              <span className="text-xs" style={{ color: 'var(--text-muted)' }}>현재 크레딧</span>
+              <span className="text-xs" style={{ color: 'var(--text-muted)' }}>현재 이용권</span>
               <span className="text-sm font-bold" style={{ color: 'var(--text-accent)' }}>
                 {credits.remaining}회
               </span>
@@ -456,7 +456,7 @@ function PricingContent() {
                 </p>
               </div>
               <div>
-                <span style={{ color: 'var(--text-muted)' }}>남은 크레딧</span>
+                <span style={{ color: 'var(--text-muted)' }}>남은 이용권</span>
                 <p className="font-medium" style={{ color: 'var(--text-accent)' }}>
                   {credits?.remaining ?? 0}회
                 </p>
@@ -547,8 +547,8 @@ function PricingContent() {
            >
              <p className="text-xs text-center" style={{ color: 'var(--text-secondary)' }}>
                {planMode === 'annual' 
-                 ? '연간 구독은 카드결제만 지원됩니다. 매월 크레딧이 자동 충전됩니다.'
-                 : '구독은 카드결제만 지원됩니다.'}
+                  ? '연간 구독은 카드결제만 지원됩니다. 매월 이용권이 자동 지급됩니다.'
+                  : '구독은 카드결제만 지원됩니다.'}
              </p>
            </div>
          )}
@@ -575,7 +575,7 @@ function PricingContent() {
               }}
             />
             <p className="text-[10px] mt-1.5" style={{ color: 'var(--text-muted)' }}>
-              나중에 같은 이메일로 회원가입하면 크레딧이 자동 연동됩니다.
+              나중에 같은 이메일로 회원가입하면 이용권이 자동 연동됩니다.
             </p>
           </div>
         )}
@@ -625,12 +625,12 @@ function PricingContent() {
                       {isSubscription && (
                         <span className="text-[10px] px-2 py-0.5 rounded-full font-medium"
                           style={{ background: 'var(--bg-secondary)', color: 'var(--text-accent)', border: '1px solid var(--border-color)' }}>
-                          매월 자동 충전
+                          매월 자동 지급
                         </span>
                       )}
                     </div>
                     <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                      크레딧 {plan.credits}회{isSubscription ? '/월' : ''}
+                      이용권 {plan.credits}회{isSubscription ? '/월' : ''}
                     </p>
                   </div>
                   <span className="text-xl font-bold" style={{ color: 'var(--text-accent)' }}>
@@ -662,7 +662,7 @@ function PricingContent() {
                       ? '현재 플랜'
                       : isSubscription
                         ? '구독 시작'
-                        : '크레딧 충전'}
+                        : '이용권 구매'}
                 </button>
               </div>
             )
@@ -693,7 +693,7 @@ function PricingContent() {
         {/* Note */}
         <div className="mt-8 text-center">
           <p className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>
-            크레딧은 만료되지 않으며, AI 해석 1회당 1크레딧이 차감됩니다.<br />
+            이용권은 만료되지 않으며, AI 해석 1회당 1회가 차감됩니다.<br />
             토스페이먼츠를 통해 안전하게 결제됩니다. (카드, 간편결제 지원)
           </p>
         </div>

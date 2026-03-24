@@ -29,7 +29,7 @@ const SEARCH_ITEMS: SearchItem[] = [
   { title: '오행 가이드', description: '오행의 의미와 관계', path: '/guide/oheng', category: '가이드', keywords: ['오행', '목', '화', '토', '금', '수'] },
   { title: '띠별 운세', description: '12띠별 운세 보기', path: '/fortune/ddi/rat', category: '운세', keywords: ['띠', '쥐', '소', '호랑이', '토끼'] },
   { title: '별자리 운세', description: '12별자리 운세', path: '/fortune/zodiac/aries', category: '운세', keywords: ['별자리', '양자리', '처녀자리'] },
-  { title: '요금제', description: '구독 및 크레딧 요금', path: '/pricing', category: '서비스', keywords: ['요금', '가격', '구독', '프리미엄'] },
+  { title: '요금제', description: '구독 및 이용권 요금', path: '/pricing', category: '서비스', keywords: ['요금', '가격', '구독', '프리미엄'] },
   { title: '고객 문의', description: '문의 및 피드백', path: '/inquiry', category: '서비스', keywords: ['문의', '고객', '피드백', '연락'] },
   { title: '블로그', description: '사주 관련 글 모음', path: '/blog', category: '콘텐츠', keywords: ['블로그', '글', '정보'] },
   { title: '무료 사주 풀이', description: '무료 AI 사주 분석', path: '/saju/free', category: '사주', keywords: ['무료', '사주', '풀이'] },

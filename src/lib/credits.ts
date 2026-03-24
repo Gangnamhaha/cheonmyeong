@@ -1,15 +1,15 @@
 /**
- * Credit management system
+ * Usage pass management system
  * 
  * Storage strategy:
  * - Production (Upstash Redis): Persistent across cold starts
  * - Development fallback: In-memory Map (when REDIS_URL not set)
  * 
- * Credit tiers:
+ * Usage pass tiers:
  * - Free: 3 AI interpretations per day (no login required)
- * - Starter: 30 credits (₩3,900)
- * - Pro: 100 credits (₩9,900)
- * - Unlimited: 500 credits (₩29,900)
+ * - Starter: 30 passes (₩3,900)
+ * - Pro: 100 passes (₩9,900)
+ * - Unlimited: 500 passes (₩29,900)
  */
 
 import { Redis } from '@upstash/redis'
@@ -40,7 +40,7 @@ export const PLANS = {
     credits: 30,
     price: 3900,
     priceLabel: '₩3,900',
-    features: ['AI 해석 30회', '모든 카테고리 해석', '후속 질문 가능', '궁합 분석'],
+    features: ['AI 해석 이용권 30회', '모든 카테고리 해석', '후속 질문 가능', '궁합 분석'],
     popular: false,
     type: 'onetime' as const,
     stripePriceId: process.env.STRIPE_PRICE_STARTER || null,
@@ -51,7 +51,7 @@ export const PLANS = {
     credits: 100,
     price: 9900,
     priceLabel: '₩9,900',
-    features: ['AI 해석 100회', '모든 카테고리 해석', '무제한 후속 질문', '궁합 분석', '대운 상세 해석'],
+    features: ['AI 해석 이용권 100회', '모든 카테고리 해석', '무제한 후속 질문', '궁합 분석', '대운 상세 해석'],
     popular: true,
     type: 'onetime' as const,
     stripePriceId: process.env.STRIPE_PRICE_PRO || null,
@@ -95,7 +95,7 @@ export const PLANS = {
     credits: 500,
     price: 29900,
     priceLabel: '₩29,900',
-    features: ['AI 해석 500회', '모든 기능 무제한', '우선 응답', '월간 운세 리포트'],
+    features: ['AI 해석 이용권 500회', '모든 기능 무제한', '우선 응답', '월간 운세 리포트'],
     popular: false,
     type: 'onetime' as const,
     stripePriceId: process.env.STRIPE_PRICE_UNLIMITED || null,
@@ -106,7 +106,7 @@ export const PLANS = {
     credits: 50,
     price: 4900,
     priceLabel: '₩4,900/월',
-    features: ['매월 50회 크레딧 자동 충전', '모든 카테고리 해석', '후속 질문 가능', '궁합 분석'],
+    features: ['매월 50회 이용권 자동 지급', '모든 카테고리 해석', '후속 질문 가능', '궁합 분석'],
     popular: false,
     type: 'subscription' as const,
     stripePriceId: process.env.STRIPE_PRICE_SUB_BASIC || null,
@@ -118,7 +118,7 @@ export const PLANS = {
     credits: 150,
     price: 9900,
     priceLabel: '₩9,900/월',
-    features: ['매월 150회 크레딧 자동 충전', '모든 기능 무제한', '대운 상세 해석', '우선 응답'],
+    features: ['매월 150회 이용권 자동 지급', '모든 기능 무제한', '대운 상세 해석', '우선 응답'],
     popular: true,
     type: 'subscription' as const,
     stripePriceId: process.env.STRIPE_PRICE_SUB_PRO || null,
@@ -130,7 +130,7 @@ export const PLANS = {
     credits: 500,
     price: 19900,
     priceLabel: '₩19,900/월',
-    features: ['매월 500회 크레딧 자동 충전', '모든 기능 무제한', '우선 응답', '월간 운세 리포트', '1:1 상담'],
+    features: ['매월 500회 이용권 자동 지급', '모든 기능 무제한', '우선 응답', '월간 운세 리포트', '1:1 상담'],
     popular: false,
     type: 'subscription' as const,
     stripePriceId: process.env.STRIPE_PRICE_SUB_PREMIUM || null,
@@ -142,7 +142,7 @@ export const PLANS = {
     credits: 50,
     price: 47000,
     priceLabel: '₩47,000/년',
-    features: ['매월 50회 크레딧 자동 충전', '모든 카테고리 해석', '후속 질문 가능', '궁합 분석', '월 ₩3,917 (20% 할인)'],
+    features: ['매월 50회 이용권 자동 지급', '모든 카테고리 해석', '후속 질문 가능', '궁합 분석', '월 ₩3,917 (20% 할인)'],
     popular: false,
     type: 'subscription' as const,
     stripePriceId: process.env.STRIPE_PRICE_SUB_BASIC_ANNUAL || null,
@@ -154,30 +154,30 @@ export const PLANS = {
     credits: 150,
     price: 95000,
     priceLabel: '₩95,000/년',
-    features: ['매월 150회 크레딧 자동 충전', '모든 기능 무제한', '대운 상세 해석', '우선 응답', '월 ₩7,917 (20% 할인)'],
+    features: ['매월 150회 이용권 자동 지급', '모든 기능 무제한', '대운 상세 해석', '우선 응답', '월 ₩7,917 (20% 할인)'],
     popular: true,
     type: 'subscription' as const,
     stripePriceId: process.env.STRIPE_PRICE_SUB_PRO_ANNUAL || null,
     interval: 'year' as const,
   },
   bundle_50: {
-    name: '50 크레딧 번들',
+    name: '50회 이용권 번들',
     nameEn: '50 Credit Bundle',
     credits: 50,
     price: 5900,
     priceLabel: '₩5,900',
-    features: ['AI 해석 50회', '모든 카테고리 해석', '후속 질문 가능', '궁합 분석', '회당 ₩118'],
+    features: ['AI 해석 이용권 50회', '모든 카테고리 해석', '후속 질문 가능', '궁합 분석', '회당 ₩118'],
     popular: false,
     type: 'onetime' as const,
     stripePriceId: null,
   },
   bundle_200: {
-    name: '200 크레딧 번들',
+    name: '200회 이용권 번들',
     nameEn: '200 Credit Bundle',
     credits: 200,
     price: 15900,
     priceLabel: '₩15,900',
-    features: ['AI 해석 200회', '모든 기능 무제한', '대운 상세 해석', '우선 응답', '회당 ₩80 (최저가)'],
+    features: ['AI 해석 이용권 200회', '모든 기능 무제한', '대운 상세 해석', '우선 응답', '회당 ₩80 (최저가)'],
     popular: false,
     type: 'onetime' as const,
     stripePriceId: null,
