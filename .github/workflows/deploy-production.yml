@@ -10,14 +10,35 @@ on:
 
 jobs:
   deploy:
-    if: ${{ (github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success') && secrets.VERCEL_TOKEN != '' && secrets.VERCEL_PROJECT_ID != '' && secrets.VERCEL_TEAM_ID != '' && secrets.VERCEL_PROJECT_NAME != '' }}
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+      - name: Validate Vercel secrets
+        id: secrets
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          VERCEL_TEAM_ID: ${{ secrets.VERCEL_TEAM_ID }}
+          VERCEL_PROJECT_NAME: ${{ secrets.VERCEL_PROJECT_NAME }}
+        run: |
+          missing=0
+          for v in VERCEL_TOKEN VERCEL_PROJECT_ID VERCEL_TEAM_ID VERCEL_PROJECT_NAME; do
+            if [ -z "${!v}" ]; then
+              echo "::notice::Missing required secret: $v"
+              missing=1
+            fi
+          done
+          if [ "$missing" -eq 1 ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "skip=false" >> "$GITHUB_OUTPUT"
       - name: Trigger Vercel production deployment
+        if: ${{ steps.secrets.outputs.skip != 'true' }}
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
