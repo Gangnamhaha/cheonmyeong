@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
 
   try {
     await applyReferralCode(userId, code)
-    return NextResponse.json({ success: true, message: '초대 코드가 적용되었습니다! 이용권 3회가 지급되었습니다.' })
+    return NextResponse.json({ success: true, message: '초대 코드가 적용되었습니다! AI 해석 이용권이 지급되었습니다.' })
   } catch (error) {
     const message = error instanceof Error ? error.message : '초대 코드 적용에 실패했습니다.'
     return NextResponse.json({ error: message }, { status: 400 })

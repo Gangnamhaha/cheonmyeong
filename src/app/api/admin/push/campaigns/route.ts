@@ -144,7 +144,7 @@ export async function POST(req: NextRequest) {
         .select('*')
 
       if (creditError) {
-        return NextResponse.json({ error: '크레딧 필터 조회에 실패했습니다.' }, { status: 500 })
+        return NextResponse.json({ error: '이용권 필터 조회에 실패했습니다.' }, { status: 500 })
       }
 
       const creditMatched = new Set(

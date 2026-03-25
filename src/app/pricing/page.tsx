@@ -55,6 +55,8 @@ declare global {
 type PlanMode = 'onetime' | 'monthly' | 'annual'
 type PaymentMethod = 'card' | 'kakao_pay'
 
+const SHOW_PASS_COUNTS = process.env.NEXT_PUBLIC_SHOW_PASS_COUNTS === 'true'
+
 const ONETIME_PLANS: OnetimePlanKey[] = ['starter', 'pro', 'bundle_50', 'bundle_200', 'unlimited']
 const MONTHLY_SUBSCRIPTION_PLANS: SubscriptionPlanKey[] = ['sub_basic', 'sub_pro', 'sub_premium']
 const ANNUAL_SUBSCRIPTION_PLANS: SubscriptionPlanKey[] = ['sub_basic_annual', 'sub_pro_annual']
@@ -107,7 +109,14 @@ function PricingContent() {
   useEffect(() => {
     if (success && planParam) {
       const plan = PLANS[planParam as PlanKey]
-      if (plan) showToast(`${plan.name} 이용권 ${plan.credits}회가 지급되었습니다! 🎉`, 5000)
+      if (plan) {
+        showToast(
+          SHOW_PASS_COUNTS
+            ? `${plan.name} 이용권 ${plan.credits}회가 지급되었습니다! 🎉`
+            : `${plan.name} AI 해석 이용권이 지급되었습니다! 🎉`,
+          5000,
+        )
+      }
     }
     if (cancelled) showToast('결제가 취소되었습니다.')
   }, [success, cancelled, planParam, showToast])
@@ -419,9 +428,9 @@ function PricingContent() {
           {credits && credits.remaining > 0 && (
             <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-full"
               style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)' }}>
-              <span className="text-xs" style={{ color: 'var(--text-muted)' }}>현재 이용권</span>
+              <span className="text-xs" style={{ color: 'var(--text-muted)' }}>AI 해석 이용권</span>
               <span className="text-sm font-bold" style={{ color: 'var(--text-accent)' }}>
-                {credits.remaining}회
+                {SHOW_PASS_COUNTS ? `${credits.remaining}회` : '보유 중'}
               </span>
             </div>
           )}
@@ -458,7 +467,9 @@ function PricingContent() {
               <div>
                 <span style={{ color: 'var(--text-muted)' }}>남은 이용권</span>
                 <p className="font-medium" style={{ color: 'var(--text-accent)' }}>
-                  {credits?.remaining ?? 0}회
+                  {SHOW_PASS_COUNTS
+                    ? `${credits?.remaining ?? 0}회`
+                    : ((credits?.remaining ?? 0) > 0 ? '보유' : '없음')}
                 </p>
               </div>
             </div>
@@ -630,7 +641,9 @@ function PricingContent() {
                       )}
                     </div>
                     <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                      이용권 {plan.credits}회{isSubscription ? '/월' : ''}
+                      {SHOW_PASS_COUNTS
+                        ? `이용권 ${plan.credits}회${isSubscription ? '/월' : ''}`
+                        : 'AI 해석 이용권'}
                     </p>
                   </div>
                   <span className="text-xl font-bold" style={{ color: 'var(--text-accent)' }}>
@@ -693,7 +706,7 @@ function PricingContent() {
         {/* Note */}
         <div className="mt-8 text-center">
           <p className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>
-            이용권은 만료되지 않으며, AI 해석 1회당 1회가 차감됩니다.<br />
+            이용권은 만료되지 않으며, AI 해석 시 이용권이 차감됩니다.<br />
             토스페이먼츠를 통해 안전하게 결제됩니다. (카드, 간편결제 지원)
           </p>
         </div>

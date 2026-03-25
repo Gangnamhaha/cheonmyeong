@@ -40,7 +40,7 @@ function getMonthStartIso(): string {
 async function awardBonusCredits(userId: string, amount: number): Promise<void> {
   const supabase = getSupabase()
   if (!supabase) {
-    throw new Error('크레딧 보너스 처리를 위해 Supabase 설정이 필요합니다.')
+    throw new Error('이용권 보너스 처리를 위해 Supabase 설정이 필요합니다.')
   }
 
   const current = await getUserCredits(userId)

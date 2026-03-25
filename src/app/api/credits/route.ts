@@ -48,7 +48,7 @@ export async function GET() {
   })
 }
 
-// POST /api/credits — 이용권 1회 사용 (AI 해석 시 호출)
+// POST /api/credits — 이용권 사용 (AI 해석 시 호출)
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions)
   const userId = getEffectiveUserId(session)
@@ -79,7 +79,7 @@ export async function POST(req: NextRequest) {
   if (!result.success) {
     return NextResponse.json(
       {
-        error: '오늘의 무료 사용 횟수(3회)를 모두 사용했습니다. 이용권을 구매해 주세요.',
+        error: '오늘의 무료 이용권을 모두 사용했습니다. 이용권을 구매해 주세요.',
         remaining: 0,
       },
       { status: 403 },
