@@ -143,7 +143,7 @@ export default function Footer() {
           <div className="flex flex-col gap-1 text-[10px] leading-relaxed text-[var(--text-muted)]">
             <p>상호: 주식회사 에이아이트리 | 대표: 김은수 | 사업자등록번호: 569-87-03583</p>
             <p>통신판매업 신고: 제2025-서울성북-1353호 | 연락처: 02-988-2572</p>
-            <p>주소: 서울특별시 성북구 삼양로 22 1층, 102호(길음동, 기린빌딩)</p>
+            <p>주소: 서울특별시 성북구 보국문로 95, 3층 304호(정릉동)</p>
           </div>
         </div>
       </div>
