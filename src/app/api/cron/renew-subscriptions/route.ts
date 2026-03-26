@@ -55,6 +55,14 @@ export async function GET(req: NextRequest) {
         continue
       }
 
+      // Annual subscriptions are not offered/renewed by this job.
+      // Prevent accidental monthly charging for legacy annual plans.
+      if (planInfo.interval === 'year') {
+        await updateSubscription(sub.user_id as string, { status: 'expired' })
+        skipped++
+        continue
+      }
+
       const billingKey = sub.billing_key as string
       const userId = sub.user_id as string
       const shortId = Date.now().toString(36) + Math.random().toString(36).slice(2, 6)

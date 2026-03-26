@@ -52,14 +52,13 @@ declare global {
   }
 }
 
-type PlanMode = 'onetime' | 'monthly' | 'annual'
+type PlanMode = 'onetime' | 'monthly'
 type PaymentMethod = 'card' | 'kakao_pay'
 
 const SHOW_PASS_COUNTS = process.env.NEXT_PUBLIC_SHOW_PASS_COUNTS === 'true'
 
 const ONETIME_PLANS: OnetimePlanKey[] = ['starter', 'pro', 'bundle_50', 'bundle_200', 'unlimited']
 const MONTHLY_SUBSCRIPTION_PLANS: SubscriptionPlanKey[] = ['sub_basic', 'sub_pro', 'sub_premium']
-const ANNUAL_SUBSCRIPTION_PLANS: SubscriptionPlanKey[] = ['sub_basic_annual', 'sub_pro_annual']
 
 export default function PricingPage() {
   return (
@@ -388,10 +387,7 @@ function PricingContent() {
     }
   }
 
-  const currentPlans = 
-    planMode === 'onetime' ? ONETIME_PLANS : 
-    planMode === 'monthly' ? MONTHLY_SUBSCRIPTION_PLANS : 
-    ANNUAL_SUBSCRIPTION_PLANS
+  const currentPlans = planMode === 'onetime' ? ONETIME_PLANS : MONTHLY_SUBSCRIPTION_PLANS
 
   return (
     <div className="min-h-screen px-4 py-12" style={{ background: 'var(--bg-primary)' }}>
@@ -486,41 +482,31 @@ function PricingContent() {
           </div>
         )}
 
-         {/* Plan Mode Toggle */}
-         <div className="flex justify-center mb-8">
-           <div className="inline-flex rounded-full p-1" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)' }}>
-             <button
-               onClick={() => setPlanMode('onetime')}
-               className="px-5 py-2 rounded-full text-sm font-bold transition-all"
-               style={{
-                 background: planMode === 'onetime' ? 'var(--accent)' : 'transparent',
-                 color: planMode === 'onetime' ? 'var(--accent-text)' : 'var(--text-muted)',
-               }}
-             >
-               일회성
-             </button>
-             <button
-               onClick={() => setPlanMode('monthly')}
-               className="px-5 py-2 rounded-full text-sm font-bold transition-all"
-               style={{
-                 background: planMode === 'monthly' ? 'var(--accent)' : 'transparent',
-                 color: planMode === 'monthly' ? 'var(--accent-text)' : 'var(--text-muted)',
-               }}
-             >
-               월 구독
-             </button>
-             <button
-               onClick={() => setPlanMode('annual')}
-               className="px-5 py-2 rounded-full text-sm font-bold transition-all"
-               style={{
-                 background: planMode === 'annual' ? 'var(--accent)' : 'transparent',
-                 color: planMode === 'annual' ? 'var(--accent-text)' : 'var(--text-muted)',
-               }}
-             >
-               연 구독
-             </button>
-           </div>
-         </div>
+          {/* Plan Mode Toggle */}
+          <div className="flex justify-center mb-8">
+            <div className="inline-flex rounded-full p-1" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)' }}>
+              <button
+                onClick={() => setPlanMode('onetime')}
+                className="px-5 py-2 rounded-full text-sm font-bold transition-all"
+                style={{
+                  background: planMode === 'onetime' ? 'var(--accent)' : 'transparent',
+                  color: planMode === 'onetime' ? 'var(--accent-text)' : 'var(--text-muted)',
+                }}
+              >
+                일회성
+              </button>
+              <button
+                onClick={() => setPlanMode('monthly')}
+                className="px-5 py-2 rounded-full text-sm font-bold transition-all"
+                style={{
+                  background: planMode === 'monthly' ? 'var(--accent)' : 'transparent',
+                  color: planMode === 'monthly' ? 'var(--accent-text)' : 'var(--text-muted)',
+                }}
+              >
+                월 구독
+              </button>
+            </div>
+          </div>
 
          {/* Payment Method Selection (일회성 only) */}
          {planMode === 'onetime' && (
@@ -550,19 +536,17 @@ function PricingContent() {
            </div>
          )}
 
-         {/* Subscription Card-Only Notice */}
-         {(planMode === 'monthly' || planMode === 'annual') && (
-           <div
-             className="rounded-2xl p-4 mb-6 theme-transition"
-             style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)' }}
-           >
-             <p className="text-xs text-center" style={{ color: 'var(--text-secondary)' }}>
-               {planMode === 'annual' 
-                  ? '연간 구독은 카드결제만 지원됩니다. 매월 이용권이 자동 지급됩니다.'
-                  : '구독은 카드결제만 지원됩니다.'}
-             </p>
-           </div>
-         )}
+          {/* Subscription Card-Only Notice */}
+          {planMode === 'monthly' && (
+            <div
+              className="rounded-2xl p-4 mb-6 theme-transition"
+              style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)' }}
+            >
+              <p className="text-xs text-center" style={{ color: 'var(--text-secondary)' }}>
+                구독은 카드결제만 지원됩니다.
+              </p>
+            </div>
+          )}
 
         {/* Guest email input */}
         {!session && (
@@ -596,9 +580,8 @@ function PricingContent() {
            {currentPlans.map((key) => {
              const plan = PLANS[key]
              const isPopular = plan.popular
-             const isCurrent = credits?.plan === key
-             const isSubscription = plan.type === 'subscription'
-             const isAnnual = isSubscription && plan.interval === 'year'
+              const isCurrent = credits?.plan === key
+              const isSubscription = plan.type === 'subscription'
 
              return (
                <div
@@ -616,14 +599,6 @@ function PricingContent() {
                      style={{ background: 'var(--accent)', color: 'var(--accent-text)' }}
                    >
                      인기
-                   </div>
-                 )}
-                 {isAnnual && (
-                   <div
-                     className="absolute top-0 right-0 px-3 py-1 text-[10px] font-bold rounded-bl-lg"
-                     style={{ background: '#10b981', color: 'white' }}
-                   >
-                     20% 할인
                    </div>
                  )}
 

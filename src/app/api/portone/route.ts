@@ -27,6 +27,12 @@ export async function POST(req: NextRequest) {
   }
 
   const planInfo = PLANS[plan]
+
+  // This endpoint is for one-time payments only.
+  // Subscriptions must use /api/portone/billing (+ /api/portone/billing/pay).
+  if (planInfo.type === 'subscription') {
+    return NextResponse.json({ error: '구독 결제는 지원하지 않습니다.' }, { status: 400 })
+  }
   const userId = session?.user
     ? (session.user as Record<string, unknown>).id as string
     : `email_${guestEmail}`

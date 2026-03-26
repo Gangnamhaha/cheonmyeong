@@ -83,6 +83,12 @@ export async function POST(req: NextRequest) {
   try {
     if (requestedType === 'subscription') {
       const subscriptionPlanKey = planKey as SubscriptionPlanKey
+      if (plan.type === 'subscription' && plan.interval === 'year') {
+        return NextResponse.json(
+          { error: '연간 구독은 현재 제공하지 않습니다.' },
+          { status: 400 },
+        )
+      }
       if (!plan.stripePriceId) {
         return NextResponse.json(
           { error: '이 구독 요금제는 Stripe Price ID가 설정되지 않았습니다.' },

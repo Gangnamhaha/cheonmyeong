@@ -32,6 +32,11 @@ export async function POST(req: NextRequest) {
   const userId = (session.user as Record<string, unknown>).id as string
   const planInfo = PLANS[plan]
 
+  // Annual subscriptions are not offered in payment
+  if (planInfo.interval === 'year') {
+    return NextResponse.json({ error: '연간 구독은 현재 제공하지 않습니다.' }, { status: 400 })
+  }
+
   // Generate unique issueKey for billingKey issuance
   const shortId = Date.now().toString(36) + Math.random().toString(36).slice(2, 6)
   const issueKey = `billing-${plan}-${shortId}`

@@ -39,6 +39,11 @@ export async function POST(req: NextRequest) {
   const userId = (session.user as Record<string, unknown>).id as string
   const planInfo = PLANS[plan]
 
+  // Annual subscriptions are not offered in payment
+  if (planInfo.interval === 'year') {
+    return NextResponse.json({ error: '연간 구독은 현재 제공하지 않습니다.' }, { status: 400 })
+  }
+
   const idempotencyKey = `billing:first:${userId}:${plan}:${billingKey}`
   let lockKey: string | null = null
 
