@@ -114,11 +114,11 @@ export function getDailyQuote() {
 }
 
 export const FEATURES = [
-  { icon: '🏛️', title: '사주팔자 분석', desc: '생년월일시를 기반으로 천간·지지 팔자를 정밀 계산합니다', href: '/saju/free' },
+  { icon: '🏛️', title: '사주팔자 분석', desc: '생년월일시를 기반으로 천간·지지 팔자를 정밀 계산합니다', href: '/#saju-form-card' },
   { icon: '🤖', title: 'AI 맞춤 해석', desc: '명리학 전문 AI가 당신의 사주를 성격, 연애, 직업, 재물 등 카테고리별로 풀어드립니다', href: '/guide/saju-basics' },
   { icon: '📊', title: '오행·십신·용신', desc: '오행 분포도, 십신 관계도, 용신 분석까지 한눈에 확인하세요', href: '/guide/oheng' },
   { icon: '🌟', title: '대운·세운·월운', desc: '10년 대운의 흐름과 올해 세운, 이달의 월운을 분석합니다', href: '/fortune/today' },
-  { icon: '💬', title: 'AI 사주 상담', desc: '사주에 대해 궁금한 점을 AI 전문가에게 자유롭게 질문하세요', href: '/saju/free' },
+  { icon: '💬', title: 'AI 사주 상담', desc: '사주에 대해 궁금한 점을 AI 전문가에게 자유롭게 질문하세요', href: '/#saju-form-card' },
   { icon: '💑', title: '궁합 분석', desc: '두 사람의 사주를 비교하고 AI가 궁합을 풀어드립니다', href: '/gunghap' },
 ]
 
@@ -126,7 +126,37 @@ export function getHistory(): HistoryEntry[] {
   if (typeof window === 'undefined') return []
   try {
     const raw = localStorage.getItem('sajuhae-history')
-    return raw ? JSON.parse(raw) : []
+    const parsed: unknown = raw ? JSON.parse(raw) : []
+    if (!Array.isArray(parsed)) return []
+
+    return parsed
+      .map((v): HistoryEntry | null => {
+        if (typeof v !== 'object' || v === null) return null
+        const e = v as Record<string, unknown>
+
+        const year = typeof e.year === 'number' ? e.year : Number(e.year)
+        const month = typeof e.month === 'number' ? e.month : Number(e.month)
+        const day = typeof e.day === 'number' ? e.day : Number(e.day)
+        const hour = typeof e.hour === 'number' ? e.hour : Number(e.hour)
+        const minute = typeof e.minute === 'number' ? e.minute : Number(e.minute)
+        const gender = e.gender === 'female' ? 'female' : 'male'
+        const date = typeof e.date === 'string' ? e.date : ''
+        const dayPillar = typeof e.dayPillar === 'string' ? e.dayPillar : undefined
+
+        if (!Number.isFinite(year) || !Number.isFinite(month) || !Number.isFinite(day) || !Number.isFinite(hour)) return null
+
+        return {
+          year,
+          month,
+          day,
+          hour,
+          minute: Number.isFinite(minute) ? minute : 0,
+          gender,
+          date,
+          dayPillar,
+        }
+      })
+      .filter((e): e is HistoryEntry => e !== null)
   } catch {
     return []
   }
@@ -137,7 +167,17 @@ export function saveHistory(entry: HistoryEntry) {
     const existing = getHistory()
     const updated = [
       entry,
-      ...existing.filter(e => !(e.year === entry.year && e.month === entry.month && e.day === entry.day && e.hour === entry.hour)),
+      ...existing.filter(
+        e =>
+          !(
+            e.year === entry.year &&
+            e.month === entry.month &&
+            e.day === entry.day &&
+            e.hour === entry.hour &&
+            e.minute === entry.minute &&
+            e.gender === entry.gender
+          ),
+      ),
     ].slice(0, 5)
     localStorage.setItem('sajuhae-history', JSON.stringify(updated))
   } catch {

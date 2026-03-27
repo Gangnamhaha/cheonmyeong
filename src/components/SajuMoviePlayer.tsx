@@ -491,66 +491,84 @@ export default function SajuMoviePlayer({
         setIsMuted(false)
         setScenario(data.scenario)
 
-        // --- Phase 2: Generate AI scene images ---
-        setLoadingPhase('images')
-        const scenes: MovieScene[] = data.scenario.scenes
-        const imgUrls: (string | null)[] = new Array(scenes.length).fill(null)
-        const imgEls: (HTMLImageElement | null)[] = new Array(scenes.length).fill(null)
-        let completed = 0
-
-        await Promise.allSettled(
-          scenes.map(async (scene: MovieScene, idx: number) => {
-            if (imgAbort.signal.aborted) return
-            try {
-              const imgRes = await fetch('/api/generate-scene-image', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  gender: formData.gender,
-                  birthYear: formData.year,
-                  sceneType: scene.type,
-                  narration: scene.narration,
-                  mood: scene.mood,
-                  genre: selectedGenre,
-                }),
-                signal: imgAbort.signal,
-              })
-              if (imgRes.ok) {
-                const imgData = await imgRes.json()
-                if (imgData.image) {
-                  const bin = atob(imgData.image)
-                  const bytes = new Uint8Array(bin.length)
-                  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i)
-                  const blob = new Blob([bytes], { type: 'image/png' })
-                  const url = URL.createObjectURL(blob)
-                  imgUrls[idx] = url
-                  const el = new Image()
-                  el.src = url
-                  imgEls[idx] = el
-                }
-              }
-            } catch {
-              /* silent fail — scene plays without image */
-            }
-            completed++
-            if (!imgAbort.signal.aborted) setImageProgress(completed)
-          }),
-        )
-
-        if (cancelled) return
-
-        setSceneImages([...imgUrls])
-        sceneImagesRef.current = imgUrls
-        imageElsRef.current = imgEls
-        setLoadingPhase(null)
+        // Start playback immediately after scenario is ready.
         setLoading(false)
         setIsPlaying(true)
+        setLoadingPhase(null)
 
-        // Init audio
-        const engine = new MovieAudioEngine()
-        await engine.init()
-        audioRef.current = engine
-        engine.play(data.scenario.scenes[0]?.mood ?? 'mystical')
+        // Init audio in background (don't block playback)
+        void (async () => {
+          try {
+            if (cancelled) return
+            const engine = new MovieAudioEngine()
+            await engine.init()
+            if (cancelled) {
+              engine.destroy()
+              return
+            }
+            audioRef.current = engine
+            engine.play(data.scenario.scenes[0]?.mood ?? 'mystical')
+          } catch {
+            // ignore audio init failures
+          }
+        })()
+
+        // --- Phase 2: Generate AI scene images (non-blocking) ---
+        void (async () => {
+          if (cancelled) return
+          setLoadingPhase('images')
+          const scenes: MovieScene[] = data.scenario.scenes
+          const imgUrls: (string | null)[] = new Array(scenes.length).fill(null)
+          const imgEls: (HTMLImageElement | null)[] = new Array(scenes.length).fill(null)
+          let completed = 0
+
+          await Promise.allSettled(
+            scenes.map(async (scene: MovieScene, idx: number) => {
+              if (imgAbort.signal.aborted) return
+              try {
+                const imgRes = await fetch('/api/generate-scene-image', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    gender: formData.gender,
+                    birthYear: formData.year,
+                    sceneType: scene.type,
+                    narration: scene.narration,
+                    mood: scene.mood,
+                    genre: selectedGenre,
+                  }),
+                  signal: imgAbort.signal,
+                })
+                if (imgRes.ok) {
+                  const imgData = await imgRes.json()
+                  if (imgData.image) {
+                    const bin = atob(imgData.image)
+                    const bytes = new Uint8Array(bin.length)
+                    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i)
+                    const blob = new Blob([bytes], { type: 'image/png' })
+                    const url = URL.createObjectURL(blob)
+                    imgUrls[idx] = url
+                    const el = new Image()
+                    el.src = url
+                    imgEls[idx] = el
+                  }
+                }
+              } catch {
+                /* silent fail — scene plays without image */
+              }
+              completed++
+              if (!imgAbort.signal.aborted) setImageProgress(completed)
+            }),
+          )
+
+          if (cancelled) return
+          if (imgAbort.signal.aborted) return
+
+          setSceneImages([...imgUrls])
+          sceneImagesRef.current = imgUrls
+          imageElsRef.current = imgEls
+          setLoadingPhase(null)
+        })()
       } catch (err) {
         if (!cancelled) {
           console.error(err)

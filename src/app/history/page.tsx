@@ -151,7 +151,7 @@ function HistoryContent() {
               사주 분석을 시작해 보세요
             </p>
             <Link
-              href="/saju/free"
+              href="/#saju-form-card"
               className="inline-block px-6 py-3 rounded-xl text-sm font-bold hover-scale transition-all"
               style={{ background: 'var(--accent)', color: 'var(--accent-text)' }}
             >

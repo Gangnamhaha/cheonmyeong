@@ -108,16 +108,36 @@ export default function SajuForm({ onSubmit, loading = false }: SajuFormProps) {
     try {
       const saved = localStorage.getItem('sajuhae-lastInput')
       if (saved) {
-        const d = JSON.parse(saved)
-        if (d.year) setYear(d.year)
-        if (d.month) setMonth(d.month)
-        if (d.day) setDay(d.day)
-        if (d.hour !== undefined) setHour(d.hour)
-        if (d.gender) setGender(d.gender)
+        const d: unknown = JSON.parse(saved)
+        if (typeof d === 'object' && d !== null) {
+          const r = d as Record<string, unknown>
+
+          if (typeof r.year === 'number') setYear(r.year)
+          if (typeof r.month === 'number') setMonth(r.month)
+          if (typeof r.day === 'number') setDay(r.day)
+          if (typeof r.hour === 'number') setHour(r.hour)
+          if (typeof r.minute === 'number') setMinute(r.minute)
+          if (r.calendarType === 'solar' || r.calendarType === 'lunar') setCalendarType(r.calendarType)
+          if (typeof r.isLeapMonth === 'boolean') setIsLeapMonth(r.isLeapMonth)
+          if (typeof r.unknownTime === 'boolean') setUnknownTime(r.unknownTime)
+          if (r.gender === 'male' || r.gender === 'female') setGender(r.gender)
+          if (typeof r.name === 'string') setName(r.name.slice(0, 20))
+        }
       }
     } catch {}
     const timer = setTimeout(() => setShowForm(true), 200)
     return () => clearTimeout(timer)
+  }, [])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    if (window.location.hash !== '#saju-form-card') return
+
+    const t = window.setTimeout(() => {
+      document.getElementById('saju-form-card')?.scrollIntoView({ behavior: 'smooth' })
+    }, 250)
+
+    return () => window.clearTimeout(t)
   }, [])
 
   useEffect(() => {
@@ -174,7 +194,12 @@ export default function SajuForm({ onSubmit, loading = false }: SajuFormProps) {
     if (inputDate > now) { setFormError('미래 날짜는 입력할 수 없습니다.'); return }
     if (year < 1900 || year > 2050) { setFormError('연도는 1900~2050 사이여야 합니다.'); return }
     // Save last input
-    try { localStorage.setItem('sajuhae-lastInput', JSON.stringify({ year, month, day, hour, gender })) } catch {}
+    try {
+      localStorage.setItem(
+        'sajuhae-lastInput',
+        JSON.stringify({ year, month, day, hour, minute, calendarType, isLeapMonth, unknownTime, gender, name }),
+      )
+    } catch {}
     const useQuickDefaults = quickMode
     const submitUnknownTime = useQuickDefaults ? false : unknownTime
     const submitHour = useQuickDefaults ? 12 : hour
@@ -192,7 +217,7 @@ export default function SajuForm({ onSubmit, loading = false }: SajuFormProps) {
       setIsLeapMonth(false)
     }
 
-    saveHistory({ year, month, day, hour: h, gender, date: new Date().toISOString().slice(0, 10) })
+    saveHistory({ year, month, day, hour: h, minute: m, gender, date: new Date().toISOString().slice(0, 10) })
     incrementAnalysisCount()
     onSubmit({
       name: useQuickDefaults ? '' : name,
@@ -212,7 +237,9 @@ export default function SajuForm({ onSubmit, loading = false }: SajuFormProps) {
     setMonth(entry.month)
     setDay(entry.day)
     setHour(entry.hour)
+    setMinute(entry.minute)
     setGender(entry.gender)
+    setUnknownTime(false)
     setShowForm(true)
     document.getElementById('saju-form-card')?.scrollIntoView({ behavior: 'smooth' })
   }

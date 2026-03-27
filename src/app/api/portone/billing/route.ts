@@ -4,7 +4,11 @@ import { authOptions } from '@/lib/auth'
 import { PLANS, type SubscriptionPlanKey } from '@/lib/credits'
 
 const PORTONE_STORE_ID = process.env.PORTONE_STORE_ID || ''
-const PORTONE_CHANNEL_KEY_TOSS = process.env.PORTONE_CHANNEL_KEY_TOSS || ''
+const PORTONE_CHANNEL_KEY_BILLING =
+  process.env.PORTONE_CHANNEL_KEY_BILLING
+  || process.env.PORTONE_CHANNEL_KEY_INICIS_BILLING
+  || process.env.PORTONE_CHANNEL_KEY_TOSS
+  || ''
 
 /**
  * POST /api/portone/billing
@@ -20,7 +24,7 @@ export async function POST(req: NextRequest) {
   const body = await req.json()
   const plan = body.plan as SubscriptionPlanKey
 
-  if (!PORTONE_STORE_ID || !PORTONE_CHANNEL_KEY_TOSS) {
+  if (!PORTONE_STORE_ID || !PORTONE_CHANNEL_KEY_BILLING) {
     return NextResponse.json({ error: 'PortOne 설정이 완료되지 않았습니다.' }, { status: 503 })
   }
 
@@ -43,7 +47,7 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json({
     storeId: PORTONE_STORE_ID,
-    channelKey: PORTONE_CHANNEL_KEY_TOSS,
+    channelKey: PORTONE_CHANNEL_KEY_BILLING,
     issueKey,
     issueName: `사주해 - ${planInfo.name} 정기결제`,
     customer: {

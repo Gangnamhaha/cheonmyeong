@@ -30,9 +30,9 @@ export default function TermsPage() {
             </section>
 
             <section>
-              <h2 className="mb-2 text-lg font-semibold text-[var(--text-primary)]">제3조 (결제, 구독, 크레딧 및 환불)</h2>
+              <h2 className="mb-2 text-lg font-semibold text-[var(--text-primary)]">제3조 (결제, 구독, 이용권 및 환불)</h2>
               <p>
-                서비스는 크레딧 충전형 상품 및 정기 구독 상품을 제공합니다. 결제는 외부 결제사업자(예: 카드사, 간편결제사)를 통해 처리되며, 실제 결제 승인 시점에 이용 계약이 성립합니다. 환불 기준은 별도 고지된 환불정책 페이지(/refund)를 따릅니다.
+                서비스는 요금제 구매형 상품 및 정기 구독 상품을 제공합니다. 결제는 외부 결제사업자(예: 카드사, 간편결제사)를 통해 처리되며, 실제 결제 승인 시점에 이용 계약이 성립합니다. 환불 기준은 별도 고지된 환불정책 페이지(/refund)를 따릅니다.
               </p>
             </section>
 

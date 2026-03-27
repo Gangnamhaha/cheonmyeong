@@ -21,7 +21,7 @@ const GUIDE_SECTIONS: { title: string; items: GuideItem[] }[] = [
   {
     title: '🔮 사주 분석',
     items: [
-      { label: '무료 사주 분석하기', action: 'navigate', target: '/', description: '생년월일시로 AI 사주팔자 분석' },
+      { label: '무료 사주 분석하기', action: 'navigate', target: '/#saju-form-card', description: '생년월일시로 AI 사주팔자 분석' },
       { label: '오행이 뭔가요?', action: 'ask', description: '오행의 기본 개념 알아보기' },
       { label: '용신이란?', action: 'ask', description: '나에게 유리한 오행 찾기' },
     ],

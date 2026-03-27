@@ -77,7 +77,7 @@ function SignupContent() {
       trackSignUp('email')
 
       if (data.referralApplied) {
-        setInfo('초대 코드가 적용되었습니다! 3 크레딧이 지급되었습니다.')
+        setInfo('초대 코드가 적용되었습니다! 3 이용권이 지급되었습니다.')
         sessionStorage.removeItem(REFERRAL_STORAGE_KEY)
       } else if (data.referralMessage) {
         setInfo(`초대 코드 안내: ${data.referralMessage}`)

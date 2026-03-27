@@ -189,7 +189,7 @@ export default function SajuCalendarClient() {
               달력의 일진은 공통 흐름입니다. 생년월일시를 입력해 나만의 원국·오행·용신을 함께 보면 같은 날짜도 전혀 다르게 해석됩니다.
             </p>
             <Link
-              href="/saju/free"
+              href="/#saju-form-card"
               className="mt-4 inline-flex rounded-xl bg-emerald-400 px-5 py-2.5 text-sm font-black text-slate-900 transition hover:bg-emerald-300"
             >
               무료 사주 분석 시작하기 →

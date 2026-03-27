@@ -51,7 +51,7 @@ export default function StickyMobileCTA() {
       <div className="mx-0 h-16 border-t border-slate-800 bg-slate-900/95 px-3 backdrop-blur-sm">
         <div className="mx-auto flex h-full max-w-5xl items-center gap-2">
           <Link
-            href="/saju/free"
+            href="/#saju-form-card"
             className="flex-1 rounded-lg bg-amber-500 px-4 py-2.5 text-center text-sm font-bold text-slate-950 transition hover:bg-amber-400"
           >
             무료 사주 분석 받기 →

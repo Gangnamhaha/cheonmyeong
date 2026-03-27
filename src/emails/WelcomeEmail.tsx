@@ -25,7 +25,7 @@ export function WelcomeEmail({ name }: WelcomeEmailProps) {
             <Text className="m-0 text-xl font-bold text-gray-900">사주해 AI</Text>
             <Text className="text-base text-gray-800">안녕하세요 {name}님, 사주해 AI 가입을 환영합니다.</Text>
             <Text className="text-base text-gray-700">
-              지금 바로 무료 크레딧 3회로 오늘의 사주 해석을 시작해보세요.
+              지금 바로 무료 이용권 3회로 오늘의 사주 해석을 시작해보세요.
             </Text>
             <Button
               href="/"

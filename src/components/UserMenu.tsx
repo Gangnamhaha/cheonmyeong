@@ -160,7 +160,7 @@ export default function UserMenu() {
                 style={{ color: 'var(--text-accent)' }}
                 onClick={() => setMenuOpen(false)}
               >
-                ✨ 크레딧 충전하기
+                ✨ 요금제 구매하기
               </a>
               <a
                 href="/login"
@@ -333,7 +333,7 @@ export default function UserMenu() {
               style={{ color: 'var(--text-accent)' }}
               onClick={() => setMenuOpen(false)}
             >
-              ✨ 크레딧 충전하기
+              ✨ 요금제 구매하기
             </a>
             <button
               onClick={handleLogout}

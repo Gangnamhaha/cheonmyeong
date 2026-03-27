@@ -3,6 +3,7 @@ export interface HistoryEntry {
   month: number
   day: number
   hour: number
+  minute: number
   gender: 'male' | 'female'
   date: string
   dayPillar?: string
@@ -33,7 +34,7 @@ export default function HistoryPanel({ history, onLoadHistory }: HistoryPanelPro
                 {entry.year}.{String(entry.month).padStart(2, '0')}.{String(entry.day).padStart(2, '0')}
               </span>
               <span className="text-xs ml-2" style={{ color: 'var(--text-muted)' }}>
-                {entry.hour}시 · {entry.gender === 'male' ? '남' : '여'}
+                {entry.hour}시 {String(entry.minute).padStart(2, '0')}분 · {entry.gender === 'male' ? '남' : '여'}
               </span>
             </div>
             <span className="text-xs" style={{ color: 'var(--text-muted)' }}>

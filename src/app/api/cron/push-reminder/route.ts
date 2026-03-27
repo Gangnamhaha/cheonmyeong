@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
     if (kstHour === 18) {
       pushResult = await broadcastPush({
         title: '✅ 오늘 체크인 하셨나요?',
-        body: '매일 체크인하면 무료 크레딧을 드려요! 지금 확인해보세요.',
+        body: '매일 체크인하면 무료 이용권을 드려요! 지금 확인해보세요.',
         url: 'https://sajuhae.vercel.app',
       })
       notificationType = 'evening-checkin'

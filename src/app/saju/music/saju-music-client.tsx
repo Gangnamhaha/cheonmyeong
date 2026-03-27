@@ -218,7 +218,7 @@ export default function SajuMusicClient() {
             개인 맞춤 사운드와 AI 고품질 음악 기능을 바로 사용할 수 있습니다.
           </p>
           <div className="flex flex-wrap gap-3">
-            <Link href="/saju/free" className="rounded-xl bg-amber-400 px-5 py-3 text-sm font-bold text-slate-950 hover:bg-amber-300">
+            <Link href="/#saju-form-card" className="rounded-xl bg-amber-400 px-5 py-3 text-sm font-bold text-slate-950 hover:bg-amber-300">
               무료 사주 분석 시작하기
             </Link>
             <Link href="/" className="rounded-xl border border-slate-700 px-5 py-3 text-sm text-slate-200 hover:border-amber-400 hover:text-amber-300">

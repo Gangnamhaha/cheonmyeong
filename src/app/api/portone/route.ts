@@ -4,7 +4,11 @@ import { authOptions } from '@/lib/auth'
 import { PLANS, type PlanKey } from '@/lib/credits'
 
 const PORTONE_STORE_ID = process.env.PORTONE_STORE_ID || ''
-const PORTONE_CHANNEL_KEY_TOSS = process.env.PORTONE_CHANNEL_KEY_TOSS || ''
+const PORTONE_CHANNEL_KEY_ONETIME =
+  process.env.PORTONE_CHANNEL_KEY_ONETIME
+  || process.env.PORTONE_CHANNEL_KEY_INICIS_ONETIME
+  || process.env.PORTONE_CHANNEL_KEY_TOSS
+  || ''
 
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions)
@@ -18,7 +22,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: '로그인 또는 이메일이 필요합니다.' }, { status: 401 })
   }
 
-  if (!PORTONE_STORE_ID || !PORTONE_CHANNEL_KEY_TOSS) {
+  if (!PORTONE_STORE_ID || !PORTONE_CHANNEL_KEY_ONETIME) {
     return NextResponse.json({ error: 'PortOne 설정이 완료되지 않았습니다.' }, { status: 503 })
   }
 
@@ -43,7 +47,7 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({
     paymentId,
     storeId: PORTONE_STORE_ID,
-    channelKey: PORTONE_CHANNEL_KEY_TOSS,
+    channelKey: PORTONE_CHANNEL_KEY_ONETIME,
     orderName: `사주해 - ${planInfo.name}`,
     totalAmount: planInfo.price,
     currency: 'CURRENCY_KRW',

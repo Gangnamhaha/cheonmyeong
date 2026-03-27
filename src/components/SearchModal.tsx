@@ -12,7 +12,7 @@ interface SearchItem {
 }
 
 const SEARCH_ITEMS: SearchItem[] = [
-  { title: '무료 사주 분석', description: 'AI 사주팔자 분석', path: '/', category: '사주', keywords: ['사주', '팔자', '분석', '무료', 'AI'] },
+  { title: '무료 사주 분석', description: 'AI 사주팔자 분석', path: '/#saju-form-card', category: '사주', keywords: ['사주', '팔자', '분석', '무료', 'AI'] },
   { title: '궁합 분석', description: '두 사람의 사주 궁합', path: '/gunghap', category: '궁합', keywords: ['궁합', '연애', '결혼', '커플'] },
   { title: '무료 궁합', description: '무료 사주 궁합 분석', path: '/gunghap/free', category: '궁합', keywords: ['무료', '궁합'] },
   { title: '오늘의 운세', description: '오늘 하루 운세', path: '/fortune/today', category: '운세', keywords: ['오늘', '운세', '일일'] },
@@ -32,10 +32,10 @@ const SEARCH_ITEMS: SearchItem[] = [
   { title: '요금제', description: '구독 및 이용권 요금', path: '/pricing', category: '서비스', keywords: ['요금', '가격', '구독', '프리미엄'] },
   { title: '고객 문의', description: '문의 및 피드백', path: '/inquiry', category: '서비스', keywords: ['문의', '고객', '피드백', '연락'] },
   { title: '블로그', description: '사주 관련 글 모음', path: '/blog', category: '콘텐츠', keywords: ['블로그', '글', '정보'] },
-  { title: '무료 사주 풀이', description: '무료 AI 사주 분석', path: '/saju/free', category: '사주', keywords: ['무료', '사주', '풀이'] },
+  { title: '무료 사주 풀이', description: '무료 AI 사주 분석', path: '/#saju-form-card', category: '사주', keywords: ['무료', '사주', '풀이'] },
 ]
 
-const POPULAR_PATHS = ['/', '/gunghap', '/fortune/today', '/fortune/2026', '/tools/mbti', '/saju/music']
+const POPULAR_PATHS = ['/#saju-form-card', '/gunghap', '/fortune/today', '/fortune/2026', '/tools/mbti', '/saju/music']
 
 function matchesSearch(item: SearchItem, query: string): boolean {
   const q = query.toLowerCase()

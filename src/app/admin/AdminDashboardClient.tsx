@@ -146,7 +146,7 @@ const TABS: { key: TabKey; label: string }[] = [
   { key: 'dashboard', label: '대시보드' },
   { key: 'users', label: '사용자 관리' },
   { key: 'revenue', label: '매출/결제' },
-  { key: 'credits', label: '크레딧 관리' },
+  { key: 'credits', label: '이용권 관리' },
   { key: 'push-campaigns', label: '푸시 캠페인' },
   { key: 'referrals', label: '레퍼럴' },
   { key: 'ai-costs', label: 'AI 비용' },
@@ -640,7 +640,7 @@ export default function AdminDashboardClient() {
       })
       const data = await res.json()
       if (!res.ok) {
-        setCreditError(data.error ?? '크레딧 조정에 실패했습니다.')
+        setCreditError(data.error ?? '이용권 조정에 실패했습니다.')
         return
       }
 
@@ -656,7 +656,7 @@ export default function AdminDashboardClient() {
       fetchUsers(usersPage)
       fetchStats()
     } catch {
-      setCreditError('크레딧 조정에 실패했습니다.')
+      setCreditError('이용권 조정에 실패했습니다.')
     } finally {
       setCreditLoading(false)
     }
@@ -1039,7 +1039,7 @@ export default function AdminDashboardClient() {
         {activeTab === 'credits' && (
           <section className="space-y-4">
             <div className="rounded-xl border border-slate-700 bg-slate-800 p-4">
-              <h2 className="text-lg font-semibold text-amber-400">크레딧 조정</h2>
+              <h2 className="text-lg font-semibold text-amber-400">이용권 조정</h2>
               <div className="mt-3 flex flex-col gap-2 sm:flex-row">
                 <input
                   value={creditSearch}
@@ -1059,7 +1059,7 @@ export default function AdminDashboardClient() {
               {creditTarget && (
                 <div className="mt-4 rounded-lg border border-slate-700 bg-slate-900 p-3 text-sm">
                   <p className="text-slate-300">대상: {creditTarget.email || creditTarget.userId}</p>
-                  <p className="mt-1 text-amber-400">현재 잔여 크레딧: {creditTarget.remainingCredits}</p>
+                  <p className="mt-1 text-amber-400">현재 잔여 이용권: {creditTarget.remainingCredits}</p>
                 </div>
               )}
 
@@ -1082,7 +1082,7 @@ export default function AdminDashboardClient() {
                   disabled={creditLoading}
                   className="rounded-lg bg-amber-500 px-4 py-2 text-sm font-semibold text-slate-950 disabled:opacity-50"
                 >
-                  {creditLoading ? '처리 중...' : '크레딧 조정 실행'}
+                  {creditLoading ? '처리 중...' : '이용권 조정 실행'}
                 </button>
               </form>
 

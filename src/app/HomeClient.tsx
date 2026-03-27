@@ -32,7 +32,7 @@ import {
 
 type AppState = 'form' | 'result'
 type ResultTab = '사주' | '분석' | '운세' | '해석'
-type ViewMode = 'simple' | 'summary' | 'detail'
+type ViewMode = 'simple' | 'detail'
 type ReportTier = 'basic' | 'pro'
 
 const RESULT_TABS: { key: ResultTab; label: string; icon: string }[] = [
@@ -169,7 +169,7 @@ export default function HomeClient() {
       await fetchCheckinStatus()
 
       if ((data.reward ?? 0) > 0) {
-        setCheckinToast(`+${data.reward} 크레딧 보상!`)
+        setCheckinToast(`+${data.reward} 이용권 보상!`)
         setTimeout(() => setCheckinToast(null), 2000)
       }
     } catch {
@@ -198,12 +198,12 @@ export default function HomeClient() {
         const creditData = await creditRes.json().catch(() => null)
         setAiError(
           (creditData && typeof creditData.error === 'string' && creditData.error) ||
-            '크레딧이 부족합니다.',
+            '이용권이 부족합니다.',
         )
         return
       }
     } catch {
-      setAiError('크레딧 확인 중 네트워크 오류가 발생했습니다. 다시 시도해 주세요.')
+      setAiError('이용권 확인 중 네트워크 오류가 발생했습니다. 다시 시도해 주세요.')
       return
     }
 
@@ -212,8 +212,8 @@ export default function HomeClient() {
     const controller = new AbortController()
     abortRef.current = controller
 
-    // 30-second timeout
-    const timeoutId = setTimeout(() => controller.abort(), 30000)
+    const timeoutMs = category === '종합' || category === '인생성장' ? 60000 : 30000
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs)
 
     setAiLoading(true)
     setAiError(null)
@@ -234,6 +234,7 @@ export default function HomeClient() {
           yearlyFortune: result.yearlyFortune,
           monthlyFortune: result.monthlyFortune,
           category,
+          stream: true,
           traditionalContext: context || undefined,
           traditionalResult: traditionalResult || undefined,
           formData: formData || undefined,
@@ -852,76 +853,6 @@ export default function HomeClient() {
     setPremiumError(null)
   }
 
-  // Summary view helper
-  function renderSummary() {
-    if (!fullResult) return null
-    const ratingEmoji = fullResult.yearlyFortune.rating === '길' ? '🟢' : fullResult.yearlyFortune.rating === '흉' ? '🔴' : '🟡'
-    const aiPreview = aiInterpretation ? aiInterpretation.slice(0, 100) + (aiInterpretation.length > 100 ? '...' : '') : null
-
-    return (
-      <div className="summary-card animate-fadeIn space-y-4">
-        <div className="text-center">
-          <div className="text-xs mb-2" style={{ color: 'var(--text-muted)' }}>간략 요약</div>
-        </div>
-
-        {/* 일간 */}
-        <div className="flex items-center justify-between">
-          <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>일간 (日干)</span>
-          <span className="text-xl font-bold" style={{ color: 'var(--text-accent)' }}>
-            {fullResult.saju.dayPillar.heavenlyStemHanja} {fullResult.saju.dayPillar.heavenlyStem}
-          </span>
-        </div>
-
-        {/* 신강/신약 */}
-        <div className="flex items-center justify-between">
-          <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>강약</span>
-          <span
-            className="text-lg font-bold px-3 py-0.5 rounded-full"
-            style={{
-              color: fullResult.ilganStrength.strength === '신강' ? '#3b82f6' : '#f97316',
-              background: fullResult.ilganStrength.strength === '신강' ? 'rgba(59,130,246,0.15)' : 'rgba(249,115,22,0.15)',
-            }}
-          >
-            {fullResult.ilganStrength.strength}
-          </span>
-        </div>
-
-        {/* 용신 */}
-        <div className="flex items-center justify-between">
-          <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>용신 (用神)</span>
-          <span className="text-lg font-bold" style={{ color: 'var(--text-accent)' }}>
-            {fullResult.yongsin.yongsin}
-          </span>
-        </div>
-
-        {/* 올해 운세 */}
-        <div className="flex items-center justify-between">
-          <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>{new Date().getFullYear()}년 운세</span>
-          <span className="text-lg font-bold">
-            {ratingEmoji} {fullResult.yearlyFortune.rating}
-          </span>
-        </div>
-
-        {/* AI 한줄 요약 */}
-        {aiPreview && (
-          <div className="pt-3 border-t" style={{ borderColor: 'var(--border-color)' }}>
-            <p className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-              {aiPreview}
-            </p>
-          </div>
-        )}
-
-        <button
-          onClick={() => setViewMode('detail')}
-          className="w-full text-sm font-medium py-2 rounded-lg hover-scale"
-          style={{ background: 'var(--accent)', color: 'var(--accent-text)' }}
-        >
-          상세 보기 →
-        </button>
-      </div>
-    )
-  }
-
   function renderSimple() {
     if (!fullResult) return null
     const dayElement = fullResult.saju.dayPillar.element
@@ -1046,7 +977,7 @@ export default function HomeClient() {
                         : '출석 체크로 연속 보상을 받아보세요'}
                     </p>
                     <p className="text-[11px] mt-1" style={{ color: 'var(--text-secondary)' }}>
-                      7일 +2 · 30일 +5 · 100일 +10 크레딧
+                      7일 +2 · 30일 +5 · 100일 +10 이용권
                     </p>
                   </div>
                   {checkinStatus?.todayCheckin ? (
@@ -1131,16 +1062,6 @@ export default function HomeClient() {
                     단순
                   </button>
                   <button
-                    onClick={() => setViewMode('summary')}
-                    className="px-3 py-1.5 rounded-full text-xs font-medium transition-all"
-                    style={{
-                      background: viewMode === 'summary' ? 'var(--accent)' : 'transparent',
-                      color: viewMode === 'summary' ? 'var(--accent-text)' : 'var(--text-muted)',
-                    }}
-                  >
-                    간략
-                  </button>
-                  <button
                     onClick={() => setViewMode('detail')}
                     className="px-3 py-1.5 rounded-full text-xs font-medium transition-all"
                     style={{
@@ -1154,7 +1075,7 @@ export default function HomeClient() {
               </div>
             </div>
 
-            {viewMode === 'simple' ? renderSimple() : viewMode === 'summary' ? renderSummary() : (
+            {viewMode === 'simple' ? renderSimple() : (
               <>
                 {/* Tab Bar */}
                 <div className="flex gap-1 mb-6 p-1 rounded-xl" style={{ background: 'var(--bg-secondary)' }}>
@@ -1174,6 +1095,41 @@ export default function HomeClient() {
                     </button>
                   ))}
                 </div>
+
+                {/* AI 해석 강조 CTA (상세보기 진입 시) */}
+                {viewMode === 'detail' && activeTab !== '해석' && (
+                  <div
+                    className="mb-6 rounded-2xl p-4"
+                    style={{
+                      background: 'linear-gradient(135deg, rgba(99,102,241,0.22) 0%, rgba(168,85,247,0.18) 45%, rgba(251,191,36,0.12) 100%)',
+                      border: '1px solid rgba(168,85,247,0.35)',
+                      boxShadow: '0 10px 28px rgba(99, 102, 241, 0.12)',
+                    }}
+                  >
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                      <div>
+                        <p className="text-sm font-bold" style={{ color: '#ddd6fe' }}>
+                          🤖 AI 해석을 먼저 확인해 보세요
+                        </p>
+                        <p className="mt-1 text-xs" style={{ color: 'rgba(226,232,240,0.8)' }}>
+                          종합/성격/연애/직업 등 카테고리별로 바로 볼 수 있어요
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setActiveTab('해석')}
+                        className="w-full rounded-xl px-4 py-3 text-sm font-black transition-all hover:scale-[1.02] sm:w-auto"
+                        style={{
+                          background: 'linear-gradient(135deg, #a855f7 0%, #6366f1 55%, #fbbf24 130%)',
+                          color: '#0b1020',
+                          boxShadow: '0 10px 24px rgba(168, 85, 247, 0.25)',
+                        }}
+                      >
+                        AI해석 보기 →
+                      </button>
+                    </div>
+                  </div>
+                )}
 
                 {/* Tab Content */}
                 <div className="space-y-8 tab-panel" key={activeTab}>

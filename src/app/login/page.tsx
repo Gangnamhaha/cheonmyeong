@@ -200,7 +200,7 @@ function LoginForm() {
           </form>
 
           <p className="text-[10px] text-center" style={{ color: 'var(--text-muted)' }}>
-            비회원으로 결제한 크레딧을 사용할 수 있습니다.
+            비회원으로 구매한 이용권을 사용할 수 있습니다.
           </p>
         </div>
 

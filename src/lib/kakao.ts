@@ -143,7 +143,7 @@ export function shareReferralInvite(referralCode: string) {
     objectType: 'feed',
     content: {
       title: '사주해 친구 초대',
-      description: '사주해에서 무료 AI 사주를 확인해보세요! 가입하면 3크레딧 보너스!',
+      description: '사주해에서 무료 AI 사주를 확인해보세요! 가입하면 3 이용권 보너스!',
       imageUrl: 'https://sajuhae.vercel.app/opengraph-image.png',
       link: {
         mobileWebUrl: link,

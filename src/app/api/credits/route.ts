@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession, type Session } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { getUserCredits, useCredit, useFreeCredit } from '@/lib/credits'
+import { getUserCredits, useCredit as consumeCredit, useFreeCredit as consumeFreeCredit } from '@/lib/credits'
 import { cookies } from 'next/headers'
 
 /**
@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
   const userId = getEffectiveUserId(session)
 
   if (userId) {
-    const result = await useCredit(userId)
+    const result = await consumeCredit(userId)
 
     if (!result.success) {
       return NextResponse.json(
@@ -74,7 +74,7 @@ export async function POST(req: NextRequest) {
     || req.headers.get('x-real-ip')
     || 'unknown'
 
-  const result = await useFreeCredit(ip)
+  const result = await consumeFreeCredit(ip)
 
   if (!result.success) {
     return NextResponse.json(

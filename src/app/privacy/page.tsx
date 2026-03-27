@@ -25,7 +25,7 @@ export default function PrivacyPage() {
             <section>
               <h2 className="mb-2 text-lg font-semibold text-[var(--text-primary)]">2. 개인정보 수집 및 이용 목적</h2>
               <p>
-                수집한 정보는 회원 식별 및 인증, 사주 분석 결과 제공, 크레딧/구독 관리, 결제 및 환불 처리, 고객 문의 대응, 부정 이용 방지, 서비스 품질 개선 및 통계 분석을 위해 사용됩니다.
+                수집한 정보는 회원 식별 및 인증, 사주 분석 결과 제공, 이용권/구독 관리, 결제 및 환불 처리, 고객 문의 대응, 부정 이용 방지, 서비스 품질 개선 및 통계 분석을 위해 사용됩니다.
               </p>
             </section>
 
