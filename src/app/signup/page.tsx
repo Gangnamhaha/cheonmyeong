@@ -209,7 +209,11 @@ function SignupContent() {
               className="w-full rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-1 transition-colors"
               style={{
                 background: 'var(--bg-secondary)',
-                border: '1px solid var(--border-color)',
+                border: confirmPassword && password !== confirmPassword
+                  ? '1px solid #ef4444'
+                  : confirmPassword && password === confirmPassword
+                  ? '1px solid #4ade80'
+                  : '1px solid var(--border-color)',
                 color: 'var(--text-primary)',
               }}
               disabled={loading}
@@ -252,6 +256,16 @@ function SignupContent() {
             >
               {loading ? '가입 중...' : '회원가입'}
             </button>
+
+            {!isValid && !loading && (
+              <p className="text-xs text-center" style={{ color: 'var(--text-muted)' }}>
+                {!name.trim() && '이름을 입력해주세요.'}
+                {name.trim() && !email.trim() && '이메일을 입력해주세요.'}
+                {name.trim() && email.trim() && password.length < 6 && '비밀번호는 6자 이상이어야 합니다.'}
+                {name.trim() && email.trim() && password.length >= 6 && !confirmPassword && '비밀번호를 다시 입력해주세요.'}
+                {name.trim() && email.trim() && password.length >= 6 && confirmPassword && password !== confirmPassword && '비밀번호가 일치하지 않습니다.'}
+              </p>
+            )}
           </form>
 
           <p className="text-xs text-center" style={{ color: 'var(--text-muted)' }}>
