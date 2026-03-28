@@ -166,10 +166,9 @@ function Preview({ s, index }: { s: typeof S[0]; index: number }) {
       }
       ctx.restore()
 
-      // Typewriter text — current scene line
+      // Show full text immediately (no typewriter effect)
       const lineText = scenes[sceneIdx]
-      const charCount = Math.min(Math.floor(sceneT * lineText.length * 2), lineText.length)
-      const visibleText = lineText.slice(0, charCount)
+      const visibleText = lineText
 
       ctx.textAlign = 'center'
       ctx.textBaseline = 'middle'
@@ -188,16 +187,7 @@ function Preview({ s, index }: { s: typeof S[0]; index: number }) {
       ctx.shadowBlur = 0
       ctx.restore()
 
-      // Cursor blink with glow
-      if (charCount < lineText.length && Math.sin(t * 6) > 0) {
-        const textW = ctx.measureText(visibleText).width
-        ctx.save()
-        ctx.shadowColor = mood.glow
-        ctx.shadowBlur = 15
-        ctx.fillStyle = mood.text
-        ctx.fillRect(W / 2 + textW / 2 + 8, H * 0.45 - 25, 3, 50)
-        ctx.restore()
-      }
+      // Cursor removed (no typewriter effect)
 
       // Sub info with subtle glow
       ctx.save()
@@ -222,12 +212,12 @@ function Preview({ s, index }: { s: typeof S[0]; index: number }) {
       ctx.font = `24px ${font}`
       ctx.fillText(`${s.st} · 용신 ${s.y} · ${s.fd.year}.${s.fd.month}.${s.fd.day}`, W / 2, H * 0.74)
 
-      // Fade transition
-      if (sceneT < 0.06) {
-        ctx.fillStyle = `rgba(0,0,0,${1 - sceneT / 0.06})`
+      // Faster fade transition (instant feel)
+      if (sceneT < 0.02) {
+        ctx.fillStyle = `rgba(0,0,0,${1 - sceneT / 0.02})`
         ctx.fillRect(0, 0, W, H)
-      } else if (sceneT > 0.94) {
-        ctx.fillStyle = `rgba(0,0,0,${(sceneT - 0.94) / 0.06})`
+      } else if (sceneT > 0.98) {
+        ctx.fillStyle = `rgba(0,0,0,${(sceneT - 0.98) / 0.02})`
         ctx.fillRect(0, 0, W, H)
       }
 
