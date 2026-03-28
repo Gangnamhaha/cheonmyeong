@@ -362,6 +362,11 @@ export default function HomeClient() {
       setAppState('result')
       trackAnalysis('사주분석')
 
+      // Scroll to result section
+      setTimeout(() => {
+        resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }, 100)
+
       try {
         const saveRes = await fetch('/api/result/save', {
           method: 'POST',
