@@ -117,8 +117,10 @@ function Preview({ s, index }: { s: typeof S[0]; index: number }) {
       const sceneIdx = Math.floor(t / sceneDur) % 6
       const sceneT = (t % sceneDur) / sceneDur
       
-      // Debug log every 5 seconds
-      if (Math.floor(t) % 5 === 0 && Math.abs(t - Math.floor(t)) < 0.1) {
+      // Debug log every second (reduced frequency)
+      const prevSec = Math.floor((t - 1/60))
+      const currSec = Math.floor(t)
+      if (currSec > prevSec && currSec % 1 === 0) {
         const scenes = MOVIE_SCENES[s.m] ?? MOVIE_SCENES.mystical
         console.log(`⏱️ t=${t.toFixed(1)}s, scene=${sceneIdx}, text="${scenes[sceneIdx]}"`)
       }
