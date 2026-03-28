@@ -101,6 +101,12 @@ function Preview({ s, index }: { s: typeof S[0]; index: number }) {
       if (!running) return
       if (!visible) { frameRef.current = requestAnimationFrame(draw); return }
       timeRef.current += 1 / 60
+      
+      // Loop: 25s (5 scenes * 5s), skipping scene 0
+      // If time >= 30s, reset to 5s (scene 1 start)
+      if (timeRef.current >= 30) {
+        timeRef.current = 5
+      }
       const t = timeRef.current
 
       // 6 text scenes, 5s each = 30s loop
