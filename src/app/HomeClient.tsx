@@ -362,10 +362,14 @@ export default function HomeClient() {
       setAppState('result')
       trackAnalysis('사주분석')
 
-      // Scroll to result section
+      // Scroll to result section at top of page
       setTimeout(() => {
-        resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-      }, 100)
+        if (resultRef.current) {
+          const yOffset = -80 // Account for fixed header
+          const y = resultRef.current.getBoundingClientRect().top + window.pageYOffset + yOffset
+          window.scrollTo({ top: y, behavior: 'smooth' })
+        }
+      }, 200)
 
       try {
         const saveRes = await fetch('/api/result/save', {
