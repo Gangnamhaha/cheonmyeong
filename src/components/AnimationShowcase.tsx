@@ -80,8 +80,8 @@ function Preview({ s, index }: { s: typeof S[0]; index: number }) {
     const W = 1080, H = 1920
     let running = true
     let visible = true
-    // Start from scene 1 (skip first intro scene) - show main content immediately
-    timeRef.current = 5
+    // Start from scene 4 (most mystical scene: "신비로운 별빛 아래") - show mystical content immediately
+    timeRef.current = 20
 
     const observer = new IntersectionObserver(([entry]) => { visible = entry.isIntersecting }, { threshold: 0.1 })
     observer.observe(c)
