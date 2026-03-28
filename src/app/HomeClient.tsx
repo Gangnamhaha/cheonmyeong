@@ -362,6 +362,13 @@ export default function HomeClient() {
       setAppState('result')
       trackAnalysis('사주분석')
 
+      // Save result to localStorage for music page
+      try {
+        localStorage.setItem('sajuhae-full-result', JSON.stringify(result))
+      } catch (e) {
+        console.error('Failed to save result to localStorage:', e)
+      }
+
       // Scroll to result section at top of page
       setTimeout(() => {
         if (resultRef.current) {
