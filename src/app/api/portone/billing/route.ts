@@ -6,6 +6,7 @@ import { PLANS, type SubscriptionPlanKey } from '@/lib/credits'
 const PORTONE_STORE_ID = process.env.PORTONE_STORE_ID || ''
 const PORTONE_CHANNEL_KEY_BILLING =
   process.env.PORTONE_CHANNEL_KEY_BILLING
+  || process.env.PORTONE_CHANNEL_KEY_KCP_BILLING
   || process.env.PORTONE_CHANNEL_KEY_INICIS_BILLING
   || process.env.PORTONE_CHANNEL_KEY_TOSS
   || ''
