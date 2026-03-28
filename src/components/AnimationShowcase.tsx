@@ -105,8 +105,10 @@ function Preview({ s, index }: { s: typeof S[0]; index: number }) {
       
       // Loop: 25s (5 scenes * 5s), skipping scene 0
       // If time >= 30s, reset to 5s (scene 1 start)
+      const beforeReset = timeRef.current
       if (timeRef.current >= 30) {
         timeRef.current = 5
+        console.log(`🔄 Loop reset at ${beforeReset.toFixed(2)}s → 5s`)
       }
       const t = timeRef.current
 
@@ -114,6 +116,12 @@ function Preview({ s, index }: { s: typeof S[0]; index: number }) {
       const sceneDur = 5
       const sceneIdx = Math.floor(t / sceneDur) % 6
       const sceneT = (t % sceneDur) / sceneDur
+      
+      // Debug log every 5 seconds
+      if (Math.floor(t) % 5 === 0 && Math.abs(t - Math.floor(t)) < 0.1) {
+        const scenes = MOVIE_SCENES[s.m] ?? MOVIE_SCENES.mystical
+        console.log(`⏱️ t=${t.toFixed(1)}s, scene=${sceneIdx}, text="${scenes[sceneIdx]}"`)
+      }
 
       // Mood gradient background
       const grad = ctx.createLinearGradient(0, 0, W, H)
