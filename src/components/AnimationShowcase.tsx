@@ -48,12 +48,13 @@ const MOOD_COLORS: Record<string, { bg1: string; bg2: string; glow: string; text
   hopeful: { bg1: '#0f0f1a', bg2: '#1a1a2a', glow: '#fbbf24', text: '#fde68a' },
 }
 
+// Video files disabled - using canvas animation to ensure scene 1 start
 const VIDEO_MAP: Record<number, string> = {
-  0: '/videos/scene-1.webm',  // 클래식 운명극
-  1: '/videos/scene-2.webm',  // 로맨스
-  2: '/videos/scene-3.webm',  // 성장서사
-  3: '/videos/scene-4.webm',  // 모험
-  4: '/videos/scene-5.webm',  // 판타지
+  // 0: '/videos/scene-1.webm',  // 클래식 운명극
+  // 1: '/videos/scene-2.webm',  // 로맨스
+  // 2: '/videos/scene-3.webm',  // 성장서사
+  // 3: '/videos/scene-4.webm',  // 모험
+  // 4: '/videos/scene-5.webm',  // 판타지
 }
 
 function Preview({ s, index }: { s: typeof S[0]; index: number }) {
