@@ -80,7 +80,8 @@ function Preview({ s, index }: { s: typeof S[0]; index: number }) {
     const W = 1080, H = 1920
     let running = true
     let visible = true
-    timeRef.current = 0
+    // Start from scene 1 (skip first intro scene) - show main content immediately
+    timeRef.current = 5
 
     const observer = new IntersectionObserver(([entry]) => { visible = entry.isIntersecting }, { threshold: 0.1 })
     observer.observe(c)
