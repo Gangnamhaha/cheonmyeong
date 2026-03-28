@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       {
         error:
-          'REPLICATE_API_TOKEN이 설정되지 않아 AI 음악 생성이 비활성화되어 있습니다. 관리자에게 환경 변수 설정을 요청해 주세요.',
+          'AI 고품질 음악 생성 기능은 현재 준비 중입니다. 기본 사주 음악(실시간 Web Audio 버전)은 계속 이용하실 수 있습니다.',
       },
       { status: 503 },
     )

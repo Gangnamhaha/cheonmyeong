@@ -934,7 +934,10 @@ export default function HomeClient() {
 
         <div className="grid grid-cols-2 gap-2">
           <button
-            onClick={() => setViewMode('detail')}
+            onClick={() => {
+              setViewMode('detail')
+              setActiveTab('해석')
+            }}
             className="py-2.5 rounded-xl text-sm font-medium"
             style={{ background: 'var(--accent)', color: 'var(--accent-text)' }}
           >

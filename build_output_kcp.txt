@@ -1,0 +1,162 @@
+
+> sajuhae@0.1.0 build
+> next build
+
+  ▲ Next.js 14.2.35
+  - Environments: .env.local
+  - Experiments (use with caution):
+    · instrumentationHook
+
+   Creating an optimized production build ...
+[@sentry/nextjs] DEPRECATION WARNING: It is recommended renaming your `sentry.client.config.ts` file, or moving its content to `instrumentation-client.ts`. When using Turbopack `sentry.client.config.ts` will no longer work. Read more about the `instrumentation-client.ts` file: https://nextjs.org/docs/app/api-reference/file-conventions/instrumentation-client
+ ✓ Compiled successfully
+   Linting and checking validity of types ...
+
+./src/components/ShareCard.tsx
+252:11  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/components/UserMenu.tsx
+235:11  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/hooks/useScrollReveal.ts
+31:6  Warning: React Hook useEffect has a missing dependency: 'options'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./src/hooks/useSpeechSynthesis.ts
+87:23  Warning: The ref value 'speakSessionRef.current' will likely have changed by the time this effect cleanup function runs. If this ref points to a node rendered by React, copy 'speakSessionRef.current' to a variable inside the effect, and use that variable in the cleanup function.  react-hooks/exhaustive-deps
+
+info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/basic-features/eslint#disabling-rules
+   Collecting page data ...
+ ⚠ Using edge runtime on a page currently disables static generation for that page
+(node:82244) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+   Generating static pages (0/163) ...
+   Generating static pages (40/163) 
+   Generating static pages (81/163) 
+   Generating static pages (122/163) 
+ ✓ Generating static pages (163/163)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                              Size     First Load JS
+┌ ○ /                                    134 kB          321 kB
+├ ○ /_not-found                          875 B           158 kB
+├ ○ /admin                               8.38 kB         166 kB
+├ ƒ /api/admin                           0 B                0 B
+├ ƒ /api/admin/ai-costs                  0 B                0 B
+├ ƒ /api/admin/announcements             0 B                0 B
+├ ƒ /api/admin/auth                      0 B                0 B
+├ ƒ /api/admin/credits                   0 B                0 B
+├ ƒ /api/admin/inquiries                 0 B                0 B
+├ ƒ /api/admin/push/campaigns            0 B                0 B
+├ ƒ /api/admin/referrals                 0 B                0 B
+├ ƒ /api/admin/settings                  0 B                0 B
+├ ƒ /api/admin/users                     0 B                0 B
+├ ƒ /api/ask                             0 B                0 B
+├ ƒ /api/auth/[...nextauth]              0 B                0 B
+├ ƒ /api/auth/guest                      0 B                0 B
+├ ƒ /api/auth/signup                     0 B                0 B
+├ ƒ /api/card/[id]                       0 B                0 B
+├ ƒ /api/checkin                         0 B                0 B
+├ ƒ /api/checkout                        0 B                0 B
+├ ƒ /api/credits                         0 B                0 B
+├ ƒ /api/cron/daily-fortune              0 B                0 B
+├ ƒ /api/cron/push-reminder              0 B                0 B
+├ ƒ /api/cron/renew-subscriptions        0 B                0 B
+├ ƒ /api/daily-fortune                   0 B                0 B
+├ ƒ /api/email/send                      0 B                0 B
+├ ƒ /api/error-report                    0 B                0 B
+├ ƒ /api/generate-scene-image            0 B                0 B
+├ ƒ /api/gunghap                         0 B                0 B
+├ ƒ /api/history                         0 B                0 B
+├ ƒ /api/indexnow                        0 B                0 B
+├ ƒ /api/inquiry                         0 B                0 B
+├ ƒ /api/interpret                       0 B                0 B
+├ ƒ /api/movie-scenario                  0 B                0 B
+├ ƒ /api/music/generate                  0 B                0 B
+├ ƒ /api/og/[id]                         0 B                0 B
+├ ƒ /api/portone                         0 B                0 B
+├ ƒ /api/portone/billing                 0 B                0 B
+├ ƒ /api/portone/billing/pay             0 B                0 B
+├ ƒ /api/portone/refund                  0 B                0 B
+├ ƒ /api/portone/webhook                 0 B                0 B
+├ ƒ /api/push/send                       0 B                0 B
+├ ƒ /api/push/subscribe                  0 B                0 B
+├ ƒ /api/referral                        0 B                0 B
+├ ƒ /api/referral/apply                  0 B                0 B
+├ ƒ /api/report/download/[id]            0 B                0 B
+├ ƒ /api/report/generate                 0 B                0 B
+├ ƒ /api/result/[id]                     0 B                0 B
+├ ƒ /api/result/save                     0 B                0 B
+├ ƒ /api/saju/calculate                  0 B                0 B
+├ ○ /api/sentry-test                     0 B                0 B
+├ ƒ /api/subscription                    0 B                0 B
+├ ƒ /api/subscription/portal             0 B                0 B
+├ ƒ /api/webhook                         0 B                0 B
+├ ○ /apple-icon.png                      0 B                0 B
+├ ○ /blog                                229 B           160 kB
+├ ● /blog/[slug]                         923 B           160 kB
+├   ├ /blog/saju-boneunbeop
+├   ├ /blog/gunghap-boneunbeop
+├   ├ /blog/samjae-meaning
+├   └ [+7 more paths]
+├ ○ /fortune/2026                        923 B           160 kB
+├ ○ /fortune/2026/daebak                 229 B           160 kB
+├ ○ /fortune/2026/fall                   229 B           160 kB
+├ ● /fortune/2026/month/[month]          229 B           160 kB
+├   ├ /fortune/2026/month/1
+├   ├ /fortune/2026/month/2
+├   ├ /fortune/2026/month/3
+├   └ [+9 more paths]
+├ ○ /fortune/2026/samjae                 229 B           160 kB
+├ ○ /fortune/2026/spring                 229 B           160 kB
+├ ○ /fortune/2026/summer                 229 B           160 kB
+├ ○ /fortune/2026/tojeongbigyeol         229 B           160 kB
+├ ○ /fortune/2026/winter                 229 B           160 kB
+├ ● /fortune/ddi/[animal]                229 B           160 kB
+├   ├ /fortune/ddi/rat
+├   ├ /fortune/ddi/ox
+├   ├ /fortune/ddi/tiger
+├   └ [+9 more paths]
+├ ● /fortune/ddi/[animal]/[topic]        229 B           160 kB
+├   ├ /fortune/ddi/rat/jaemulun
+├   ├ /fortune/ddi/rat/yeonaewun
+├   ├ /fortune/ddi/rat/chwieobun
+├   └ [+33 more paths]
+├ ○ /fortune/today                       924 B           160 kB
+├ ● /fortune/zodiac/[sign]               229 B           160 kB
+├   ├ /fortune/zodiac/aries
+├   ├ /fortune/zodiac/taurus
+├   ├ /fortune/zodiac/gemini
+├   └ [+9 more paths]
+├ ○ /guide/oheng                         229 B           160 kB
+├ ○ /guide/saju-basics                   229 B           160 kB
+├ ○ /gunghap                             174 kB          340 kB
+├ ○ /gunghap/free                        229 B           160 kB
+├ ○ /history                             2.58 kB         171 kB
+├ ○ /icon.png                            0 B                0 B
+├ ○ /inquiry                             2.29 kB         162 kB
+├ ○ /login                               2.63 kB         171 kB
+├ ○ /opengraph-image.png                 0 B                0 B
+├ ○ /pricing                             27.2 kB         194 kB
+├ ○ /privacy                             229 B           160 kB
+├ ○ /refund                              229 B           160 kB
+├ ƒ /result/[id]                         1.09 kB         161 kB
+├ ○ /saju/calendar                       3.98 kB         163 kB
+├ ○ /saju/free                           1.51 kB         182 kB
+├ ○ /saju/music                          11.4 kB         171 kB
+├ ○ /signup                              3.24 kB         172 kB
+├ ○ /sitemap.xml                         0 B                0 B
+├ ○ /terms                               229 B           160 kB
+├ ○ /tools/bloodtype                     8.22 kB         168 kB
+├ ○ /tools/mbti                          5.79 kB         165 kB
+└ ○ /tools/name                          9.83 kB         169 kB
++ First Load JS shared by all            157 kB
+  ├ chunks/493-fcd86459e74a1499.js       101 kB
+  ├ chunks/fd9d1056-4d2b84bf2ebf627b.js  53.6 kB
+  └ other shared chunks (total)          2.92 kB
+
+
+○  (Static)   prerendered as static content
+●  (SSG)      prerendered as static HTML (uses getStaticProps)
+ƒ  (Dynamic)  server-rendered on demand
+
