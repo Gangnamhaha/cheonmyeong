@@ -937,6 +937,10 @@ export default function HomeClient() {
             onClick={() => {
               setViewMode('detail')
               setActiveTab('해석')
+              // Scroll to top of result section
+              setTimeout(() => {
+                resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+              }, 100)
             }}
             className="py-2.5 rounded-xl text-sm font-medium"
             style={{ background: 'var(--accent)', color: 'var(--accent-text)' }}
