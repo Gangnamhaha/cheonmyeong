@@ -84,7 +84,12 @@ function Preview({ s, index }: { s: typeof S[0]; index: number }) {
     // Start from scene 1 (skip intro) - show main content immediately
     timeRef.current = 5
 
-    const observer = new IntersectionObserver(([entry]) => { visible = entry.isIntersecting }, { threshold: 0.1 })
+    const observer = new IntersectionObserver(([entry]) => { 
+      visible = entry.isIntersecting
+      if (!entry.isIntersecting) {
+        console.log(`🙈 Canvas became invisible at t=${timeRef.current.toFixed(1)}s`)
+      }
+    }, { threshold: 0.1 })
     observer.observe(c)
 
     const mood = MOOD_COLORS[s.m] ?? MOOD_COLORS.mystical
