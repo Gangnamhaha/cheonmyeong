@@ -84,12 +84,7 @@ function Preview({ s, index }: { s: typeof S[0]; index: number }) {
     // Start from scene 1 (skip intro) - show main content immediately
     timeRef.current = 5
 
-    const observer = new IntersectionObserver(([entry]) => { 
-      visible = entry.isIntersecting
-      if (!entry.isIntersecting) {
-        console.log(`🙈 Canvas became invisible at t=${timeRef.current.toFixed(1)}s`)
-      }
-    }, { threshold: 0.1 })
+    const observer = new IntersectionObserver(([entry]) => { visible = entry.isIntersecting }, { threshold: 0.1 })
     observer.observe(c)
 
     const mood = MOOD_COLORS[s.m] ?? MOOD_COLORS.mystical
@@ -110,10 +105,8 @@ function Preview({ s, index }: { s: typeof S[0]; index: number }) {
       
       // Loop: 25s (5 scenes * 5s), skipping scene 0
       // If time >= 30s, reset to 5s (scene 1 start)
-      const beforeReset = timeRef.current
       if (timeRef.current >= 30) {
         timeRef.current = 5
-        console.log(`🔄 Loop reset at ${beforeReset.toFixed(2)}s → 5s`)
       }
       const t = timeRef.current
 
@@ -121,14 +114,6 @@ function Preview({ s, index }: { s: typeof S[0]; index: number }) {
       const sceneDur = 5
       const sceneIdx = Math.floor(t / sceneDur) % 6
       const sceneT = (t % sceneDur) / sceneDur
-      
-      // Debug log every second (reduced frequency)
-      const prevSec = Math.floor((t - 1/60))
-      const currSec = Math.floor(t)
-      if (currSec > prevSec && currSec % 1 === 0) {
-        const scenes = MOVIE_SCENES[s.m] ?? MOVIE_SCENES.mystical
-        console.log(`⏱️ t=${t.toFixed(1)}s, scene=${sceneIdx}, text="${scenes[sceneIdx]}"`)
-      }
 
       // Mood gradient background
       const grad = ctx.createLinearGradient(0, 0, W, H)
