@@ -14,6 +14,8 @@ export type MusicGenre =
   | 'orchestra'
   | 'lofi'
   | 'nature'
+  | 'jazz'
+  | 'pop'
 
 export interface GenreConfig {
   name: string
@@ -160,6 +162,42 @@ export const GENRE_CONFIGS: Record<MusicGenre, GenreConfig> = {
     padDetune: 20,
     melodyOctaveRange: [0, 1],
     swingAmount: 0.1,
+  },
+  jazz: {
+    name: '재즈',
+    description: '스윙 리듬과 즉흥적 멜로디로 자유로운 인생의 변주를 표현',
+    icon: '🎷',
+    padWaveform: 'sine',
+    melodyWaveform: 'triangle',
+    tempoMultiplier: 1.1,
+    reverbDecay: 2.0,
+    delayTime: 0.25,
+    delayFeedback: 0.22,
+    filterType: 'bandpass',
+    filterFreq: 1400,
+    noteLength: { min: 0.1, max: 0.7 },
+    percussionStyle: 'shuffle',
+    padDetune: 7,
+    melodyOctaveRange: [0, 3],
+    swingAmount: 0.45,
+  },
+  pop: {
+    name: '팝',
+    description: '캐치한 멜로디와 경쾌한 리듬으로 밝은 에너지를 전달',
+    icon: '🎤',
+    padWaveform: 'triangle',
+    melodyWaveform: 'sine',
+    tempoMultiplier: 1.15,
+    reverbDecay: 1.6,
+    delayTime: 0.2,
+    delayFeedback: 0.3,
+    filterType: 'lowpass',
+    filterFreq: 2400,
+    noteLength: { min: 0.12, max: 0.45 },
+    percussionStyle: 'crisp',
+    padDetune: 4,
+    melodyOctaveRange: [0, 2],
+    swingAmount: 0.08,
   },
 }
 
