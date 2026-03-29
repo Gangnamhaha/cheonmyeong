@@ -1081,7 +1081,13 @@ export default function HomeClient() {
                     단순
                   </button>
                   <button
-                    onClick={() => setViewMode('detail')}
+                    onClick={() => {
+                      setViewMode('detail')
+                      setActiveTab('해석')
+                      if (fullResult && !categoryCache[activeCategory]) {
+                        fetchInterpretation(fullResult, activeCategory)
+                      }
+                    }}
                     className="px-3 py-1.5 rounded-full text-xs font-medium transition-all"
                     style={{
                       background: viewMode === 'detail' ? 'var(--accent)' : 'transparent',
