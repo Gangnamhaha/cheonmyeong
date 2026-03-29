@@ -62,3 +62,22 @@ test-output.txt
 _*.js
 _*.txt
 scripts/_*.js
+
+# Test/debug screenshots (root level only)
+/*.png
+!/src/**/*.png
+!/public/**/*.png
+
+# Dev log files
+*.err.log
+dev_*.log
+dev_*.err.log
+prod_*.log
+prod_*.err.log
+build_output*.txt
+
+# Temp docx output
+_tmp/
+
+# OMC local state
+.omc/
