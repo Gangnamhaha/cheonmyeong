@@ -82,9 +82,10 @@ export function useSpeechSynthesis() {
     selectKoreanVoice()
     synth.addEventListener('voiceschanged', selectKoreanVoice)
 
+    const sessionRef = speakSessionRef
     return () => {
       synth.removeEventListener('voiceschanged', selectKoreanVoice)
-      speakSessionRef.current++
+      sessionRef.current++
       if (synth.speaking) synth.pause()
       synth.cancel()
       utteranceRef.current = null

@@ -233,6 +233,7 @@ export default function UserMenu() {
           {session.user?.name?.slice(0, 6) || '사용자'}
         </span>
         {session.user?.image && (
+          /* eslint-disable-next-line @next/next/no-img-element */
           <img
             src={session.user.image}
             alt=""

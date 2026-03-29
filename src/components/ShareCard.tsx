@@ -250,6 +250,7 @@ export default function ShareCard({ fullResult, name }: ShareCardProps) {
             border: '1px solid var(--border-color)',
           }}
         >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={previewUrl} alt="사주 카드 미리보기" className="w-full rounded-xl" />
           <div className="grid grid-cols-2 gap-2 mt-3">
             <button
