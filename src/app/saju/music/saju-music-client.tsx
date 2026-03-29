@@ -70,7 +70,7 @@ export default function SajuMusicClient() {
   const [progress, setProgress] = useState(0)
   const [totalDuration, setTotalDuration] = useState(0)
   const [isRunning, setIsRunning] = useState(false)
-  const [volume, setVolume] = useState(0.85)
+  const [volume, setVolume] = useState(1.0)
   const [audioError, setAudioError] = useState<string | null>(null)
   const [selectedGenre, setSelectedGenre] = useState<MusicGenre>('ambient')
 

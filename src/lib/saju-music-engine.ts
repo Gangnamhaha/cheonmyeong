@@ -46,7 +46,7 @@ export class SajuMusicEngine {
   private totalDuration = 0
   private movementStartTimes: number[] = []
   private currentMovementIndex = -1
-  private volume = 0.85
+  private volume = 1.0
   private _isPlaying = false
   private genreConfig: GenreConfig = GENRE_CONFIGS.ambient
 
@@ -64,7 +64,7 @@ export class SajuMusicEngine {
     this.master.connect(this.ctx.destination)
 
     this.musicBus = this.ctx.createGain()
-    this.musicBus.gain.value = 0.9
+    this.musicBus.gain.value = 1.0
 
     this.reverb = this.ctx.createConvolver()
     this.reverb.buffer = this.createImpulseResponse(this.ctx, 2.8, 2.1)
@@ -76,9 +76,9 @@ export class SajuMusicEngine {
     this.delayFeedback.gain.value = 0.28
 
     const wet = this.ctx.createGain()
-    wet.gain.value = 0.28
+    wet.gain.value = 0.5
     const dry = this.ctx.createGain()
-    dry.gain.value = 0.72
+    dry.gain.value = 1.3
 
     this.musicBus.connect(dry)
     this.musicBus.connect(this.reverb)
@@ -295,7 +295,7 @@ export class SajuMusicEngine {
     textureLfoGain.connect(colorFilter.frequency)
 
     padGain.gain.setValueAtTime(0.0001, startAt)
-    padGain.gain.exponentialRampToValueAtTime(0.08 + movement.intensity * 0.08, startAt + 2)
+    padGain.gain.exponentialRampToValueAtTime(0.24 + movement.intensity * 0.24, startAt + 2)
     padGain.gain.exponentialRampToValueAtTime(0.0001, endAt)
 
     const rootOsc = this.ctx.createOscillator()
@@ -379,7 +379,7 @@ export class SajuMusicEngine {
       filter.frequency.value = clamp(this.genreConfig.filterFreq + freq * 0.7, 160, 4200)
       filter.Q.value = movement.mood === 'mystical' ? 8 : 4
 
-      const peak = clamp(0.04 + movement.intensity * 0.09, 0.03, 0.14)
+      const peak = clamp(0.12 + movement.intensity * 0.27, 0.09, 0.42)
       gain.gain.setValueAtTime(0.0001, noteTime)
       gain.gain.exponentialRampToValueAtTime(peak, noteTime + 0.04)
       gain.gain.exponentialRampToValueAtTime(0.0001, noteTime + noteLength)
