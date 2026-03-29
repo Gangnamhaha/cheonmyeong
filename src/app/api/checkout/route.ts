@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import Stripe from 'stripe'
+import { SITE_URL } from '@/lib/constants'
 import {
   PLANS,
   type OnetimePlanKey,
@@ -78,7 +79,7 @@ export async function POST(req: NextRequest) {
   const userId = (session.user as Record<string, unknown>).id as string
   const userEmail = session.user.email ?? undefined
   const userName = session.user.name ?? undefined
-  const origin = req.headers.get('origin') || 'https://sajuhae.vercel.app'
+  const origin = req.headers.get('origin') || SITE_URL
 
   try {
     if (requestedType === 'subscription') {

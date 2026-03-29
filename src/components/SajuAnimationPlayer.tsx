@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { SITE_DOMAIN } from '@/lib/constants'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useSpeechSynthesis } from '@/hooks/useSpeechSynthesis'
 import { OHENG_COLORS } from '@/lib/oheng'
@@ -328,7 +329,7 @@ function drawScene5(
 function drawScene6(ctx: CanvasRenderingContext2D, w: number, h: number) {
   drawBaseBackground(ctx, w, h)
   drawText(ctx, '당신의 운명이 펼쳐집니다', w / 2, h * 0.45, 62, '#f8fafc')
-  drawText(ctx, '사주해 sajuhae.vercel.app', w / 2, h * 0.54, 30, '#fbbf24')
+  drawText(ctx, `사주해 ${SITE_DOMAIN}`, w / 2, h * 0.54, 30, '#fbbf24')
   ctx.strokeStyle = '#fbbf24'
   ctx.lineWidth = 4
   ctx.strokeRect(56, 56, w - 112, h - 112)
@@ -1019,7 +1020,7 @@ export default function SajuAnimationPlayer({
           />
         </motion.div>
         <p className="text-center text-3xl font-semibold text-slate-100">당신의 운명이 펼쳐집니다</p>
-        <p className="mt-4 text-sm text-amber-300">사주해 sajuhae.vercel.app</p>
+        <p className="mt-4 text-sm text-amber-300">사주해 {SITE_DOMAIN}</p>
       </motion.div>
     )
   }

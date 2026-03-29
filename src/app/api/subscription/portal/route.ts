@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import Stripe from 'stripe'
 import { authOptions } from '@/lib/auth'
 import { getSubscription } from '@/lib/subscription'
+import { SITE_URL } from '@/lib/constants'
 
 const stripe = process.env.STRIPE_SECRET_KEY
   ? new Stripe(process.env.STRIPE_SECRET_KEY)
@@ -24,7 +25,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Stripe 고객 정보가 없습니다.' }, { status: 404 })
   }
 
-  const origin = req.headers.get('origin') || 'https://sajuhae.vercel.app'
+  const origin = req.headers.get('origin') || SITE_URL
   const portal = await stripe.billingPortal.sessions.create({
     customer: subscription.stripeCustomerId,
     return_url: `${origin}/pricing`,

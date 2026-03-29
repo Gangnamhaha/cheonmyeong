@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
+import { SITE_URL } from '@/lib/constants'
 
 const STEMS = ['갑', '을', '병', '정', '무', '기', '경', '신', '임', '계']
 const BRANCHES = ['자', '축', '인', '묘', '진', '사', '오', '미', '신', '유', '술', '해']
@@ -82,9 +83,9 @@ export default function SajuCalendarClient() {
       isPartOf: {
         '@type': 'WebSite',
         name: '사주해',
-        url: 'https://sajuhae.vercel.app',
+        url: SITE_URL,
       },
-      url: 'https://sajuhae.vercel.app/saju/calendar',
+      url: `${SITE_URL}/saju/calendar`,
     }),
     []
   )

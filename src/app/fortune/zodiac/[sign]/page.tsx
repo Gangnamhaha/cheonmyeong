@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { WESTERN_ZODIAC, getZodiacBySlug } from '@/data/western-zodiac'
+import { SITE_URL } from '@/lib/constants'
 
 type Params = {
   params: {
@@ -67,7 +68,7 @@ export default function ZodiacSignPage({ params }: Params) {
       '@type': 'Organization',
       name: '사주해',
     },
-    mainEntityOfPage: `https://sajuhae.vercel.app/fortune/zodiac/${zodiac.slug}`,
+    mainEntityOfPage: `${SITE_URL}/fortune/zodiac/${zodiac.slug}`,
   }
 
   return (

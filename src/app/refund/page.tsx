@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { SITE_DOMAIN } from '@/lib/constants'
 
 export default function RefundPage() {
   return (
@@ -47,7 +48,7 @@ export default function RefundPage() {
               <h2 className="mb-2 text-lg font-semibold text-[var(--text-primary)]">5. 문의처</h2>
               <p>
                 서비스명: 사주해<br />
-                서비스 주소: sajuhae.vercel.app<br />
+                서비스 주소: {SITE_DOMAIN}<br />
                 이메일: any001004@gmail.com
               </p>
             </section>

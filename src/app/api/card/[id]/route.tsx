@@ -1,5 +1,6 @@
 import { ImageResponse } from '@vercel/og'
 import { getSupabase } from '@/lib/db'
+import { SITE_DOMAIN } from '@/lib/constants'
 
 export const runtime = 'edge'
 
@@ -56,7 +57,7 @@ function renderFallbackImage(format: CardFormat) {
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: isStory ? 20 : 14 }}>
-          <div style={{ fontSize: isStory ? 34 : 28, color: '#f8fafc' }}>나도 사주 보기 → sajuhae.vercel.app</div>
+          <div style={{ fontSize: isStory ? 34 : 28, color: '#f8fafc' }}>나도 사주 보기 → {SITE_DOMAIN}</div>
         </div>
       </div>
     ),
@@ -169,7 +170,7 @@ export async function GET(request: Request, { params }: Params) {
           </div>
 
           <div style={{ marginTop: isStory ? 14 : 10, fontSize: isStory ? 34 : 28, color: '#f59e0b', fontWeight: 700 }}>
-            나도 사주 보기 → sajuhae.vercel.app
+            나도 사주 보기 → {SITE_DOMAIN}
           </div>
         </div>
       </div>

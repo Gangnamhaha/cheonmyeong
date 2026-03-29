@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useCallback, useRef, useEffect } from 'react'
+import { SITE_URL, SITE_DOMAIN } from '@/lib/constants'
 import { useSession } from 'next-auth/react'
 import SajuForm from '@/components/SajuForm'
 import SajuResultCard from '@/components/SajuResult'
@@ -128,7 +129,7 @@ export default function HomeClient() {
   // New state for tabs and view mode
   const [activeTab, setActiveTab] = useState<ResultTab>('사주')
   const [viewMode, setViewMode] = useState<ViewMode>('simple')
-  const resultUrl = resultId ? `https://sajuhae.vercel.app/result/${resultId}` : null
+  const resultUrl = resultId ? `${SITE_URL}/result/${resultId}` : null
 
   const fetchCheckinStatus = useCallback(async () => {
     if (!session?.user) {
@@ -686,7 +687,7 @@ export default function HomeClient() {
       sections.push(
         new Paragraph({ spacing: { before: 300 }, children: [] }),
         new Paragraph({ alignment: AlignmentType.CENTER, children: [
-          new TextRun({ text: `${new Date().toISOString().slice(0, 10)} | sajuhae.vercel.app`, size: 16, color: 'AAAAAA' }),
+          new TextRun({ text: `${new Date().toISOString().slice(0, 10)} | ${SITE_DOMAIN}`, size: 16, color: 'AAAAAA' }),
         ] }),
       )
 
@@ -1639,7 +1640,7 @@ export default function HomeClient() {
             {new Date().toISOString().slice(0, 10)}
           </span>
           <span style={{ fontSize: '10px', color: '#475569' }}>
-            sajuhae.vercel.app
+            {SITE_DOMAIN}
           </span>
         </div>
       </div>

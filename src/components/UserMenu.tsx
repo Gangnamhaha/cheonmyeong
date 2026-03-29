@@ -1,6 +1,7 @@
 'use client'
 
 import { useSession, signIn, signOut } from 'next-auth/react'
+import { SITE_URL } from '@/lib/constants'
 import { useState, useEffect, useCallback } from 'react'
 import { shareReferralInvite } from '@/lib/kakao'
 
@@ -85,7 +86,7 @@ export default function UserMenu() {
 
   async function copyReferralLink() {
     if (!referral?.code) return
-    const link = `https://sajuhae.vercel.app/signup?ref=${referral.code}`
+    const link = `${SITE_URL}/signup?ref=${referral.code}`
     try {
       await navigator.clipboard.writeText(link)
       alert('초대 링크가 복사되었습니다!')

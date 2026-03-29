@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
+import { SITE_DOMAIN } from '@/lib/constants'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useSpeechSynthesis } from '@/hooks/useSpeechSynthesis'
 import { OHENG_COLORS } from '@/lib/oheng'
@@ -380,7 +381,7 @@ function drawSceneForCanvas(
 
     case 'epilogue':
       drawCenteredText(ctx, scene.narration.split('.')[0] ?? scene.narration, w / 2, h * 0.45, 42, '#f8fafc')
-      drawCenteredText(ctx, '사주해 sajuhae.vercel.app', w / 2, h * 0.55, 26, accent)
+      drawCenteredText(ctx, `사주해 ${SITE_DOMAIN}`, w / 2, h * 0.55, 26, accent)
       break
 
     default:
@@ -1129,7 +1130,7 @@ export default function SajuMoviePlayer({
               animate={{ opacity: 1 }}
               transition={{ delay: 3, duration: 1 }}
             >
-              사주해 sajuhae.vercel.app
+              사주해 {SITE_DOMAIN}
             </motion.p>
           </div>
         )

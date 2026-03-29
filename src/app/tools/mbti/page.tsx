@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { SITE_URL } from '@/lib/constants'
 import Breadcrumb from '@/components/Breadcrumb'
 import RelatedContent from '@/components/RelatedContent'
 import MbtiClient from './MbtiClient'
@@ -76,7 +77,7 @@ const webApplicationSchema = {
     price: '0',
     priceCurrency: 'KRW',
   },
-  url: 'https://sajuhae.vercel.app/tools/mbti',
+  url: `${SITE_URL}/tools/mbti`,
 }
 
 const RELATED_LINKS = [

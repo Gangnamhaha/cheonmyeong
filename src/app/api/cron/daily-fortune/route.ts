@@ -4,6 +4,7 @@ import { getSupabase } from '@/lib/db'
 import { Redis } from '@upstash/redis'
 import { broadcastPush } from '@/lib/push'
 import { logTokenUsage, calculateCost } from '@/lib/ai-cost'
+import { SITE_URL } from '@/lib/constants'
 
 const redisUrl = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL
 const redisToken = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN
@@ -110,7 +111,7 @@ export async function GET(req: NextRequest) {
       pushResult = await broadcastPush({
         title: '🔮 오늘의 운세가 도착했어요!',
         body: '사주해 AI가 분석한 오늘의 사주 운세를 확인해보세요.',
-        url: 'https://sajuhae.vercel.app',
+        url: SITE_URL,
       })
     } catch (e) {
       console.error('Push broadcast failed:', e)

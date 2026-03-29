@@ -1,3 +1,4 @@
+import { SITE_DOMAIN } from '@/lib/constants'
 import {
   AlignmentType,
   Document,
@@ -223,7 +224,7 @@ export async function generateGunghapReport(
                 alignment: AlignmentType.CENTER,
                 children: [
                   new TextRun({
-                    text: '사주해 AI 사주팔자 분석 서비스 | sajuhae.vercel.app',
+                    text: `사주해 AI 사주팔자 분석 서비스 | ${SITE_DOMAIN}`,
                     size: 18,
                     color: '777777',
                   }),
@@ -274,7 +275,7 @@ export async function generatePremiumReport(
                 alignment: AlignmentType.CENTER,
                 children: [
                   new TextRun({
-                    text: '사주해 AI 사주팔자 분석 서비스 | sajuhae.vercel.app',
+                    text: `사주해 AI 사주팔자 분석 서비스 | ${SITE_DOMAIN}`,
                     size: 18,
                     color: '777777',
                   }),
@@ -369,7 +370,7 @@ export async function generateProReport(
                 alignment: AlignmentType.CENTER,
                 children: [
                   new TextRun({
-                    text: '사주해 AI 사주팔자 분석 서비스 | sajuhae.vercel.app',
+                    text: `사주해 AI 사주팔자 분석 서비스 | ${SITE_DOMAIN}`,
                     size: 18,
                     color: '777777',
                   }),

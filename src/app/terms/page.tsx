@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { SITE_DOMAIN } from '@/lib/constants'
 
 export default function TermsPage() {
   return (
@@ -11,7 +12,7 @@ export default function TermsPage() {
         <section className="mt-4 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-6 shadow-[var(--card-shadow)] sm:p-8">
           <h1 className="font-serif-kr text-3xl font-bold text-[var(--text-accent)]">이용약관</h1>
           <p className="mt-2 text-sm text-[var(--text-secondary)]">
-            사주해 서비스 이용에 관한 기본 조건을 안내합니다. 본 약관은 sajuhae.vercel.app에서 제공하는 AI 기반 사주 분석 서비스 및 유료 상품 이용에 적용됩니다.
+            사주해 서비스 이용에 관한 기본 조건을 안내합니다. 본 약관은 {SITE_DOMAIN}에서 제공하는 AI 기반 사주 분석 서비스 및 유료 상품 이용에 적용됩니다.
           </p>
 
           <div className="mt-8 space-y-6 text-sm leading-7 text-[var(--text-secondary)]">

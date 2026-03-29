@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { SITE_URL } from '@/lib/constants'
 
 type BreadcrumbItem = {
   label: string
@@ -9,7 +10,7 @@ type BreadcrumbProps = {
   items: BreadcrumbItem[]
 }
 
-const SITE_ORIGIN = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '') || 'https://sajuhae.vercel.app'
+const SITE_ORIGIN = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '') || SITE_URL
 
 export default function Breadcrumb({ items }: BreadcrumbProps) {
   const breadcrumbSchema = {

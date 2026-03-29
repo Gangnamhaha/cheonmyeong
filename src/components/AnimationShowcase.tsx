@@ -1,6 +1,7 @@
 'use client'
 
 import { useRef, useEffect, useState, lazy, Suspense } from 'react'
+import { SITE_DOMAIN } from '@/lib/constants'
 import type { FullSajuResult } from '@/lib/saju'
 // lottie removed (404 error on sparkle-stars.json)
 const SajuAnimationPlayer = lazy(() => import('./SajuAnimationPlayer'))
@@ -252,7 +253,7 @@ function Preview({ s, index }: { s: typeof S[0]; index: number }) {
       // Brand
       ctx.fillStyle = mood.glow + '55'
       ctx.font = `20px ${font}`
-      ctx.fillText('사주해 sajuhae.vercel.app', W / 2, H - 48)
+      ctx.fillText(`사주해 ${SITE_DOMAIN}`, W / 2, H - 48)
 
       frameRef.current = requestAnimationFrame(draw)
     }

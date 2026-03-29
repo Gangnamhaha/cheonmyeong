@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { SITE_URL } from '@/lib/constants'
 import SajuMusicClient from './saju-music-client'
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -11,7 +12,7 @@ export async function generateMetadata(): Promise<Metadata> {
       title: '나의 사주 음악 | 사주해',
       description:
         '초년·청년·중년·말년 흐름을 4악장으로 듣는 맞춤형 사주 음악. 오행 균형과 용신을 사운드로 체험하세요.',
-      url: 'https://sajuhae.vercel.app/saju/music',
+      url: `${SITE_URL}/saju/music`,
       type: 'website',
       locale: 'ko_KR',
       siteName: '사주해',
@@ -33,9 +34,9 @@ const musicJsonLd = {
   isPartOf: {
     '@type': 'WebSite',
     name: '사주해',
-    url: 'https://sajuhae.vercel.app',
+    url: SITE_URL,
   },
-  url: 'https://sajuhae.vercel.app/saju/music',
+  url: `${SITE_URL}/saju/music`,
   about: {
     '@type': 'Thing',
     name: '사주팔자 음악 해석',

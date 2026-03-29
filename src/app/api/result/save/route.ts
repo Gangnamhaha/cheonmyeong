@@ -1,8 +1,9 @@
 import { randomUUID } from 'crypto'
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabase } from '@/lib/db'
+import { SITE_URL } from '@/lib/constants'
 
-const BASE_URL = 'https://sajuhae.vercel.app'
+const BASE_URL = SITE_URL
 
 function generateShortId(): string {
   return randomUUID().replace(/-/g, '').slice(0, 8)

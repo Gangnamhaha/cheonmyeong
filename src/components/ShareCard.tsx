@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { SITE_DOMAIN } from '@/lib/constants'
 import { OHENG_COLORS } from '@/lib/oheng'
 import type { FullSajuResult } from '@/lib/saju'
 
@@ -183,7 +184,7 @@ export default function ShareCard({ fullResult, name }: ShareCardProps) {
 
     ctx.fillStyle = '#94a3b8'
     ctx.font = `20px ${font}`
-    ctx.fillText('sajuhae.vercel.app', W / 2, H - 60)
+    ctx.fillText(SITE_DOMAIN, W / 2, H - 60)
 
     c.toBlob((blob) => {
       setIsGenerating(false)

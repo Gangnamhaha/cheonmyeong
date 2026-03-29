@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { broadcastPush } from '@/lib/push'
+import { SITE_URL } from '@/lib/constants'
 
 export async function GET(req: NextRequest) {
   // Verify cron secret
@@ -20,7 +21,7 @@ export async function GET(req: NextRequest) {
       pushResult = await broadcastPush({
         title: '✅ 오늘 체크인 하셨나요?',
         body: '매일 체크인하면 무료 이용권을 드려요! 지금 확인해보세요.',
-        url: 'https://sajuhae.vercel.app',
+        url: SITE_URL,
       })
       notificationType = 'evening-checkin'
     }
@@ -29,7 +30,7 @@ export async function GET(req: NextRequest) {
       pushResult = await broadcastPush({
         title: '🌟 이번 주말 운세가 궁금하다면?',
         body: 'AI 사주 분석으로 주말 운세를 확인해보세요. 무료!',
-        url: 'https://sajuhae.vercel.app/fortune/today',
+        url: `${SITE_URL}/fortune/today`,
       })
       notificationType = 'weekend-engagement'
     }

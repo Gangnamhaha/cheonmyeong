@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { SITE_URL } from '@/lib/constants'
 import Breadcrumb from '@/components/Breadcrumb'
 import RelatedContent from '@/components/RelatedContent'
 import NameClient from './NameClient'
@@ -27,7 +28,7 @@ const webApplicationSchema = {
     price: '0',
     priceCurrency: 'KRW',
   },
-  url: 'https://sajuhae.vercel.app/tools/name',
+  url: `${SITE_URL}/tools/name`,
 }
 
 const faqSchema = {

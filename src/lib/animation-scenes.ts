@@ -1,4 +1,5 @@
 import { OHENG_COLORS } from '@/lib/oheng'
+import { SITE_DOMAIN } from '@/lib/constants'
 import type { FullSajuResult } from '@/lib/saju'
 
 type OhengKey = '목' | '화' | '토' | '금' | '수'
@@ -156,7 +157,7 @@ export function drawSceneEnding(ctx: CanvasRenderingContext2D, w: number, h: num
   drawText(ctx, '당신의 운명이', w / 2, h * 0.38, 62, '#f8fafc')
   drawText(ctx, '펼쳐집니다', w / 2, h * 0.44, 62, '#f8fafc')
   drawText(ctx, '사주해', w / 2, h * 0.54, 48, '#fbbf24')
-  drawText(ctx, 'sajuhae.vercel.app', w / 2, h * 0.6, 30, '#94a3b8')
+  drawText(ctx, SITE_DOMAIN, w / 2, h * 0.6, 30, '#94a3b8')
   ctx.strokeStyle = '#fbbf24'; ctx.lineWidth = 4
   ctx.strokeRect(56, 56, w - 112, h - 112)
 }

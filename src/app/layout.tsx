@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Noto_Serif_KR } from 'next/font/google'
 import Script from 'next/script'
 import './globals.css'
+import { SITE_URL } from '@/lib/constants'
 import ErrorBoundary from '@/components/ErrorBoundary'
 import ThemeProvider from '@/components/ThemeProvider'
 import AuthProvider from '@/components/AuthProvider'
@@ -21,7 +22,7 @@ const notoSerifKr = Noto_Serif_KR({
 })
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://sajuhae.vercel.app'),
+  metadataBase: new URL(SITE_URL),
   title: '사주해 - AI 사주팔자 풀이',
   description: '생년월일시를 입력하면 사주팔자, 오행, 십신, 용신, 대운을 분석하고 AI가 해석해드립니다. 무료 사주 풀이 서비스.',
   keywords: ['사주', '사주팔자', '팔자', '오행', '십신', '용신', '대운', '운세', 'AI 사주', '무료 사주', '사주해', '명리학'],
@@ -107,7 +108,7 @@ export default function RootLayout({
               "@context": "https://schema.org",
               "@type": "WebApplication",
               "name": "사주해 - AI 사주팔자 풀이",
-              "url": "https://sajuhae.vercel.app",
+              "url": SITE_URL,
               "description": "생년월일시를 입력하면 사주팔자, 오행, 십신, 용신, 대운을 분석하고 AI가 해석해드립니다.",
               "applicationCategory": "LifestyleApplication",
               "operatingSystem": "Web",

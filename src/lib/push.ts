@@ -15,6 +15,7 @@
 
 import { getSupabase } from '@/lib/db'
 import * as crypto from 'crypto'
+import { SITE_URL } from '@/lib/constants'
 
 // ─── Server-side: Token Storage ────────────────────────────────────
 
@@ -206,11 +207,11 @@ export async function sendPushNotification(params: {
                   icon: params.icon || '/app_icon_128.png',
                 },
                 fcm_options: {
-                  link: params.url || 'https://sajuhae.vercel.app',
+                  link: params.url || SITE_URL,
                 },
               },
               data: {
-                url: params.url || 'https://sajuhae.vercel.app',
+                url: params.url || SITE_URL,
               },
             },
           }),
