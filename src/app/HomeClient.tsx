@@ -369,13 +369,9 @@ export default function HomeClient() {
         console.error('Failed to save result to localStorage:', e)
       }
 
-      // Scroll to result section at top of page
+      // Scroll to top of page
       setTimeout(() => {
-        if (resultRef.current) {
-          const yOffset = -80 // Account for fixed header
-          const y = resultRef.current.getBoundingClientRect().top + window.pageYOffset + yOffset
-          window.scrollTo({ top: y, behavior: 'smooth' })
-        }
+        window.scrollTo({ top: 0, behavior: 'smooth' })
       }, 200)
 
       try {
