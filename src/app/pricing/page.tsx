@@ -38,6 +38,7 @@ declare global {
         channelKey: string
         billingKeyMethod: string
         issueKey: string
+        issueId?: string
         issueName?: string
         customer?: {
           id?: string
@@ -316,6 +317,7 @@ function PricingContent() {
         channelKey: data.channelKey,
         billingKeyMethod: 'CARD',
         issueKey: data.issueKey,
+        issueId: data.issueKey,
         issueName: data.issueName,
         customer: {
           id: data.userId,
