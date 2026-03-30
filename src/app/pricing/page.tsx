@@ -358,8 +358,9 @@ function PricingContent() {
 
       showToast('구독이 시작되었습니다! 이용권이 지급되었습니다.', 5000)
       fetchSubscription()
-    } catch {
-      showToast('네트워크 오류가 발생했습니다.')
+    } catch (err) {
+      console.error('구독 결제 에러:', err)
+      showToast(err instanceof Error ? `결제 오류: ${err.message}` : '네트워크 오류가 발생했습니다.')
     } finally {
       setLoadingPlan(null)
     }
