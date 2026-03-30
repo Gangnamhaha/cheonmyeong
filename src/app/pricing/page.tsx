@@ -279,10 +279,16 @@ function PricingContent() {
       return
     }
 
-    const phone = subPhone.replace(/[^0-9]/g, '')
+    let phone = subPhone.replace(/[^0-9]/g, '')
     if (!phone || phone.length < 10) {
-      showToast('구독 결제를 위해 휴대폰 번호를 입력해주세요.')
-      return
+      const input = prompt('구독 결제를 위해 휴대폰 번호를 입력해주세요.\n(예: 01012345678)')
+      if (!input) return
+      phone = input.replace(/[^0-9]/g, '')
+      if (phone.length < 10) {
+        showToast('올바른 휴대폰 번호를 입력해주세요.')
+        return
+      }
+      setSubPhone(phone)
     }
 
     setLoadingPlan(planKey)
@@ -550,25 +556,15 @@ function PricingContent() {
            </div>
          )}
 
-          {/* Subscription Card-Only Notice + Phone */}
+          {/* Subscription Card-Only Notice */}
           {planMode === 'monthly' && (
             <div
               className="rounded-2xl p-4 mb-6 theme-transition"
               style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)' }}
             >
-              <p className="text-xs text-center mb-3" style={{ color: 'var(--text-secondary)' }}>
+              <p className="text-xs text-center" style={{ color: 'var(--text-secondary)' }}>
                 구독은 카드결제만 지원됩니다.
               </p>
-              {session && (
-                <input
-                  type="tel"
-                  value={subPhone}
-                  onChange={e => setSubPhone(e.target.value)}
-                  placeholder="휴대폰 번호 (예: 01012345678)"
-                  className="w-full px-3 py-2 rounded-lg text-sm theme-transition"
-                  style={{ background: 'var(--bg-primary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }}
-                />
-              )}
             </div>
           )}
 
