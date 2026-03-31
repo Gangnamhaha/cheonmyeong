@@ -5,10 +5,10 @@ import { PLANS, type PlanKey } from '@/lib/credits'
 
 const PORTONE_STORE_ID = process.env.PORTONE_STORE_ID || ''
 const PORTONE_CHANNEL_KEY_ONETIME =
-  process.env.PORTONE_CHANNEL_KEY_ONETIME
+  process.env.PORTONE_CHANNEL_KEY_TOSS
+  || process.env.PORTONE_CHANNEL_KEY_ONETIME
   || process.env.PORTONE_CHANNEL_KEY_KCP_ONETIME
   || process.env.PORTONE_CHANNEL_KEY_INICIS_ONETIME
-  || process.env.PORTONE_CHANNEL_KEY_TOSS
   || ''
 
 export async function POST(req: NextRequest) {
