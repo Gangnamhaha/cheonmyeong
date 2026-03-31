@@ -275,13 +275,13 @@ function PricingContent() {
   }
 
   // PortOne V2 billingKey subscription flow
-  async function handleSubscription(planKey: SubscriptionPlanKey) {
+  async function handleSubscription(planKey: SubscriptionPlanKey, phoneOverride?: string) {
     if (!session) {
       showToast('구독은 로그인이 필요합니다.')
       return
     }
 
-    const phone = subPhone.replace(/[^0-9]/g, '')
+    const phone = (phoneOverride || subPhone).replace(/[^0-9]/g, '')
     if (!phone || phone.length < 10) {
       setPhoneInput(subPhone)
       setPhoneModal({ planKey })
@@ -731,9 +731,10 @@ function PricingContent() {
                 style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }}
                 onKeyDown={e => {
                   if (e.key === 'Enter' && phoneInput.length >= 10) {
+                    const planKey = phoneModal.planKey
                     setSubPhone(phoneInput)
                     setPhoneModal(null)
-                    setTimeout(() => handleSubscription(phoneModal.planKey), 0)
+                    handleSubscription(planKey, phoneInput)
                   }
                 }}
               />
@@ -751,9 +752,10 @@ function PricingContent() {
                       showToast('올바른 휴대폰 번호를 입력해주세요.')
                       return
                     }
+                    const planKey = phoneModal.planKey
                     setSubPhone(phoneInput)
                     setPhoneModal(null)
-                    setTimeout(() => handleSubscription(phoneModal.planKey), 0)
+                    handleSubscription(planKey, phoneInput)
                   }}
                   disabled={phoneInput.length < 10}
                   className="flex-1 py-2.5 rounded-xl text-sm font-bold"
