@@ -243,8 +243,8 @@ function PricingContent() {
         payMethod: paymentMethod === 'kakao_pay' ? 'EASY_PAY' : 'CARD',
         redirectUrl: `${window.location.origin}/pricing`,
         customer: {
-          email: session?.user?.email || guestEmail.trim() || undefined,
-          fullName: session?.user?.name || undefined,
+          email: session?.user?.email || guestEmail.trim() || 'guest@sajuhae.com',
+          fullName: session?.user?.name || '사주해 이용자',
         },
         customData,
       }
