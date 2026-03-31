@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
     channelKey: PORTONE_CHANNEL_KEY_ONETIME,
     orderName: `사주해 - ${planInfo.name}`,
     totalAmount: planInfo.price,
-    currency: 'KRW',
+    currency: 'CURRENCY_KRW',
     userId,
   })
 }

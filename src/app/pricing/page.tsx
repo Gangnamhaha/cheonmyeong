@@ -269,8 +269,8 @@ function PricingContent() {
       await verifyPayment(data.paymentId, isGuest, customData)
     } catch (err) {
       console.error('[handlePayment error]', err)
-      const message = err instanceof Error ? err.message : '네트워크 오류가 발생했습니다.'
-      showToast(message || '네트워크 오류가 발생했습니다.')
+      const detail = err instanceof Error ? err.message : JSON.stringify(err)
+      showToast(`결제 오류: ${detail || '알 수 없는 오류'}`, 10000)
     } finally {
       setLoadingPlan(null)
     }
