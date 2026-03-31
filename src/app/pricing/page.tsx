@@ -85,6 +85,8 @@ function PricingContent() {
   const [cancelingSubscription, setCancelingSubscription] = useState(false)
   const [guestEmail, setGuestEmail] = useState('')
   const [subPhone, setSubPhone] = useState('')
+  const [phoneModal, setPhoneModal] = useState<{ planKey: SubscriptionPlanKey } | null>(null)
+  const [phoneInput, setPhoneInput] = useState('')
 
   const success = searchParams.get('success')
   const cancelled = searchParams.get('cancelled')
@@ -279,16 +281,11 @@ function PricingContent() {
       return
     }
 
-    let phone = subPhone.replace(/[^0-9]/g, '')
+    const phone = subPhone.replace(/[^0-9]/g, '')
     if (!phone || phone.length < 10) {
-      const input = prompt('구독 결제를 위해 휴대폰 번호를 입력해주세요.\n(예: 01012345678)')
-      if (!input) return
-      phone = input.replace(/[^0-9]/g, '')
-      if (phone.length < 10) {
-        showToast('올바른 휴대폰 번호를 입력해주세요.')
-        return
-      }
-      setSubPhone(phone)
+      setPhoneInput(subPhone)
+      setPhoneModal({ planKey })
+      return
     }
 
     setLoadingPlan(planKey)
@@ -705,6 +702,72 @@ function PricingContent() {
             토스페이먼츠를 통해 안전하게 결제됩니다. (카드, 간편결제 지원)
           </p>
         </div>
+
+        {/* Phone Number Modal */}
+        {phoneModal && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center px-4"
+            style={{ background: 'rgba(0,0,0,0.5)' }}
+            onClick={() => setPhoneModal(null)}
+          >
+            <div
+              className="w-full max-w-xs rounded-2xl p-6 shadow-xl theme-transition"
+              style={{ background: 'var(--bg-card)' }}
+              onClick={e => e.stopPropagation()}
+            >
+              <h3 className="text-base font-bold mb-1" style={{ color: 'var(--text-primary)' }}>
+                휴대폰 번호 입력
+              </h3>
+              <p className="text-xs mb-4" style={{ color: 'var(--text-muted)' }}>
+                정기결제 등록을 위해 필요합니다.
+              </p>
+              <input
+                type="tel"
+                value={phoneInput}
+                onChange={e => setPhoneInput(e.target.value.replace(/[^0-9]/g, '').slice(0, 11))}
+                placeholder="01012345678"
+                autoFocus
+                className="w-full px-4 py-3 rounded-xl text-sm mb-4 focus:outline-none focus:ring-1"
+                style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }}
+                onKeyDown={e => {
+                  if (e.key === 'Enter' && phoneInput.length >= 10) {
+                    setSubPhone(phoneInput)
+                    setPhoneModal(null)
+                    setTimeout(() => handleSubscription(phoneModal.planKey), 0)
+                  }
+                }}
+              />
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setPhoneModal(null)}
+                  className="flex-1 py-2.5 rounded-xl text-sm font-medium"
+                  style={{ background: 'var(--bg-secondary)', color: 'var(--text-secondary)' }}
+                >
+                  취소
+                </button>
+                <button
+                  onClick={() => {
+                    if (phoneInput.length < 10) {
+                      showToast('올바른 휴대폰 번호를 입력해주세요.')
+                      return
+                    }
+                    setSubPhone(phoneInput)
+                    setPhoneModal(null)
+                    setTimeout(() => handleSubscription(phoneModal.planKey), 0)
+                  }}
+                  disabled={phoneInput.length < 10}
+                  className="flex-1 py-2.5 rounded-xl text-sm font-bold"
+                  style={{
+                    background: phoneInput.length >= 10 ? 'var(--accent)' : 'var(--bg-secondary)',
+                    color: phoneInput.length >= 10 ? 'var(--accent-text)' : 'var(--text-muted)',
+                  }}
+                >
+                  확인
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Toast */}
         {toast && (
