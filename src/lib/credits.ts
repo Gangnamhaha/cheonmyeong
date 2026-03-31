@@ -20,6 +20,7 @@ export interface UserCredits {
   used: number
   plan: PlanKey
   lastRefill: string // ISO date
+  expiresAt?: string // ISO date — null/undefined means never expires
 }
 
 export const PLANS = {
@@ -205,6 +206,32 @@ const CREDIT_KEY = (userId: string) => `credits:user:${userId}`
 const USED_COUNTER_KEY = (userId: string) => `credits:used:${userId}`
 const FREE_KEY = (ip: string, date: string) => `credits:free:${ip}:${date}`
 
+// Auto-detect whether the expires_at column exists in the credits table.
+// Starts as true (optimistic); flips to false on first column-not-found error.
+let _hasExpiresAtColumn = true
+
+async function upsertCredits(
+  supabase: NonNullable<ReturnType<typeof getSupabase>>,
+  userId: string,
+  data: { total: number; used: number; plan: string; last_refill: string; expires_at?: string | null },
+) {
+  const payload = _hasExpiresAtColumn
+    ? { user_id: userId, ...data }
+    : { user_id: userId, total: data.total, used: data.used, plan: data.plan, last_refill: data.last_refill }
+
+  const { error } = await supabase.from('credits').upsert(payload, { onConflict: 'user_id' })
+
+  if (error?.message?.includes('expires_at')) {
+    // Column doesn't exist yet — retry without it
+    _hasExpiresAtColumn = false
+    const { total, used, plan, last_refill } = data
+    await supabase.from('credits').upsert(
+      { user_id: userId, total, used, plan, last_refill },
+      { onConflict: 'user_id' },
+    )
+  }
+}
+
 // ─── User credit functions ─────────────────────────────────────────
 
 export async function getUserCredits(userId: string): Promise<UserCredits> {
@@ -222,6 +249,7 @@ export async function getUserCredits(userId: string): Promise<UserCredits> {
         used: data.used,
         plan: data.plan as PlanKey,
         lastRefill: data.last_refill,
+        expiresAt: data.expires_at ?? undefined,
       }
     }
   }
@@ -243,13 +271,12 @@ export async function getUserCredits(userId: string): Promise<UserCredits> {
   }
 
   if (supabase) {
-    await supabase.from('credits').upsert({
-      user_id: userId,
+    await upsertCredits(supabase, userId, {
       total: defaultCredits.total,
       used: defaultCredits.used,
       plan: defaultCredits.plan,
       last_refill: defaultCredits.lastRefill,
-    }, { onConflict: 'user_id' })
+    })
   }
 
   if (redis) {
@@ -265,21 +292,28 @@ export async function addCredits(userId: string, plan: PlanKey): Promise<UserCre
   const current = await getUserCredits(userId)
   const supabase = getSupabase()
   const planInfo = PLANS[plan]
+
+  // Set expiration: 3 months from now for onetime plans
+  const expiresAt = planInfo.type === 'onetime'
+    ? new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
+    : undefined
+
   const updated: UserCredits = {
     total: current.total + planInfo.credits - current.used, // remaining + new
     used: 0,
     plan: plan === 'free' ? current.plan : plan,
     lastRefill: new Date().toISOString().slice(0, 10),
+    expiresAt: expiresAt ?? current.expiresAt,
   }
 
   if (supabase) {
-    await supabase.from('credits').upsert({
-      user_id: userId,
+    await upsertCredits(supabase, userId, {
       total: updated.total,
       used: updated.used,
       plan: updated.plan,
       last_refill: updated.lastRefill,
-    }, { onConflict: 'user_id' })
+      expires_at: updated.expiresAt || null,
+    })
   }
 
   if (redis) {
@@ -301,16 +335,17 @@ export async function refillSubscriptionCredits(userId: string, plan: Subscripti
     used: 0,
     plan,
     lastRefill: new Date().toISOString().slice(0, 10),
+    expiresAt: undefined,
   }
 
   if (supabase) {
-    await supabase.from('credits').upsert({
-      user_id: userId,
+    await upsertCredits(supabase, userId, {
       total: updated.total,
       used: updated.used,
       plan: updated.plan,
       last_refill: updated.lastRefill,
-    }, { onConflict: 'user_id' })
+      expires_at: null,
+    })
   }
 
   if (redis) {
@@ -340,6 +375,11 @@ export async function useCredit(userId: string): Promise<{ success: boolean; rem
     const cached = await redis.get<UserCredits>(key)
     const credits = cached ?? await getUserCredits(userId)
 
+    // Check expiration
+    if (credits.expiresAt && new Date(credits.expiresAt) < new Date()) {
+      return { success: false, remaining: 0 }
+    }
+
     const currentCounter = await redis.get<number>(USED_COUNTER_KEY(userId))
     if (typeof currentCounter !== 'number') {
       await redis.set(USED_COUNTER_KEY(userId), credits.used)
@@ -363,13 +403,12 @@ export async function useCredit(userId: string): Promise<{ success: boolean; rem
       if (supabase) {
         void (async () => {
           try {
-            await supabase.from('credits').upsert({
-              user_id: userId,
+            await upsertCredits(supabase, userId, {
               total: updatedCredits.total,
               used: updatedCredits.used,
               plan: updatedCredits.plan,
               last_refill: updatedCredits.lastRefill,
-            }, { onConflict: 'user_id' })
+            })
           } catch {
             // Non-critical async sync
           }
@@ -394,6 +433,10 @@ export async function useCredit(userId: string): Promise<{ success: boolean; rem
       if (!data) {
         await getUserCredits(userId)
         continue
+      }
+
+      if (data.expires_at && new Date(data.expires_at) < new Date()) {
+        return { success: false, remaining: 0 }
       }
 
       if (data.used >= data.total) {
@@ -431,6 +474,9 @@ export async function useCredit(userId: string): Promise<{ success: boolean; rem
 
 export async function getRemainingCredits(userId: string): Promise<number> {
   const credits = await getUserCredits(userId)
+  if (credits.expiresAt && new Date(credits.expiresAt) < new Date()) {
+    return 0
+  }
   return credits.total - credits.used
 }
 

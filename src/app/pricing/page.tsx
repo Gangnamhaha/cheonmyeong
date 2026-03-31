@@ -267,8 +267,10 @@ function PricingContent() {
 
       // 5. Verify on server
       await verifyPayment(data.paymentId, isGuest, customData)
-    } catch {
-      showToast('네트워크 오류가 발생했습니다.')
+    } catch (err) {
+      console.error('[handlePayment error]', err)
+      const message = err instanceof Error ? err.message : '네트워크 오류가 발생했습니다.'
+      showToast(message || '네트워크 오류가 발생했습니다.')
     } finally {
       setLoadingPlan(null)
     }
@@ -698,7 +700,7 @@ function PricingContent() {
         {/* Note */}
         <div className="mt-8 text-center">
           <p className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>
-            이용권은 만료되지 않으며, AI 해석 시 이용권이 차감됩니다.<br />
+            이용권은 구매일로부터 3개월간 유효하며, AI 해석 시 이용권이 차감됩니다.<br />
             토스페이먼츠를 통해 안전하게 결제됩니다. (카드, 간편결제 지원)
           </p>
         </div>
