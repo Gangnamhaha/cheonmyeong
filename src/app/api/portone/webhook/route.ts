@@ -106,7 +106,7 @@ export async function POST(req: NextRequest) {
       parseCustomData(customDataFromBody) ??
       parseCustomData(payment.customData)
     if (!parsedData) {
-      return NextResponse.json({ error: 'paymentId 또는 customData 파싱 실패' }, { status: 400 })
+      return NextResponse.json({ received: true, ignored: true, reason: 'unparseable' })
     }
 
     const planFromPaymentId = parsePlanFromPayStylePaymentId(paymentId)
@@ -282,7 +282,8 @@ export async function POST(req: NextRequest) {
     return buildResponse({ received: true, type: 'onetime' })
   } catch (error) {
     console.error('PortOne webhook handling error:', error)
-    return NextResponse.json({ error: 'PortOne webhook 처리 중 오류가 발생했습니다.' }, { status: 500 })
+    // Return 200 to prevent PortOne from retrying — log the error server-side only
+    return NextResponse.json({ received: true, error: 'processing_failed' })
   } finally {
     if (idempotencyRedis && lockKey) {
       try {

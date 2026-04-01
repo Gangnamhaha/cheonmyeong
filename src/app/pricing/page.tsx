@@ -269,8 +269,7 @@ function PricingContent() {
       await verifyPayment(data.paymentId, isGuest, customData)
     } catch (err) {
       console.error('[handlePayment error]', err)
-      const detail = err instanceof Error ? err.message : JSON.stringify(err)
-      showToast(`결제 오류: ${detail || '알 수 없는 오류'}`, 10000)
+      showToast('결제 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.')
     } finally {
       setLoadingPlan(null)
     }
