@@ -10,10 +10,10 @@ const config: ExpoConfig = {
   scheme: 'sajuhae',
   version: '1.0.0',
   orientation: 'portrait',
-  icon: '../app_icon_1024.png',
+  icon: './app_icon_1024.png',
   userInterfaceStyle: 'automatic',
   splash: {
-    image: '../app_icon_1024.png',
+    image: './app_icon_1024.png',
     resizeMode: 'contain',
     backgroundColor: '#0f172a'
   },
@@ -28,7 +28,7 @@ const config: ExpoConfig = {
   android: {
     package: 'com.sajuhae.mobile',
     adaptiveIcon: {
-      foregroundImage: '../app_icon_1024.png',
+      foregroundImage: './app_icon_1024.png',
       backgroundColor: '#0f172a'
     }
   },

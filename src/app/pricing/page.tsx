@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react'
 import { useState, useEffect, useCallback } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { PLANS, type PlanKey, type SubscriptionPlanKey, type OnetimePlanKey } from '@/lib/credits'
+import { isNativeApp } from '@/lib/constants'
 import { useTheme } from '@/components/ThemeProvider'
 import type { UserSubscription } from '@/lib/subscription'
 import { trackPurchase } from '@/lib/analytics'
@@ -87,6 +88,11 @@ function PricingContent() {
   const [subPhone, setSubPhone] = useState('')
   const [phoneModal, setPhoneModal] = useState<{ planKey: SubscriptionPlanKey } | null>(null)
   const [phoneInput, setPhoneInput] = useState('')
+  const [nativeApp, setNativeApp] = useState(false)
+
+  useEffect(() => {
+    setNativeApp(isNativeApp())
+  }, [])
 
   const success = searchParams.get('success')
   const cancelled = searchParams.get('cancelled')
@@ -500,6 +506,23 @@ function PricingContent() {
           </div>
         )}
 
+          {/* Native App: hide payment UI (Apple/Google policy) */}
+          {nativeApp && (
+            <div
+              className="rounded-2xl p-6 mb-6 text-center theme-transition"
+              style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)' }}
+            >
+              <p className="text-base font-bold mb-2" style={{ color: 'var(--text-primary)' }}>
+                이용권 구매 안내
+              </p>
+              <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                이용권 구매는 웹사이트에서 가능합니다.<br />
+                브라우저에서 <span style={{ color: 'var(--text-accent)' }}>sajuhae.vercel.app</span>에 접속해 주세요.
+              </p>
+            </div>
+          )}
+
+          {!nativeApp && <>
           {/* Plan Mode Toggle */}
           <div className="flex justify-center mb-8">
             <div className="inline-flex rounded-full p-1" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)' }}>
@@ -703,6 +726,7 @@ function PricingContent() {
             토스페이먼츠를 통해 안전하게 결제됩니다. (카드, 간편결제 지원)
           </p>
         </div>
+        </>}
 
         {/* Phone Number Modal */}
         {phoneModal && (
