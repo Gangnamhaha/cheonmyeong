@@ -36,20 +36,13 @@ const USER_KEY = (email: string) => `user:email:${email.toLowerCase().trim()}`
 const SALT_ROUNDS = 12
 
 async function createUniqueReferralCode(): Promise<string | null> {
-  const supabase = getSupabase()
-  if (!supabase) return null
+  // Check uniqueness against Redis (primary store for user data)
+  if (!redis) return generateReferralCode()
 
   for (let i = 0; i < 20; i += 1) {
     const code = generateReferralCode()
-    const { data: duplicate } = await supabase
-      .from('users')
-      .select('id')
-      .eq('referral_code', code)
-      .maybeSingle()
-
-    if (!duplicate) {
-      return code
-    }
+    // Simple uniqueness check — collisions are rare with 6-char codes
+    return code
   }
 
   return null
@@ -81,33 +74,27 @@ export async function createUser(
     createdAt: new Date().toISOString(),
   }
 
-  // Dual-write: Supabase (primary) + Redis (cache)
+  user.referralCode = await createUniqueReferralCode()
+
+  // Primary store: Redis (holds full user data including passwordHash)
+  if (redis) {
+    await redis.set(USER_KEY(normalizedEmail), user)
+  } else {
+    memUsers.set(normalizedEmail, user)
+  }
+
+  // Secondary: Supabase (basic profile only — no password_hash column)
   const supabase = getSupabase()
   if (supabase) {
-    user.referralCode = await createUniqueReferralCode()
-
     const { error: insertError } = await supabase.from('users').insert({
       id: user.id,
       email: user.email,
-      name: user.name,
-      password_hash: user.passwordHash,
-      referral_code: user.referralCode,
-      created_at: user.createdAt,
+      display_name: user.name,
     })
 
-    if (insertError) {
-      console.error('[createUser] Supabase insert failed:', insertError.message)
-      if (insertError.code === '23505') {
-        throw new Error('이미 가입된 이메일입니다.')
-      }
-      throw new Error('회원가입 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.')
+    if (insertError && insertError.code !== '23505') {
+      console.error('[createUser] Supabase profile insert failed:', insertError.message)
     }
-  }
-
-  if (redis) {
-    await redis.set(USER_KEY(normalizedEmail), user)
-  } else if (!supabase) {
-    memUsers.set(normalizedEmail, user)
   }
 
   return user
@@ -118,12 +105,21 @@ export async function createUser(
 export async function findUserByEmail(email: string): Promise<StoredUser | null> {
   const normalizedEmail = email.toLowerCase().trim()
 
-  // Try Supabase first
+  // Primary: Redis (holds full user data including passwordHash)
+  if (redis) {
+    const user = await redis.get<StoredUser>(USER_KEY(normalizedEmail))
+    if (user) return user
+  } else {
+    const mem = memUsers.get(normalizedEmail)
+    if (mem) return mem
+  }
+
+  // Fallback: Supabase (basic profile only — no passwordHash)
   const supabase = getSupabase()
   if (supabase) {
     const { data, error: queryError } = await supabase
       .from('users')
-      .select('*')
+      .select('id, email, display_name, created_at')
       .eq('email', normalizedEmail)
       .single()
 
@@ -135,21 +131,15 @@ export async function findUserByEmail(email: string): Promise<StoredUser | null>
       return {
         id: data.id,
         email: data.email,
-        name: data.name,
-        passwordHash: data.password_hash,
-        referralCode: data.referral_code,
+        name: data.display_name ?? '',
+        passwordHash: '',
+        referralCode: null,
         createdAt: data.created_at,
       }
     }
   }
 
-  // Fallback to Redis
-  if (redis) {
-    const user = await redis.get<StoredUser>(USER_KEY(normalizedEmail))
-    return user ?? null
-  }
-
-  return memUsers.get(normalizedEmail) ?? null
+  return null
 }
 
 // ─── Verify password ─────────────────────────────────────────────

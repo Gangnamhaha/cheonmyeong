@@ -152,21 +152,21 @@ export async function POST(req: NextRequest) {
       if (customerEmail) {
         const { data } = await supabase
           .from('users')
-          .select('name')
+          .select('display_name')
           .eq('email', customerEmail)
           .maybeSingle()
-        return { email: customerEmail, name: data?.name || customerName || '고객' }
+        return { email: customerEmail, name: data?.display_name || customerName || '고객' }
       }
 
       const { data } = await supabase
         .from('users')
-        .select('email, name')
+        .select('email, display_name')
         .eq('id', parsedData.userId)
         .maybeSingle()
 
       return {
         email: data?.email?.trim() || null,
-        name: data?.name || customerName || '고객',
+        name: data?.display_name || customerName || '고객',
       }
     }
 
