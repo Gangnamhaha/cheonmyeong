@@ -7,6 +7,8 @@ import { verifyUserPassword } from '@/lib/user'
 import { getUserCredits, addCredits } from '@/lib/credits'
 import { Redis } from '@upstash/redis'
 
+const AUTH_ORIGIN = process.env.NEXTAUTH_URL || 'https://cheonmyeong.vercel.app'
+
 const redisUrl = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL
 const redisToken = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN
 const authRedis = redisUrl && redisToken ? new Redis({ url: redisUrl, token: redisToken }) : null
@@ -19,6 +21,11 @@ export const authOptions: NextAuthOptions = {
           GoogleProvider({
             clientId: process.env.GOOGLE_CLIENT_ID,
             clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+            authorization: {
+              params: {
+                redirect_uri: `${AUTH_ORIGIN}/api/auth/callback/google`,
+              },
+            },
           }),
         ]
       : []),
@@ -32,6 +39,7 @@ export const authOptions: NextAuthOptions = {
             authorization: {
               params: {
                 scope: 'profile_nickname profile_image account_email',
+                redirect_uri: `${AUTH_ORIGIN}/api/auth/callback/kakao`,
               },
             },
           }),
