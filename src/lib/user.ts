@@ -86,7 +86,7 @@ export async function createUser(
   if (supabase) {
     user.referralCode = await createUniqueReferralCode()
 
-    await supabase.from('users').insert({
+    const { error: insertError } = await supabase.from('users').insert({
       id: user.id,
       email: user.email,
       name: user.name,
@@ -94,6 +94,14 @@ export async function createUser(
       referral_code: user.referralCode,
       created_at: user.createdAt,
     })
+
+    if (insertError) {
+      console.error('[createUser] Supabase insert failed:', insertError.message)
+      if (insertError.code === '23505') {
+        throw new Error('이미 가입된 이메일입니다.')
+      }
+      throw new Error('회원가입 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.')
+    }
   }
 
   if (redis) {
@@ -113,11 +121,16 @@ export async function findUserByEmail(email: string): Promise<StoredUser | null>
   // Try Supabase first
   const supabase = getSupabase()
   if (supabase) {
-    const { data } = await supabase
+    const { data, error: queryError } = await supabase
       .from('users')
       .select('*')
       .eq('email', normalizedEmail)
       .single()
+
+    if (queryError && queryError.code !== 'PGRST116') {
+      console.error('[findUserByEmail] Supabase query failed:', queryError.message)
+    }
+
     if (data) {
       return {
         id: data.id,
