@@ -41,6 +41,7 @@ export default function AiInterpretation({
       <div className="mb-4 flex items-center justify-between gap-3">
         <h2 className="text-lg font-bold tracking-wide" style={{ color: 'var(--text-accent)' }}>
           AI 사주 해석 <span className="text-sm font-normal" style={{ color: 'var(--text-muted)' }}>(命理 解釋)</span>
+          <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold" style={{ background: 'var(--bg-secondary)', color: 'var(--text-accent)', border: '1px solid var(--border-color)' }}>특허 출원 기술</span>
         </h2>
         {canReadAloud && (
           <button

@@ -349,6 +349,12 @@ function PricingContent() {
           <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
             AI 사주 해석 구독을 시작하세요
           </p>
+          <div className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-medium"
+            style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', color: 'var(--text-muted)' }}>
+            <span style={{ color: 'var(--text-accent)' }}>Patent Pending</span>
+            <span>|</span>
+            <span>특허 출원 멀티모달 AI 기술 기반</span>
+          </div>
           {credits && credits.remaining > 0 && (
             <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-full"
               style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)' }}>

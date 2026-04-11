@@ -50,6 +50,20 @@ export default function HeroSection({
         >
           당신의 사주가 음악이 되고, 영상이 됩니다.
         </p>
+        <div
+          className="mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-medium"
+          style={{
+            background: 'var(--bg-card)',
+            border: '1px solid var(--border-color)',
+            color: 'var(--text-muted)',
+            opacity: 0,
+            animation: 'fadeIn 0.5s ease-out 0.5s forwards',
+          }}
+        >
+          <span style={{ color: 'var(--text-accent)' }}>Patent Pending</span>
+          <span>|</span>
+          <span>특허 출원 멀티모달 AI 기술</span>
+        </div>
 
         <p className="text-xs mt-3 max-w-xs mx-auto leading-relaxed" style={{ color: 'var(--text-muted)' }} suppressHydrationWarning>
           {greeting}
