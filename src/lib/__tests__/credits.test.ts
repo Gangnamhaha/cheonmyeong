@@ -22,7 +22,7 @@ describe('PLANS 구조 검증', () => {
   it('free 요금제는 가격 0', () => {
     expect(PLANS.free.price).toBe(0)
     expect(PLANS.free.type).toBe('free')
-    expect(PLANS.free.credits).toBe(3)
+    expect(PLANS.free.credits).toBe(1)
   })
 
   it('일회성 요금제 가격이 0보다 큼', () => {
@@ -37,7 +37,7 @@ describe('PLANS 구조 검증', () => {
     const subPlans = planKeys.filter((k) => PLANS[k].type === 'subscription')
     expect(subPlans.length).toBeGreaterThan(0)
     subPlans.forEach((key) => {
-      const plan = PLANS[key] as typeof PLANS['sub_basic']
+      const plan = PLANS[key] as typeof PLANS['sub_light']
       expect(['month', 'year'], `${key}: interval 값`).toContain(plan.interval)
     })
   })
@@ -94,7 +94,7 @@ describe('PortOne paymentId 파싱 로직', () => {
     expect(parsePlanFromPayStylePaymentId('pay-pro-xyz789')).toBe('pro')
     expect(parsePlanFromPayStylePaymentId('pay-unlimited-def456')).toBe('unlimited')
     expect(parsePlanFromPayStylePaymentId('pay-premium_report-ghi')).toBe('premium_report')
-    expect(parsePlanFromPayStylePaymentId('pay-sub_basic-jkl')).toBe('sub_basic')
+    expect(parsePlanFromPayStylePaymentId('pay-sub_light-jkl')).toBe('sub_light')
   })
 
   it('잘못된 paymentId는 null 반환', () => {
@@ -194,14 +194,14 @@ describe('결제 금액 일관성', () => {
   })
 
   it('구독 요금제는 월간 가격이 연간보다 비쌈 (단위 월 기준)', () => {
-    const monthlyBasic = PLANS.sub_basic.price
-    const annualBasic = PLANS.sub_basic_annual.price / 12
+    const monthlyLight = PLANS.sub_light.price
+    const annualLight = PLANS.sub_light_annual.price / 12
 
-    expect(monthlyBasic).toBeGreaterThan(annualBasic)
+    expect(monthlyLight).toBeGreaterThan(annualLight)
 
-    const monthlyPro = PLANS.sub_pro.price
-    const annualPro = PLANS.sub_pro_annual.price / 12
+    const monthlyStandard = PLANS.sub_standard.price
+    const annualStandard = PLANS.sub_standard_annual.price / 12
 
-    expect(monthlyPro).toBeGreaterThan(annualPro)
+    expect(monthlyStandard).toBeGreaterThan(annualStandard)
   })
 })

@@ -4,7 +4,7 @@ import { Suspense } from 'react'
 import { useSession } from 'next-auth/react'
 import { useState, useEffect, useCallback } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { PLANS, type PlanKey, type SubscriptionPlanKey, type OnetimePlanKey } from '@/lib/credits'
+import { PLANS, type PlanKey, type SubscriptionPlanKey } from '@/lib/credits'
 import { isNativeApp } from '@/lib/constants'
 import { useTheme } from '@/components/ThemeProvider'
 import type { UserSubscription } from '@/lib/subscription'
@@ -56,13 +56,9 @@ declare global {
   }
 }
 
-type PlanMode = 'onetime' | 'monthly'
-type PaymentMethod = 'card' | 'kakao_pay'
-
 const SHOW_PASS_COUNTS = process.env.NEXT_PUBLIC_SHOW_PASS_COUNTS === 'true'
 
-const ONETIME_PLANS: OnetimePlanKey[] = ['starter', 'pro', 'bundle_50', 'bundle_200', 'unlimited']
-const MONTHLY_SUBSCRIPTION_PLANS: SubscriptionPlanKey[] = ['sub_basic', 'sub_pro', 'sub_premium']
+const SUBSCRIPTION_PLANS: SubscriptionPlanKey[] = ['sub_light', 'sub_standard', 'sub_premium']
 
 export default function PricingPage() {
   return (
@@ -77,14 +73,11 @@ function PricingContent() {
   const { theme, toggleTheme, cycleFontSize, fontSizeLabel } = useTheme()
   const searchParams = useSearchParams()
 
-  const [planMode, setPlanMode] = useState<PlanMode>('monthly')
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('card')
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null)
   const [toast, setToast] = useState<string | null>(null)
   const [credits, setCredits] = useState<{ remaining: number; plan: string } | null>(null)
   const [subscription, setSubscription] = useState<UserSubscription | null>(null)
   const [cancelingSubscription, setCancelingSubscription] = useState(false)
-  const [guestEmail, setGuestEmail] = useState('')
   const [subPhone, setSubPhone] = useState('')
   const [phoneModal, setPhoneModal] = useState<{ planKey: SubscriptionPlanKey } | null>(null)
   const [phoneInput, setPhoneInput] = useState('')
@@ -189,95 +182,6 @@ function PricingContent() {
       }
     } catch {
       showToast('결제 검증 중 오류가 발생했습니다.')
-    }
-  }
-
-  // PortOne V2 payment flow
-  async function handlePayment(planKey: PlanKey) {
-    const isGuest = !session
-
-    // 비회원이면 이메일 필수
-    if (isGuest && !guestEmail.trim()) {
-      showToast('이메일 주소를 입력해주세요.')
-      return
-    }
-
-    if (isGuest && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(guestEmail.trim())) {
-      showToast('올바른 이메일 형식을 입력해주세요.')
-      return
-    }
-
-    setLoadingPlan(planKey)
-
-    try {
-      // 1. Get payment params from server
-      const res = await fetch('/api/portone', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          plan: planKey,
-          ...(isGuest ? { guestEmail: guestEmail.trim() } : {}),
-        }),
-      })
-
-      if (!res.ok) {
-        const err = await res.json()
-        showToast(err.error || '결제 준비에 실패했습니다.')
-        setLoadingPlan(null)
-        return
-      }
-
-      const data = await res.json()
-
-      const customData = JSON.stringify({ userId: data.userId, plan: planKey })
-
-      // 2. Check V2 SDK loaded
-      if (!window.PortOne) {
-        showToast('결제 모듈을 로딩 중입니다. 잠시 후 다시 시도해 주세요.')
-        setLoadingPlan(null)
-        return
-      }
-
-      // 3. Build payment params based on selected payment method
-      const paymentParams: Parameters<typeof window.PortOne.requestPayment>[0] = {
-        storeId: data.storeId,
-        channelKey: data.channelKey,
-        paymentId: data.paymentId,
-        orderName: data.orderName,
-        totalAmount: data.totalAmount,
-        currency: data.currency,
-        payMethod: paymentMethod === 'kakao_pay' ? 'EASY_PAY' : 'CARD',
-        redirectUrl: `${window.location.origin}/pricing`,
-        customer: {
-          email: session?.user?.email || guestEmail.trim() || 'guest@sajuhae.com',
-          fullName: session?.user?.name || '사주해 이용자',
-        },
-        customData,
-      }
-
-      // Add easyPay provider for KakaoPay
-      if (paymentMethod === 'kakao_pay') {
-        ;(paymentParams as Record<string, unknown>).easyPay = { provider: 'KAKAO_PAY' }
-      }
-
-      // 3. Call V2 SDK
-      const response = await window.PortOne.requestPayment(paymentParams)
-
-      // 4. Check result
-      if (response?.code) {
-        const isCanceled = response.code === 'PAY_PROCESS_CANCELED' || response.code === 'PAY_PROCESS_ABORTED'
-        showToast(isCanceled ? '결제가 취소되었습니다.' : (response.message || '결제 처리 중 오류가 발생했습니다.'))
-        setLoadingPlan(null)
-        return
-      }
-
-      // 5. Verify on server
-      await verifyPayment(data.paymentId, isGuest, customData)
-    } catch (err) {
-      console.error('[handlePayment error]', err)
-      showToast('결제 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.')
-    } finally {
-      setLoadingPlan(null)
     }
   }
 
@@ -411,7 +315,7 @@ function PricingContent() {
     }
   }
 
-  const currentPlans = planMode === 'onetime' ? ONETIME_PLANS : MONTHLY_SUBSCRIPTION_PLANS
+  const currentPlans = SUBSCRIPTION_PLANS
 
   return (
     <div className="min-h-screen px-4 py-12" style={{ background: 'var(--bg-primary)' }}>
@@ -443,7 +347,7 @@ function PricingContent() {
             요금제
           </h1>
           <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-            AI 사주 해석 이용권을 구매하세요
+            AI 사주 해석 구독을 시작하세요
           </p>
           {credits && credits.remaining > 0 && (
             <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-full"
@@ -523,95 +427,24 @@ function PricingContent() {
           )}
 
           {!nativeApp && <>
-          {/* Plan Mode Toggle */}
-          <div className="flex justify-center mb-8">
-            <div className="inline-flex rounded-full p-1" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)' }}>
-              <button
-                onClick={() => setPlanMode('onetime')}
-                className="px-5 py-2 rounded-full text-sm font-bold transition-all"
-                style={{
-                  background: planMode === 'onetime' ? 'var(--accent)' : 'transparent',
-                  color: planMode === 'onetime' ? 'var(--accent-text)' : 'var(--text-muted)',
-                }}
-              >
-                일회성
-              </button>
-              <button
-                onClick={() => setPlanMode('monthly')}
-                className="px-5 py-2 rounded-full text-sm font-bold transition-all"
-                style={{
-                  background: planMode === 'monthly' ? 'var(--accent)' : 'transparent',
-                  color: planMode === 'monthly' ? 'var(--accent-text)' : 'var(--text-muted)',
-                }}
-              >
-                월 구독
-              </button>
-            </div>
+          {/* Card-Only Notice */}
+          <div
+            className="rounded-2xl p-4 mb-6 theme-transition"
+            style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)' }}
+          >
+            <p className="text-xs text-center" style={{ color: 'var(--text-secondary)' }}>
+              정기결제(카드)로 진행됩니다. 언제든 해지 가능합니다.
+            </p>
           </div>
 
-         {/* Payment Method Selection (일회성 only) */}
-         {planMode === 'onetime' && (
-           <div className="flex justify-center mb-8">
-             <div className="inline-flex rounded-full p-1" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)' }}>
-               <button
-                 onClick={() => setPaymentMethod('card')}
-                 className="px-5 py-2 rounded-full text-sm font-bold transition-all"
-                 style={{
-                   background: paymentMethod === 'card' ? 'var(--accent)' : 'transparent',
-                   color: paymentMethod === 'card' ? 'var(--accent-text)' : 'var(--text-muted)',
-                 }}
-               >
-                 💳 카드결제
-               </button>
-               <button
-                 onClick={() => setPaymentMethod('kakao_pay')}
-                 className="px-5 py-2 rounded-full text-sm font-bold transition-all"
-                 style={{
-                   background: paymentMethod === 'kakao_pay' ? 'var(--accent)' : 'transparent',
-                   color: paymentMethod === 'kakao_pay' ? 'var(--accent-text)' : 'var(--text-muted)',
-                 }}
-               >
-                 🟡 카카오페이
-               </button>
-             </div>
-           </div>
-         )}
-
-          {/* Subscription Card-Only Notice */}
-          {planMode === 'monthly' && (
-            <div
-              className="rounded-2xl p-4 mb-6 theme-transition"
-              style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)' }}
-            >
-              <p className="text-xs text-center" style={{ color: 'var(--text-secondary)' }}>
-                구독은 카드결제만 지원됩니다.
-              </p>
-            </div>
-          )}
-
-        {/* Guest email input */}
+        {/* Login prompt for non-members */}
         {!session && (
           <div
             className="rounded-2xl p-4 mb-6 theme-transition"
             style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)' }}
           >
-            <p className="text-xs mb-2 font-medium" style={{ color: 'var(--text-secondary)' }}>
-              비회원 결제 — 이메일을 입력하면 로그인 없이 결제할 수 있습니다.
-            </p>
-            <input
-              type="email"
-              value={guestEmail}
-              onChange={e => setGuestEmail(e.target.value)}
-              placeholder="이메일 주소"
-              className="w-full rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-1 transition-colors"
-              style={{
-                background: 'var(--bg-secondary)',
-                border: '1px solid var(--border-color)',
-                color: 'var(--text-primary)',
-              }}
-            />
-            <p className="text-[10px] mt-1.5" style={{ color: 'var(--text-muted)' }}>
-              나중에 같은 이메일로 회원가입하면 이용권이 자동 연동됩니다.
+            <p className="text-xs text-center font-medium" style={{ color: 'var(--text-secondary)' }}>
+              구독을 시작하려면 <a href="/login" className="underline" style={{ color: 'var(--text-accent)' }}>로그인</a>이 필요합니다.
             </p>
           </div>
         )}
@@ -676,8 +509,8 @@ function PricingContent() {
                 </ul>
 
                 <button
-                  onClick={() => isSubscription ? handleSubscription(key as SubscriptionPlanKey) : handlePayment(key)}
-                  disabled={loadingPlan === key}
+                  onClick={() => handleSubscription(key as SubscriptionPlanKey)}
+                  disabled={loadingPlan === key || !session}
                   className="w-full py-3 rounded-xl text-sm font-bold hover-scale transition-all disabled:cursor-not-allowed"
                   style={{
                     background: isCurrent ? 'var(--bg-secondary)' : isPopular ? 'var(--accent)' : 'var(--bg-secondary)',
@@ -689,9 +522,9 @@ function PricingContent() {
                     ? '처리 중...'
                     : isCurrent
                       ? '현재 플랜'
-                      : isSubscription
-                        ? '구독 시작'
-                        : '이용권 구매'}
+                      : !session
+                        ? '로그인 후 구독'
+                        : '구독 시작'}
                 </button>
               </div>
             )
@@ -722,8 +555,9 @@ function PricingContent() {
         {/* Note */}
         <div className="mt-8 text-center">
           <p className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>
-            이용권은 구매일로부터 3개월간 유효하며, AI 해석 시 이용권이 차감됩니다.<br />
-            토스페이먼츠를 통해 안전하게 결제됩니다. (카드, 간편결제 지원)
+            구독은 매월 자동 갱신되며, 이용권은 매달 초기화됩니다.<br />
+            언제든 구독을 해지할 수 있으며, 해지 후에도 현재 기간까지 이용 가능합니다.<br />
+            토스페이먼츠를 통해 안전하게 결제됩니다.
           </p>
         </div>
         </>}
