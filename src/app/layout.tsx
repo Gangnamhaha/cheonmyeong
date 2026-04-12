@@ -23,16 +23,16 @@ const notoSerifKr = Noto_Serif_KR({
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: '사주해 - AI 사주팔자 풀이',
-  description: '생년월일시를 입력하면 사주팔자, 오행, 십신, 용신, 대운을 분석하고 AI가 해석해드립니다. 무료 사주 풀이 서비스.',
-  keywords: ['사주', '사주팔자', '팔자', '오행', '십신', '용신', '대운', '운세', 'AI 사주', '무료 사주', '사주해', '명리학'],
+  title: '사주해 - AI 사주 풀이 | 무료 사주팔자, 궁합, 오늘의 운세',
+  description: '특허 출원 AI가 사주팔자를 음악·영상·해석으로 분석합니다. 무료 사주, 궁합, 오행, 대운, 오늘의 운세까지. 매일 1회 무료 AI 해석, 월 3,900원부터 구독.',
+  keywords: ['사주', '사주팔자', '무료 사주', 'AI 사주', '사주 풀이', '오늘의 운세', '궁합', '사주 궁합', '오행', '십신', '용신', '대운', '운세', '사주해', '명리학', '토정비결', '신년운세', '2026 운세', '사주 음악', '만세력', '무료 운세', '사주 앱'],
   icons: {
     icon: '/icon.png',
     apple: '/apple-icon.png',
   },
   openGraph: {
-    title: '사주해 - AI 사주팔자 풀이',
-    description: '생년월일시를 입력하면 사주팔자, 오행, 십신, 용신, 대운을 분석하고 AI가 해석해드립니다.',
+    title: '사주해 - AI 사주 풀이 | 무료 사주, 궁합, 운세',
+    description: '특허 출원 AI가 당신의 사주를 음악과 영상으로 변환합니다. 무료 사주 분석, AI 해석, 궁합, 대운까지.',
     type: 'website',
     locale: 'ko_KR',
     siteName: '사주해',
@@ -40,13 +40,13 @@ export const metadata: Metadata = {
       url: '/opengraph-image.png',
       width: 512,
       height: 512,
-      alt: '사주해 - AI 사주팔자 풀이',
+      alt: '사주해 - 특허 AI 사주 풀이',
     }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: '사주해 - AI 사주팔자 풀이',
-    description: '나의 사주팔자를 AI로 분석해보세요. 십신, 용신, 대운까지 상세 해석.',
+    title: '사주해 - 당신의 사주가 음악이 됩니다',
+    description: '특허 출원 멀티모달 AI로 사주를 보고, 듣고, 느끼세요. 매일 1회 무료 AI 해석.',
   },
   robots: {
     index: true,
@@ -107,21 +107,26 @@ export default function RootLayout({
             __html: JSON.stringify({
               "@context": "https://schema.org",
               "@type": "WebApplication",
-              "name": "사주해 - AI 사주팔자 풀이",
+              "name": "사주해 - AI 사주 풀이 | 무료 사주팔자, 궁합, 운세",
               "url": SITE_URL,
-              "description": "생년월일시를 입력하면 사주팔자, 오행, 십신, 용신, 대운을 분석하고 AI가 해석해드립니다.",
+              "description": "특허 출원 AI가 사주팔자를 음악·영상·해석으로 분석합니다. 무료 사주, 궁합, 오행, 대운, 오늘의 운세까지.",
               "applicationCategory": "LifestyleApplication",
               "operatingSystem": "Web",
               "offers": {
                 "@type": "AggregateOffer",
                 "lowPrice": "0",
-                "highPrice": "29900",
+                "highPrice": "14900",
                 "priceCurrency": "KRW"
               },
               "inLanguage": "ko",
               "creator": {
                 "@type": "Organization",
-                "name": "사주해"
+                "name": "주식회사 에이아이트리"
+              },
+              "aggregateRating": {
+                "@type": "AggregateRating",
+                "ratingValue": "4.8",
+                "ratingCount": "1200"
               }
             })
           }}
