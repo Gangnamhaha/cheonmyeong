@@ -57,6 +57,30 @@ export default function PrivacyPage() {
               </p>
             </section>
 
+            <section id="data-deletion">
+              <h2 className="mb-2 text-lg font-semibold text-[var(--text-primary)]">6-1. 사용자 데이터 삭제 요청 (Data Deletion Instructions)</h2>
+              <p className="mb-3">
+                사주해는 이용자의 모든 개인정보 및 서비스 이용 데이터를 완전히 삭제할 수 있는 방법을 제공합니다. 삭제된 데이터는 복구할 수 없습니다.
+              </p>
+              <p className="mb-3 font-semibold text-[var(--text-primary)]">삭제 요청 방법:</p>
+              <ol className="mb-3 list-decimal space-y-1 pl-5">
+                <li>이메일로 요청: <a href="mailto:any001004@gmail.com" className="text-[var(--text-accent)] underline">any001004@gmail.com</a></li>
+                <li>제목: &quot;데이터 삭제 요청&quot;</li>
+                <li>본문: 가입 이메일 주소 또는 OAuth 제공자(구글/카카오/페이스북) 및 해당 계정의 고유 ID를 기재해주세요.</li>
+                <li>회사는 요청 접수 후 영업일 기준 7일 이내에 해당 이용자의 모든 데이터(계정 정보, 사주 분석 기록, 구독/결제 기록, 쿠키 식별자, 로그 기록 등)를 완전히 삭제하고 이메일로 완료 확인을 전송합니다.</li>
+              </ol>
+              <p className="mb-3 font-semibold text-[var(--text-primary)]">Facebook 계정 연동 해제:</p>
+              <p className="mb-2">
+                Facebook 로그인으로 가입한 이용자는 Facebook 계정 설정에서 &quot;사주해&quot; 앱을 제거하는 것만으로도 계정 연동 및 관련 데이터 처리를 중단할 수 있습니다.
+              </p>
+              <p className="mb-2">
+                Facebook 계정 설정 경로: <code className="rounded bg-[var(--bg-secondary)] px-2 py-0.5 text-xs">Settings → Apps and Websites → 사주해 → Remove</code>
+              </p>
+              <p>
+                이후 사주해 측의 관련 데이터 완전 삭제를 원하실 경우 위 이메일로 추가 요청해주시기 바랍니다. 회사는 법령상 보존이 필요한 정보를 제외한 모든 데이터를 삭제합니다.
+              </p>
+            </section>
+
             <section>
               <h2 className="mb-2 text-lg font-semibold text-[var(--text-primary)]">7. 개인정보 보호책임자</h2>
               <p>
