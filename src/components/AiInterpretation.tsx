@@ -87,14 +87,51 @@ export default function AiInterpretation({
 
         {!loading && error && (
           <div className="flex flex-col items-center gap-3 text-center">
-            <p className="text-red-400 text-sm">{error}</p>
-            {onRetry && (
-              <button
-                onClick={onRetry}
-                className="text-xs bg-slate-700 hover:bg-slate-600 text-slate-300 px-4 py-2 rounded-lg transition-colors"
+            {error.includes('이용권이 부족') || error.includes('요금제') ? (
+              // 구독 유도 배너
+              <div
+                className="w-full rounded-2xl p-5 text-center"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(251,191,36,0.15) 0%, rgba(168,85,247,0.12) 100%)',
+                  border: '1px solid rgba(251,191,36,0.4)',
+                }}
               >
-                다시 시도
-              </button>
+                <div className="text-3xl mb-2">🔮</div>
+                <p className="font-bold text-amber-300 text-base mb-1">오늘 무료 AI 해석을 모두 사용했어요!</p>
+                <p className="text-slate-300 text-sm mb-4">월 ₩3,900원으로 매달 5회 AI 해석 + 포림 알림을 유지하세요</p>
+                <div className="flex flex-col sm:flex-row gap-2 justify-center">
+                  <a
+                    href="/pricing"
+                    className="inline-block px-5 py-2.5 rounded-xl font-black text-sm transition-all hover:scale-105"
+                    style={{
+                      background: 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)',
+                      color: '#0b1020',
+                      boxShadow: '0 8px 20px rgba(251,191,36,0.3)',
+                    }}
+                  >
+                    ⚡ 라이트 구독 ₩3,900원두 시작하기
+                  </a>
+                  <a
+                    href="/pricing"
+                    className="inline-block px-5 py-2.5 rounded-xl font-bold text-sm border border-slate-600 text-slate-300 hover:border-amber-400 hover:text-amber-300 transition-all"
+                  >
+                    요금제 비교 보기
+                  </a>
+                </div>
+                <p className="text-xs text-slate-500 mt-3">언제든 해지 가능 · 첫 달 100% 환불 보장</p>
+              </div>
+            ) : (
+              <>
+                <p className="text-red-400 text-sm">{error}</p>
+                {onRetry && (
+                  <button
+                    onClick={onRetry}
+                    className="text-xs bg-slate-700 hover:bg-slate-600 text-slate-300 px-4 py-2 rounded-lg transition-colors"
+                  >
+                    다시 시도
+                  </button>
+                )}
+              </>
             )}
           </div>
         )}

@@ -90,6 +90,7 @@ export default function HomeClient() {
   const [aiInterpretation, setAiInterpretation] = useState<string | null>(null)
   const [aiLoading, setAiLoading] = useState(false)
   const [aiError, setAiError] = useState<string | null>(null)
+  const [creditsRemaining, setCreditsRemaining] = useState<number | null>(null)
   const [calcError, setCalcError] = useState<string | null>(null)
   const [apiError, setApiError] = useState<string | null>(null)
   const [activeCategory, setActiveCategory] = useState<AiCategory>('종합')
@@ -202,6 +203,11 @@ export default function HomeClient() {
             '이용권이 부족합니다.',
         )
         return
+      }
+      // Track remaining credits for upsell
+      const creditData = await creditRes.json().catch(() => null)
+      if (creditData?.remaining !== undefined) {
+        setCreditsRemaining(creditData.remaining)
       }
     } catch {
       setAiError('이용권 확인 중 네트워크 오류가 발생했습니다. 다시 시도해 주세요.')
@@ -1290,6 +1296,32 @@ export default function HomeClient() {
                             error={aiError}
                             onRetry={() => fetchInterpretation(fullResult, activeCategory)}
                           />
+
+                          {/* 남은 횟수 + 구독 유도 */}
+                          {!aiLoading && !aiError && aiInterpretation && creditsRemaining !== null && creditsRemaining <= 2 && (
+                            <div
+                              className="mt-3 rounded-xl p-4 text-center"
+                              style={{
+                                background: 'linear-gradient(135deg, rgba(251,191,36,0.1) 0%, rgba(168,85,247,0.08) 100%)',
+                                border: '1px solid rgba(251,191,36,0.25)',
+                              }}
+                            >
+                              <p className="text-amber-300 text-sm font-bold mb-1">
+                                {creditsRemaining === 0 ? '⚠️ 오늘 무료 횟수를 모두 사용했어요' : `⚡ AI 해석 ${creditsRemaining}회 남았어요`}
+                              </p>
+                              <p className="text-slate-400 text-xs mb-3">라이트 구독으로 매달 5회 확보 → 다음 달도 찾아볼 수 있어요</p>
+                              <a
+                                href="/pricing"
+                                className="inline-block px-4 py-2 rounded-lg text-sm font-black transition-all hover:scale-105"
+                                style={{
+                                  background: 'linear-gradient(135deg, #fbbf24, #f59e0b)',
+                                  color: '#0b1020',
+                                }}
+                              >
+                                라이트 구독 ₩3,900/월 →
+                              </a>
+                            </div>
+                          )}
 
                           {/* 후속 질문 */}
                           {chatHistory.length > 0 && (
