@@ -15,6 +15,9 @@ export async function GET(req: NextRequest) {
   }
 
   const supabase = getSupabase()
+  if (!supabase) {
+    return NextResponse.json({ error: 'Supabase not configured' }, { status: 503 })
+  }
   const now = new Date()
   const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
   const start = weekAgo.toISOString()
