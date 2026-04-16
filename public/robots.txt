@@ -4,4 +4,4 @@ Allow: /
 Disallow: /api/
 Disallow: /admin/
 
-Sitemap: https://cheonmyeong.vercel.app/sitemap.xml
+Sitemap: https://sajuhae.vercel.app/sitemap.xml
