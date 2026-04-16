@@ -63,12 +63,15 @@ async function getUsageMetrics(start: string, end: string) {
     .lte('created_at', end)
 
   // AI 해석 수
-  const { count: aiInterpret } = await supabase
-    .from('interpretations')
-    .select('*', { count: 'exact', head: true })
-    .gte('created_at', start)
-    .lte('created_at', end)
-    .catch(() => ({ count: 0 }))
+  let aiInterpret = 0
+  try {
+    const { count } = await supabase
+      .from('interpretations')
+      .select('*', { count: 'exact', head: true })
+      .gte('created_at', start)
+      .lte('created_at', end)
+    aiInterpret = count || 0
+  } catch { aiInterpret = 0 }
 
   // 신규 가입자
   const { count: newUsers } = await supabase
