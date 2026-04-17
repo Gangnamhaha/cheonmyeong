@@ -16,19 +16,14 @@ export default function CardDownloadButtons({ id, name }: Props) {
   async function handleDownload(format: CardFormat) {
     if (loadingFormat) return
     setLoadingFormat(format)
-
     try {
       const response = await fetch(`/api/card/${id}?format=${format}`)
-      if (!response.ok) {
-        throw new Error('card-download-failed')
-      }
-
+      if (!response.ok) throw new Error('card-download-failed')
       const blob = await response.blob()
       const url = URL.createObjectURL(blob)
       const anchor = document.createElement('a')
       const safeName = (name || '사용자').trim() || '사용자'
       const suffix = format === 'story' ? 'story' : 'instagram'
-
       anchor.href = url
       anchor.download = `사주해_사주카드_${safeName}_${suffix}.png`
       anchor.click()
@@ -59,8 +54,32 @@ export default function CardDownloadButtons({ id, name }: Props) {
 
   function handleShareKakao() {
     const url = window.location.href
-    const kakaoUrl = `https://sharer.kakao.com/talk/friends/picker/link?app_key=kakao&url=${encodeURIComponent(url)}`
-    window.open(kakaoUrl, '_blank', 'width=500,height=600')
+    const text = encodeURIComponent(`AI가 분석한 ${name}님의 사주팔자 결과 🔮`)
+    const kakaoShareUrl = `https://story.kakao.com/share?url=${encodeURIComponent(url)}`
+    window.open(kakaoShareUrl, '_blank', 'width=500,height=600')
+  }
+
+  function handleShareKakaoTalk() {
+    const url = window.location.href
+    if (typeof window !== 'undefined' && (window as any).Kakao?.Share) {
+      ;(window as any).Kakao.Share.sendDefault({
+        objectType: 'feed',
+        content: {
+          title: `${name}님의 AI 사주팔자 결과`,
+          description: '사주해에서 AI가 분석한 나의 사주를 확인해보세요!',
+          imageUrl: `${window.location.origin}/opengraph-image.png`,
+          link: { mobileWebUrl: url, webUrl: url },
+        },
+        buttons: [{ title: '사주 결과 보기', link: { mobileWebUrl: url, webUrl: url } }],
+      })
+    } else {
+      // SDK 없을 때 카카오톡 앱 링크
+      const kakaoUrl = `kakaolink://send?text=${encodeURIComponent(`${name}님의 AI 사주팔자 결과 🔮 ${url}`)}`
+      window.location.href = kakaoUrl
+      setTimeout(() => {
+        window.open(`https://story.kakao.com/share?url=${encodeURIComponent(url)}`, '_blank')
+      }, 500)
+    }
   }
 
   return (
@@ -72,6 +91,15 @@ export default function CardDownloadButtons({ id, name }: Props) {
 
       {/* 공유 버튼 */}
       <div className="mt-4 flex flex-wrap gap-3">
+        <button
+          type="button"
+          onClick={handleShareKakaoTalk}
+          className="inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-bold transition hover:opacity-90"
+          style={{ background: '#FEE500', color: '#3C1E1E' }}
+        >
+          💬 카카오톡
+        </button>
+
         <button
           type="button"
           onClick={handleCopyLink}
