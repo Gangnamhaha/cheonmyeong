@@ -1298,28 +1298,40 @@ export default function HomeClient() {
                           />
 
                           {/* 남은 횟수 + 구독 유도 */}
-                          {!aiLoading && !aiError && aiInterpretation && creditsRemaining !== null && creditsRemaining <= 2 && (
+                          {!aiLoading && !aiError && aiInterpretation && creditsRemaining !== null && creditsRemaining <= 3 && (
                             <div
-                              className="mt-3 rounded-xl p-4 text-center"
+                              className="mt-4 rounded-2xl p-5 text-center"
                               style={{
-                                background: 'linear-gradient(135deg, rgba(251,191,36,0.1) 0%, rgba(168,85,247,0.08) 100%)',
-                                border: '1px solid rgba(251,191,36,0.25)',
+                                background: creditsRemaining === 0
+                                  ? 'linear-gradient(135deg, rgba(239,68,68,0.15) 0%, rgba(168,85,247,0.1) 100%)'
+                                  : 'linear-gradient(135deg, rgba(251,191,36,0.12) 0%, rgba(168,85,247,0.08) 100%)',
+                                border: creditsRemaining === 0
+                                  ? '2px solid rgba(239,68,68,0.5)'
+                                  : '2px solid rgba(251,191,36,0.4)',
                               }}
                             >
-                              <p className="text-amber-300 text-sm font-bold mb-1">
-                                {creditsRemaining === 0 ? '⚠️ 오늘 무료 횟수를 모두 사용했어요' : `⚡ AI 해석 ${creditsRemaining}회 남았어요`}
+                              <p className="text-sm font-black mb-1" style={{ color: creditsRemaining === 0 ? '#f87171' : '#fbbf24' }}>
+                                {creditsRemaining === 0 ? '🔒 무료 이용권이 모두 소진됐어요' : `⚡ 이용권 ${creditsRemaining}회 남았어요`}
                               </p>
-                              <p className="text-slate-400 text-xs mb-3">라이트 구독으로 매달 5회 확보 → 다음 달도 찾아볼 수 있어요</p>
+                              <p className="text-xs mb-1" style={{ color: 'var(--text-muted)' }}>
+                                {creditsRemaining === 0
+                                  ? '연애운 · 재물운 · 직업운이 아직 잠겨 있어요'
+                                  : '구독하면 연애운 · 재물운 · 직업운 전체 해석 가능해요'}
+                              </p>
+                              <div className="flex gap-2 justify-center mb-2 text-xs" style={{ color: 'var(--text-muted)' }}>
+                                <span>✓ 연애운</span><span>✓ 재물운</span><span>✓ 직업운</span><span>✓ 월별운세</span>
+                              </div>
                               <a
                                 href="/pricing"
-                                className="inline-block px-4 py-2 rounded-lg text-sm font-black transition-all hover:scale-105"
+                                className="inline-block px-6 py-3 rounded-full text-sm font-black transition-all hover:scale-105 shadow-lg"
                                 style={{
                                   background: 'linear-gradient(135deg, #fbbf24, #f59e0b)',
                                   color: '#0b1020',
                                 }}
                               >
-                                라이트 구독 ₩3,900/월 →
+                                ₩3,900으로 전체 운세 보기 →
                               </a>
+                              <p className="mt-2 text-xs" style={{ color: 'var(--text-muted)' }}>첫 달 특가 · 언제든 해지 가능</p>
                             </div>
                           )}
 
