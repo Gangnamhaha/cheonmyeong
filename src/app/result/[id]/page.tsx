@@ -150,6 +150,26 @@ export default async function ResultPage({ params }: Params) {
           </section>
         )}
 
+
+        {/* 구독 유도 CTA */}
+        <section className="rounded-2xl border-2 p-6 text-center" style={{ background: 'linear-gradient(135deg, #1a0a00 0%, #2d1500 100%)', borderColor: '#f59e0b' }}>
+          <p className="text-xs tracking-widest font-semibold mb-2" style={{ color: '#f59e0b' }}>🔒 더 많은 운세가 잠겨있어요</p>
+          <h3 className="text-xl font-bold mb-3" style={{ color: '#fff' }}>연애운 · 재물운 · 직업운 · 월별 상세 운세</h3>
+          <div className="mb-4 rounded-xl p-4 text-left text-sm space-y-2" style={{ background: 'rgba(245,158,11,0.1)', filter: 'blur(0px)' }}>
+            <p style={{ color: 'rgba(255,255,255,0.4)', userSelect: 'none' }}>● 2026년 재물운: ██████████████</p>
+            <p style={{ color: 'rgba(255,255,255,0.4)', userSelect: 'none' }}>● 이달의 연애운: ██████████</p>
+            <p style={{ color: 'rgba(255,255,255,0.4)', userSelect: 'none' }}>● 직업·커리어 운세: ████████████</p>
+          </div>
+          <Link
+            href="/pricing"
+            className="inline-flex items-center rounded-full px-8 py-4 text-base font-bold transition hover:opacity-90 shadow-lg"
+            style={{ background: '#f59e0b', color: '#111827' }}
+          >
+            ₩3,900으로 전체 운세 보기 →
+          </Link>
+          <p className="mt-3 text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>첫 달 특가 · 언제든 해지 가능</p>
+        </section>
+
         <section className="rounded-2xl border p-6 text-center" style={{ background: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
           <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>내 사주도 무료로 보기</p>
           <Link
@@ -164,3 +184,4 @@ export default async function ResultPage({ params }: Params) {
     </main>
   )
 }
+
