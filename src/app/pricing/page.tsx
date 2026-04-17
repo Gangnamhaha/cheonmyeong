@@ -433,7 +433,31 @@ function PricingContent() {
           )}
 
           {!nativeApp && <>
-          {/* Card-Only Notice */}
+          {/* 무료 vs 구독 비교 */}
+        <div
+          className="rounded-2xl p-5 mb-6 theme-transition"
+          style={{ background: 'var(--bg-card)', border: '2px solid var(--accent)' }}
+        >
+          <p className="text-xs font-bold text-center mb-3" style={{ color: 'var(--text-accent)' }}>
+            🔮 구독하면 이렇게 달라져요
+          </p>
+          <div className="grid grid-cols-2 gap-3 text-xs">
+            <div className="rounded-xl p-3" style={{ background: 'var(--bg-secondary)' }}>
+              <p className="font-bold mb-2" style={{ color: 'var(--text-muted)' }}>무료</p>
+              <p style={{ color: 'var(--text-muted)' }}>✗ 사주팔자 기본 정보</p>
+              <p style={{ color: 'var(--text-muted)' }}>✗ 오행 요약만</p>
+              <p style={{ color: 'var(--text-muted)' }}>✗ AI 해석 1개 항목</p>
+            </div>
+            <div className="rounded-xl p-3" style={{ background: 'rgba(245,158,11,0.1)', border: '1px solid var(--accent)' }}>
+              <p className="font-bold mb-2" style={{ color: 'var(--text-accent)' }}>구독</p>
+              <p style={{ color: 'var(--text-secondary)' }}>✓ 연애운 상세 분석</p>
+              <p style={{ color: 'var(--text-secondary)' }}>✓ 재물운·직업운</p>
+              <p style={{ color: 'var(--text-secondary)' }}>✓ 월별 운세 리포트</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Card-Only Notice */}
           <div
             className="rounded-2xl p-4 mb-6 theme-transition"
             style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)' }}
